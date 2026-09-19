@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="My Gecko">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4B3A76"/>
+      <stop offset=".55" stop-color="#31245A"/>
+      <stop offset="1" stop-color="#1E1638"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".56" r=".52">
+      <stop offset="0" stop-color="#FFC66B" stop-opacity=".55"/>
+      <stop offset=".6" stop-color="#FF8A3D" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#FF8A3D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skin" x1=".2" y1="0" x2=".8" y2="1">
+      <stop offset="0" stop-color="#FFB45E"/>
+      <stop offset=".55" stop-color="#F7963B"/>
+      <stop offset="1" stop-color="#E07C28"/>
+    </linearGradient>
+    <clipPath id="headClip">
+      <path d="M256 104c-96 0-160 62-160 150 0 92 70 154 160 154s160-62 160-154c0-88-64-150-160-150z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="0" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="0" fill="url(#glow)"/>
+  <g transform="translate(256 256) scale(0.74) translate(-256 -256)">
+
+  <!-- tail: a tapering curl sweeping out from behind the head -->
+  <g fill="none" stroke="#D9761F" stroke-linecap="round">
+    <path d="M196 404c-46 18-92 10-108-22" stroke-width="52"/>
+    <path d="M88 382c-14-30 2-56 30-58" stroke-width="36"/>
+    <path d="M118 324c22-2 34 14 28 32" stroke-width="22"/>
+    <path d="M146 356c-4 12-14 18-24 16" stroke-width="11"/>
+  </g>
+
+  <!-- head -->
+  <g transform="translate(256 256) scale(1.08) translate(-256 -256)">
+    <path d="M256 104c-96 0-160 62-160 150 0 92 70 154 160 154s160-62 160-154c0-88-64-150-160-150z" fill="url(#skin)"/>
+    <g clip-path="url(#headClip)">
+      <!-- muzzle / chin highlight -->
+      <ellipse cx="256" cy="352" rx="112" ry="76" fill="#FFE2B8" opacity=".85"/>
+      <ellipse cx="256" cy="300" rx="150" ry="60" fill="#FFCE92" opacity=".35"/>
+      <!-- spots -->
+      <g fill="#4A2C23" opacity=".9">
+        <ellipse cx="150" cy="188" rx="26" ry="20" transform="rotate(-18 150 188)"/>
+        <ellipse cx="220" cy="148" rx="23" ry="17" transform="rotate(12 220 148)"/>
+        <ellipse cx="296" cy="146" rx="20" ry="16" transform="rotate(-8 296 146)"/>
+        <ellipse cx="366" cy="192" rx="25" ry="19" transform="rotate(20 366 192)"/>
+        <ellipse cx="118" cy="266" rx="19" ry="15"/>
+        <ellipse cx="398" cy="270" rx="19" ry="15"/>
+        <ellipse cx="258" cy="128" rx="14" ry="11"/>
+      </g>
+      <!-- cheeks -->
+      <ellipse cx="146" cy="318" rx="44" ry="30" fill="#FF7FA8" opacity=".38"/>
+      <ellipse cx="366" cy="318" rx="44" ry="30" fill="#FF7FA8" opacity=".38"/>
+    </g>
+
+    <!-- eyes -->
+    <g>
+      <ellipse cx="176" cy="252" rx="62" ry="64" fill="#FFF6E6"/>
+      <ellipse cx="336" cy="252" rx="62" ry="64" fill="#FFF6E6"/>
+      <ellipse cx="184" cy="258" rx="34" ry="40" fill="#1B1420"/>
+      <ellipse cx="328" cy="258" rx="34" ry="40" fill="#1B1420"/>
+      <circle cx="171" cy="240" r="13" fill="#FFFFFF"/>
+      <circle cx="315" cy="240" r="13" fill="#FFFFFF"/>
+      <circle cx="194" cy="278" r="6" fill="#FFFFFF" opacity=".8"/>
+      <circle cx="338" cy="278" r="6" fill="#FFFFFF" opacity=".8"/>
+      <!-- lids -->
+      <path d="M114 240c16-34 46-52 78-50" fill="none" stroke="#D9761F" stroke-width="20" stroke-linecap="round"/>
+      <path d="M398 240c-16-34-46-52-78-50" fill="none" stroke="#D9761F" stroke-width="20" stroke-linecap="round"/>
+    </g>
+
+    <!-- nose + smile -->
+    <g fill="#5A2A3A">
+      <ellipse cx="232" cy="336" rx="8" ry="6"/>
+      <ellipse cx="280" cy="336" rx="8" ry="6"/>
+    </g>
+    <path d="M198 356c14 34 42 52 58 52s44-18 58-52" fill="none" stroke="#5A2A3A" stroke-width="15" stroke-linecap="round"/>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#FFD86B">
+    <path d="M432 128l9 24 24 9-24 9-9 24-9-24-24-9 24-9z"/>
+    <path d="M74 150l6 17 17 6-17 6-6 17-6-17-17-6 17-6z" opacity=".85"/>
+    <path d="M414 404l5 14 14 5-14 5-5 14-5-14-14-5 14-5z" opacity=".7"/>
+  </g>
+  </g>
+</svg>
