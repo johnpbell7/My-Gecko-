@@ -1,27 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="My Gecko">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#4B3A76"/>
-      <stop offset=".55" stop-color="#31245A"/>
-      <stop offset="1" stop-color="#1E1638"/>
+    <linearGradient id="bgA" x1="0" y1="0" x2=".3" y2="1">
+      <stop offset="0" stop-color="#FFE68A"/><stop offset=".5" stop-color="#FFC24E"/><stop offset="1" stop-color="#FF8F33"/>
     </linearGradient>
-    <radialGradient id="glow" cx=".5" cy=".56" r=".52">
-      <stop offset="0" stop-color="#FFC66B" stop-opacity=".55"/>
-      <stop offset=".6" stop-color="#FF8A3D" stop-opacity=".18"/>
-      <stop offset="1" stop-color="#FF8A3D" stop-opacity="0"/>
-    </radialGradient>
     <linearGradient id="skin" x1=".2" y1="0" x2=".8" y2="1">
-      <stop offset="0" stop-color="#FFB45E"/>
-      <stop offset=".55" stop-color="#F7963B"/>
-      <stop offset="1" stop-color="#E07C28"/>
+      <stop offset="0" stop-color="#FFB45E"/><stop offset=".55" stop-color="#F7963B"/><stop offset="1" stop-color="#E07C28"/>
     </linearGradient>
     <clipPath id="headClip">
       <path d="M256 104c-96 0-160 62-160 150 0 92 70 154 160 154s160-62 160-154c0-88-64-150-160-150z"/>
     </clipPath>
   </defs>
-
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <rect width="512" height="512" rx="112" fill="url(#bgA)"/>
+  <circle cx="256" cy="256" r="208" fill="none" stroke="#FFF6E0" stroke-width="16" opacity=".75"/>
 
   <!-- tail: a tapering curl sweeping out from behind the head -->
   <g fill="none" stroke="#D9761F" stroke-linecap="round">

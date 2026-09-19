@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#31245A",
-  "theme_color": "#31245A",
+  "background_color": "#FFC24E",
+  "theme_color": "#FFC24E",
   "categories": ["games", "kids", "entertainment"],
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
