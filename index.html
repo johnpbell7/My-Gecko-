@@ -389,6 +389,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <label class="row"><span><b>School mode</b><small>Needs go down slowly on weekdays, 8:30am to 3:30pm</small></span><input type="checkbox" id="setSchool"></label>
   <label class="row"><span><b>Bedtime</b><small>He gets sleepy from this time</small></span><select id="setBed"><option value="19">7:00pm</option><option value="19.5">7:30pm</option><option value="20">8:00pm</option><option value="20.5">8:30pm</option><option value="21">9:00pm</option></select></label>
   <label class="row"><span><b>Sound</b></span><input type="checkbox" id="setSound"></label>
+  <button class="reset" id="setReset">Start again with a new egg</button>
   <button class="go ghost" data-close>Done</button></div></div>
 <div id="card" class="overlay" hidden><div class="sheet"><div class="big" id="cIcon"></div><h1 id="cTitle"></h1><p id="cText"></p><div id="cExtra"></div><button class="go" id="cOk" data-close>OK</button></div></div>
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
@@ -473,11 +474,16 @@ const MORPHS={
 };
 
 /* ---------- saved state ---------- */
-const KEY='gecko-pet-v4';
-try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-photos-v2','gecko-photos-v3'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+const KEY='gecko-pet-v5';
+try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4',
+  'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4'].forEach(k=>localStorage.removeItem(k));}catch(e){}
 const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
-function save(){if(!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let resetting=false;
+function hardReset(){resetting=true;S.name='';
+  try{localStorage.removeItem(KEY);localStorage.removeItem(PHOTO_KEY);}catch(e){}
+  location.reload();}
+function save(){if(resetting||!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 /* ---------- sound ---------- */
 let AC=null;
@@ -1348,7 +1354,7 @@ function drawSwatches(){const box=$('#swatches');box.innerHTML='';for(const k in
 $('#pGo').onclick=()=>{S.name=($('#nameIn').value.trim()||'Ziggy').slice(0,12);S.morph=chosen;applyMorph(chosen);$('#picker').hidden=true;
   if(!S.hatched)startHatch();else{say('I love my new look!');startAct('happy',.8);SFX.chirp();}save();updateUI();};
 $('#pReset').onclick=()=>{const b=$('#pReset');if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
-  S={};try{localStorage.removeItem(KEY);localStorage.removeItem(PHOTO_KEY);}catch(e){}location.reload();};
+  hardReset();};
 $('#nameIn').addEventListener('pointerdown',e=>e.stopPropagation());
 
 /* ---------- UI ---------- */
@@ -1730,7 +1736,7 @@ $('#hbBack').onclick=putBack;
 $('#dbRemove').onclick=()=>{if(sel<0)return;S.decor.splice(sel,1);sel=-1;buildDecor();updDecoBar();SFX.pop();save();};
 
 /* ---------- photo album ---------- */
-const PHOTO_KEY='gecko-photos-v4';
+const PHOTO_KEY='gecko-photos-v5';
 function loadPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||'[]');}catch(e){return [];}}
 function savePhoto(c){try{const t=document.createElement('canvas');t.width=t.height=360;t.getContext('2d').drawImage(c,0,0,360,360);let arr=loadPhotos();arr.unshift({d:t.toDataURL('image/jpeg',.72),cap:S.name+', day '+(Math.floor(ageDays())+1)});arr=arr.slice(0,12);
   for(let k=0;k<4;k++){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(arr));break;}catch(e){arr=arr.slice(0,Math.max(1,arr.length-3));}}}catch(e){}}
@@ -1886,7 +1892,12 @@ function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
 
 /* ---------- More sheet actions, settings ---------- */
 function refreshMore(){}
-function openSettings(){$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;$('#settings').hidden=false;}
+function openSettings(){$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
+  const rb=$('#setReset');rb.classList.remove('sure');rb.textContent='Start again with a new egg';
+  $('#settings').hidden=false;}
+$('#setReset').onclick=()=>{const b=$('#setReset');
+  if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
+  hardReset();};
 $('#setSchool').onchange=e=>{S.school=e.target.checked;save();};$('#setBed').onchange=e=>{S.bedtime=parseFloat(e.target.value);save();updateUI();};
 $('#setSound').onchange=e=>{S.sound=e.target.checked;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 function moreAction(k){({catch:()=>startGame('catch'),hide:()=>startGame('hide'),feather:()=>startGame('feather'),bubbles:()=>startGame('bubbles'),water:refill,treat:giveTreat,lamp:toggleLamp,vet:vet,call:callName,
@@ -1950,7 +1961,7 @@ window.__geckoStart=function(){
     S.seenGrowth=growth();S.seenDay=todayKey();save();return;}
   welcomeBack();};
 let last=performance.now(),booted=false;
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
+function loop(now){if(resetting)return;const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
   tickStats(dt);updateHatch(dt);updateGrowth(dt);updateHold(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
   renderer.render(scene,camera);
   if(!booted){booted=true;if(S.hatched)startCine();if(window.__geckoReady)window.__geckoReady();}
