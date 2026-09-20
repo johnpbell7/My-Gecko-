@@ -7,13 +7,13 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="10">
+<meta name="build" content="11">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=10">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=10">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=10">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=10">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=10">
+<link rel="manifest" href="manifest.webmanifest?v=11">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=11">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=11">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=11">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=11">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -471,7 +471,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='10';
+const BUILD='11';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -526,10 +526,10 @@ function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;
 function blob(mat,sx,sy,sz,x,y,z,parent){const m=new THREE.Mesh(SPH,mat);m.scale.set(sx,sy,sz);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;if(parent)parent.add(m);return m;}
 
 /* ---------- terrarium ---------- */
-const TL=peekMode?2:(S.tank||1),KX=TL>1?1.35:1,KZ=TL>1?1.25:1;
+const TL=peekMode?2:(S.tank||1),KX=TL>1?1.75:1,KZ=TL>1?1.5:1;
 const TANK={w:15*KX,d:8.6*KZ,h:5.4},BX=6.3*KX,Z0=-1.7*KZ,Z1=3.4*KZ;
 /* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
-const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62,rIn:1.2,mouth:.72,h:1.15};
+const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62,rIn:1.2,mouth:.82,h:1.15};
 const plants=[];
 function srnd(seed){let sd=seed||1;return()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};}
 function rockGeo(r,seed){const g=new THREE.SphereGeometry(r,40,28);const p=g.attributes.position,rn=srnd(seed),bumps=[];for(let i=0;i<8;i++)bumps.push([new THREE.Vector3(rn()-.5,rn()-.5,rn()-.5).normalize(),rn()*.28+.06]);
@@ -644,7 +644,7 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
     x.strokeStyle='rgba(90,55,30,.18)';x.lineWidth=1.2;for(let i=0;i<120;i++){const y=rand(0,h);x.beginPath();x.moveTo(0,y);for(let X=0;X<=w;X+=32)x.lineTo(X,y+Math.sin(X*.02+i)*3);x.stroke();}});
   // sideboard the tank sits on
   const sbT=wood('#c98f5d','rgba(80,45,20,.5)',6);const sbM=M(0xffffff,{map:sbT,roughness:.6});
-  const sbW=W+12,sbD=D+1.6,sbH=topY-floorY;const sb=new THREE.Mesh(new THREE.BoxGeometry(sbW,sbH,sbD),sbM);sb.position.set(0,floorY+sbH/2,0);sb.receiveShadow=true;sb.castShadow=true;scene.add(sb);
+  const sbW=W+17,sbD=D+1.6,sbH=topY-floorY;const sb=new THREE.Mesh(new THREE.BoxGeometry(sbW,sbH,sbD),sbM);sb.position.set(0,floorY+sbH/2,0);sb.receiveShadow=true;sb.castShadow=true;scene.add(sb);
   const top=new THREE.Mesh(new THREE.BoxGeometry(sbW+.3,.25,sbD+.3),M(0xffffff,{map:sbT,roughness:.45}));top.position.set(0,topY-.12,0);top.receiveShadow=true;top.name='sideboardTop';top.userData.kind='table';scene.add(top);
   const doorM=M(0xF5EBDD,{roughness:.5});const kn=M(0xD9A441,{metalness:.8,roughness:.3});
   for(let i=0;i<4;i++){const dw=sbW/4-.3;const d=new THREE.Mesh(new THREE.BoxGeometry(dw,sbH-.8,.12),doorM);d.position.set(-sbW/2+sbW/8+i*sbW/4,floorY+sbH/2-.1,sbD/2+.06);d.receiveShadow=true;scene.add(d);
@@ -720,7 +720,7 @@ const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-1.0,z1:-.34*KZ};
 const WALK={x0:-2.45*KX+.32,x1:1.95*KX+.06,z0:Z0+.08,z1:-.34*KZ-.3};
 const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
 const DOOR={x:TANK.w/2,z:1.15,w:2.3,h:1.8};
-const TABLE={x0:TANK.w/2+1.0,x1:12.6,z0:-2.9,z1:3.4,y:-0.95};
+const TABLE={x0:TANK.w/2+1.0,x1:TANK.w/2+7.2,z0:-2.9*KZ,z1:3.4*KZ,y:-0.95};
 const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
 let outside=false,trip=null,doorOpen=0,doorG=null;
 const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
@@ -966,6 +966,9 @@ function dropBall(){if(!ball||ball.state!=='carried')return;G.head.remove(ball.m
   G.root.rotation.y=lerpAngle(G.root.rotation.y,0,1);S.fun=clamp(S.fun+8,0,100);S.energy=clamp(S.energy-2,0,100);popText('+1',ball.m.position,'#7CF29A');earn(1);SFX.chirp();
   setTimeout(()=>{startAct('happy',.8);say(S.energy<12?"Phew, I'm tired now...":pick(['Again! Again!','Throw it again!','That was fun!','One more time!']),2);},150);if(ball.fetches===5)award('game');updateUI();}
 function updateBall(dt){if(!ball)return;
+  if(ball.state==='ready'||ball.state==='flying'){
+    const g0=groundY(ball.m.position.x,ball.m.position.z)+BR;
+    if(Math.hypot(ball.v.x,ball.v.z)<1.2&&ball.m.position.y<=g0+.06)ballSettle();}
   if(ball.state==='carried'){ball.carryT=(ball.carryT||0)+dt;
     if(ball.carryT>10){say(pick(['Here you go!','I brought it back!']),1.7);dropBall();}return;}
   if(ball.state==='ready'){ball.idle+=dt;if(ball.idle>70){say("I'll tidy my ball away.",2);removeBall();}return;}
@@ -976,9 +979,6 @@ function updateBall(dt){if(!ball)return;
   if(b.y<=gy+.001){v.x*=Math.max(0,1-1.6*dt);v.z*=Math.max(0,1-1.6*dt);}
   if(b.x<-BX+.25||b.x>BX-.25){v.x*=-.7;b.x=clamp(b.x,-BX+.25,BX-.25);tone(240,.06,'triangle',.04);}
   if(b.z<Z0+.25||b.z>Z1-.25){v.z*=-.7;b.z=clamp(b.z,Z0+.25,Z1-.25);tone(240,.06,'triangle',.04);}
-  /* once it stops, make sure it has not come to rest somewhere he cannot reach */
-  /* hold the invariant every frame it is at rest, not just the first one */
-  if(Math.hypot(v.x,v.z)<.6&&b.y<=gy+.05)ballSettle();
   ball.m.rotation.x+=v.z*dt/BR;ball.m.rotation.z-=v.x*dt/BR;}
 /* nudge a stopped ball back onto ground he can stand on: off the shelf, out of
    the cave, clear of the rocks. Otherwise fetch deadlocks with the ball buried. */
@@ -996,9 +996,13 @@ function looSpot(){if(!S.loo)S.loo={x:(Math.random()<.5?-1:1)*(BX-1.3),z:Z0+.6};
     const stray=Math.random()<.25;
     q=stray?{x:rand(-BX+.4,BX-.4),z:rand(Z0,Z1-.3)}
            :{x:clamp(S.loo.x+rand(-.9,.9),-BX,BX),z:clamp(S.loo.z+rand(-.6,.9),Z0-.2,Z1)};
-    let clear=true;
-    for(const o of obstacles()){if(Math.hypot(q.x-o.x,q.z-o.z)<o.r+.45){clear=false;break;}}
+    let clear=Math.hypot(q.x-CAVE.x,q.z-CAVE.z)>CAVE.rOut+.3;
+    if(clear)for(const o of obstacles()){if(Math.hypot(q.x-o.x,q.z-o.z)<o.r+.45){clear=false;break;}}
     if(clear)break;}
+  /* last resort: if every try landed in the cave, push it clear of the mouth */
+  {const d=Math.hypot(q.x-CAVE.x,q.z-CAVE.z);
+   if(d<CAVE.rOut+.3){const k=(CAVE.rOut+.5)/(d||1e-4);
+     q.x=clamp(CAVE.x+(q.x-CAVE.x)*k,-BX+.4,BX-.4);q.z=clamp(CAVE.z+(q.z-CAVE.z)*k,Z0+.3,Z1-.3);}}
   return q;}
 const dirtRingTex=canvasTex(128,128,(x)=>{const g=x.createRadialGradient(64,64,30,64,64,62);
   g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.62,'rgba(255,214,90,0)');
@@ -1088,8 +1092,9 @@ function updateGrowth(dt){if(!growAnim)return;growAnim.t+=dt;const k=growAnim.t/
       burst('✨',tmp2,14,{size:.5,speed:1.3});popText('BIGGER!',tmp2,'#FFD23F');startAct('happy',1.4);}}
   else{growOverride=0;growAnim=null;}}
 function ageDays(){return (Date.now()-S.born)/864e5;}
-const FULL_GROWN=.5+.72;
-function growth(){if(peek)return FULL_GROWN;const k=Math.min(1,ageDays()/21);return .5+.72*(1-(1-k)*(1-k));}
+const GROW_MAX=.95;
+const FULL_GROWN=.5+GROW_MAX;
+function growth(){if(peek)return FULL_GROWN;const k=Math.min(1,ageDays()/21);return .5+GROW_MAX*(1-(1-k)*(1-k));}
 function tankSmall(){return (S.tank||1)<2&&S.hatched&&ageDays()>=12;}
 function stageName(){const a=ageDays();return a<3?'Hatchling':a<8?'Baby':a<15?'Young':'Grown-up';}
 
@@ -1194,6 +1199,8 @@ function updateGecko(dt){
   if(AI.act==='pounce'&&AI.actT<AI.actD*.65){p.x+=Math.sin(G.root.rotation.y)*3.2*dt;p.z+=Math.cos(G.root.rotation.y)*3.2*dt;}
   if(!moving&&AI.act!=='pounce'){if(AI.v>.02){p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;}AI.v*=Math.max(0,1-dt*10);}
   {keepIn(p);
+    /* curled up in the cave: hold the spot, so he does not drift out of the mouth */
+    if(caveT>0&&!game&&!callPt){p.x=caveSpot.x;p.z=caveSpot.z;AI.v=0;}
     const gy=groundY(p.x,p.z);
     if(p.y>gy+1e-4){AI.vy=(AI.vy||0)-15*dt;p.y+=AI.vy*dt;
       if(p.y<=gy){const hard=AI.vy<-2.2;p.y=gy;AI.vy=0;
@@ -1262,7 +1269,7 @@ if(S.hatched){const h=Math.min(12,(Date.now()-S.last)/36e5);if(h>.01){const st=M
   const np=Math.min(POOP_MAX-poops.length,Math.round(h*.85));for(let i=0;i<np;i++){const q=looSpot();addPoop(q.x,q.z);}
   const nw=Math.min(WEE_MAX-wees.length,Math.round(h*1.05));for(let i=0;i<nw;i++){const q=looSpot();addWee(q.x,q.z);}}
   if(S.asleep&&S.energy>=100&&!isNight())S.asleep=false;}
-let sickT=60,needT=6,heartT=8;
+let sickT=60,needT=6,heartT=8,ballT=0;
 function need(){
   if(S.sick)return['🤒','I feel poorly... medicine please!'];
   if(S.asleep)return['😴',null];
@@ -1288,8 +1295,9 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   heartT-=dt;if(heartT<=0){heartT=9;if(!S.asleep&&!S.sick&&S.hunger>70&&S.fun>70&&S.clean>70){G.head.getWorldPosition(tmp2);burst('❤️',tmp2,1,{size:.4,g:.1,speed:.6,life:2});}}
   pooT-=dt;if(pooT<=0){pooT=rand(S.asleep?110:45,S.asleep?190:90);
     if(!hatch.active&&!game&&!outside&&!(poops.length>=POOP_MAX&&wees.length>=WEE_MAX))goLoo(Math.random()<.4?'wee':null);}
+  ballT-=dt;if(ballT<=0){ballT=1;if(ball&&ball.state!=='carried'&&ball.state!=='held')ballSettle();}
   itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
-  if(caveT>0){caveT-=dt;
+  if(caveT>0){caveT-=dt;AI.v=0;
     if(caveT<=0){want=null;wantT=rand(12,20);if(AI.inCave){AI.route=[CAVE_PORCH.clone()];AI.target=AI.route[0];}
       say(pick(['That was a nice rest!','Out I come!','Hello again!']),2.2);}}}
 
@@ -1315,7 +1323,7 @@ window.addEventListener('resize',resize);resize();
 function updateCam(dt){if(cine){cineCam();return;}
   camA+=(camT-camA)*Math.min(1,dt*6);const portrait=camera.aspect<1;const wide=typeof game!=='undefined'&&game&&game.kind==='hide';
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
-  const dist=((portrait?8.6:10.5)+(growth()-.85)*5+(wide?(portrait?7:3.5):0))*camZoom;
+  const dist=((portrait?8.6:10.5)+(growth()-.85)*2.6+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
   if(outside){const tcx=(TABLE.x0+TABLE.x1)/2,tcz=(TABLE.z0+TABLE.z1)/2;
     look.x+=((gx*.85+tcx*.15)-look.x)*Math.min(1,dt*2);
@@ -1551,7 +1559,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
 function askMove(){$('#cExtra').innerHTML='<button class="again" id="moveBtn">🏠 Move to a big tank!</button>';
   openCard('🏠',S.name+' is growing up!',S.name+" is getting too big for this starter tank. Move to a big tank with lots more room to explore?",true);$('#cOk').textContent='Not yet';
   $('#moveBtn').onclick=()=>{$('#card').hidden=true;$('#cOk').textContent='OK';doMove();};}
-function doMove(){S.tank=2;(S.decor||[]).forEach(d=>{d.x*=1.35;d.z*=1.25;});S.justMoved=true;save();SFX.yay();
+function doMove(){S.tank=2;(S.decor||[]).forEach(d=>{d.x*=1.75;d.z*=1.5;});S.justMoved=true;save();SFX.yay();
   const f=document.createElement('div');f.className='moving';f.innerHTML='<div>🚚</div><b>Moving day!</b><span>Packing up '+S.name+"'s things...</span>";document.body.appendChild(f);setTimeout(()=>location.reload(),1800);}
 $('#snd').onclick=()=>{S.sound=!S.sound;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 $('#snd').textContent=S.sound?'🔊':'🔇';
@@ -1668,13 +1676,21 @@ const TASK_POOL=[
  {id:'photo',ic:'📸',t:'Take a photo of him',g:1},
  {id:'trick',ic:'\u2b50',t:'Do {n} tricks',g:3},
  {id:'pet',ic:'\u2764\ufe0f',t:'Give him {n} cuddles',g:5},
- {id:'treat',ic:'🐛',t:'Give him a treat',g:1}];
+ {id:'treat',ic:'🐛',t:'Give him a treat',g:1},
+ {id:'bask',ic:'☀️',t:'Let him warm up on his rock',g:1},
+ {id:'cave',ic:'🕳️',t:'Let him rest in his cave',g:1},
+ {id:'trip',ic:'🚪',t:'Take him out on the table',g:1}];
 const taskDef=id=>TASK_POOL.find(x=>x.id===id);
 const taskLabel=t=>{const d=taskDef(t.id);return d?d.t.replace('{n}',t.g):t.id;};
 function rollTasks(){
   const td=todayKey();
   if(S.tasks&&S.tasks.list&&S.taskDay===td)return S.tasks;
   const d=new Date();let sd=(d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate())||1;
+  /* consecutive dates differ by 1, and a bare LCG turns that into almost the same
+     first number - which pinned the same job to the top of every single day.
+     Scramble the date first, then warm the generator up. */
+  sd=(Math.imul(sd,2654435761)>>>0)%2147483647||1;
+  for(let i=0;i<6;i++)sd=(sd*16807)%2147483647;
   const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
   const pool=TASK_POOL.slice(),three=[];
   while(three.length<3&&pool.length)three.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);
@@ -1878,7 +1894,7 @@ function updateTrip(dt){
         AI.wander=.3;AI.route=null;AI.target=null;callPt=null;
         say(pick(['So much room out here!','A whole table!','Adventure!']),2.8);
         toast('👆 Tap the table to send him there, or press Home when he has had enough.');}
-      else{outside=false;outBar(false);bumpCount('trip');S.fun=clamp(S.fun+8,0,100);
+      else{outside=false;outBar(false);bumpTask('trip');S.fun=clamp(S.fun+8,0,100);
         say(pick(['Home sweet home.','Back in my tank!']),2.4);save();updateUI();}
       trip=null;AI.vy=0;}
     return;}
@@ -1888,6 +1904,7 @@ function updateTrip(dt){
 }
 /* ---------- idle wants: basking & drinking ---------- */
 let want=null,wantT=6,caveT=0;
+const caveSpot=new THREE.Vector3();
 const CAVE_PORCH=new THREE.Vector3(CAVE.x,0,CAVE.z+CAVE.rOut+.62);
 const CAVE_MID  =new THREE.Vector3(CAVE.x,0,CAVE.z+.18);
 const STAY={pos:new THREE.Vector3(),kind:'stay',reach:1e9,arrive(){}};
@@ -1914,9 +1931,9 @@ function extTarget(){
     const to=lined?CAVE_MID:CAVE_PORCH;
     return{pos:to,kind:'cave',reach:.32,speed:.95,arrive(){
       if(!lined)return;
-      want=null;caveT=rand(10,20);bumpCount('cave');SFX.pop();
+      want=null;caveT=rand(10,20);caveSpot.set(q.x,0,q.z);bumpTask('cave');SFX.pop();
       say(pick(['My cave! So cosy.','Shh... I am hiding!','I love it in here.']),2.6);}};}
-  if(want==='bask'){if(!S.lamp){want=null;return null;}return{pos:SLATE,kind:'bask',reach:.35,speed:.8,arrive(){want=null;startAct('bask',7);say(pick(['Ahh, toasty!','So warm and cosy...','Sunbathing time!']),2.5);award('warm');bumpCount('bask');}};}
+  if(want==='bask'){if(!S.lamp){want=null;return null;}return{pos:SLATE,kind:'bask',reach:.35,speed:.8,arrive(){want=null;startAct('bask',7);say(pick(['Ahh, toasty!','So warm and cosy...','Sunbathing time!']),2.5);award('warm');bumpTask('bask');}};}
   if(want==='drink'){if(S.water<5){want=null;return null;}const s=growth();return{pos:new THREE.Vector3(4.9*KX-.6-1.4*s,0,2.1*KZ),kind:'drink',reach:.3,speed:.8,arrive(){want=null;startAct('drink',2.2);}};}
   return null;}
 
@@ -2296,16 +2313,22 @@ const GAMES={
           return{obj:o,out:new THREE.Vector3(ox,groundY(ox,oz),oz)};}).filter(Boolean);
       HIDE_SPOTS.forEach(s=>{s.rz=s.obj.rotation.z;s.prevKind=s.obj.userData.kind;s.obj.userData.kind='hidespot';});},
     update(g,dt){if(!g.spot){g.wait-=dt;if(g.round<3&&g.wait<3&&g.wait>0){showCd('🙈 '+Math.ceil(g.wait),true);}if(g.wait<=0){showCd(null);if(g.round>=3){endGame();return;}g.round++;g.spot=pick(HIDE_SPOTS.filter(s=>s!==g.last));g.last=g.spot;
-        G.head.getWorldPosition(tmp2);burst('💨',tmp2,5,{size:.4});G.root.visible=false;tone(500,.15,'sine',.05,.5);say('Ready or not... find me!',2.2);g.wig=1.5;g.hint=5;
-        if(!g.tip){const tg=new THREE.ConeGeometry(.13,1,12);tg.rotateZ(Math.PI/2);g.tip=new THREE.Mesh(tg,G.mats.skin);g.tip.castShadow=true;scene.add(g.tip);}
-        const o2=g.spot.obj.getWorldPosition(new THREE.Vector3());const side=o2.x<g.spot.out.x?1:-1;g.tip.position.set(g.spot.out.x+side*.7,.12,(o2.z+g.spot.out.z)/2);g.tip.rotation.y=side>0?Math.PI:0;g.tip.visible=false;}return;}
+        G.head.getWorldPosition(tmp2);burst('💨',tmp2,5,{size:.4});G.root.visible=false;tone(500,.15,'sine',.05,.5);say('Ready or not... find me!',2.2);g.wig=.8;g.hint=2.5;g.hint2=6;
+        if(!g.tip){const tg=new THREE.ConeGeometry(.2,1.5,12);tg.rotateZ(Math.PI/2);g.tip=new THREE.Mesh(tg,G.mats.skin);g.tip.castShadow=true;scene.add(g.tip);}
+        const o2=g.spot.obj.getWorldPosition(new THREE.Vector3());const side=o2.x<g.spot.out.x?1:-1;g.tip.position.set(g.spot.out.x+side*.8,.2,(o2.z+g.spot.out.z)/2);g.tip.rotation.y=side>0?Math.PI:0;g.tip.visible=false;}return;}
       g.hint-=dt;if(g.hint<=0&&g.tip&&!g.tip.visible){g.tip.visible=true;g.hints++;say('Hmm... can you see my tail?',2.2);}
       if(g.tip&&g.tip.visible){g.tip.rotation.x=Math.sin(T*9)*.5;}
-      const o=g.spot.obj;g.wig-=dt;if(g.wig<=0){g.wig=rand(2,3.5);g.shake=.6;}if(g.shake>0){g.shake-=dt;o.rotation.z=g.spot.rz+Math.sin(g.shake*40)*.06;}else o.rotation.z=g.spot.rz;},
+      /* still not found? sparkle over the spot so it cannot be missed */
+      if(g.tip&&g.tip.visible){g.hint2-=dt;if(g.hint2<=0){g.hint2=1.3;
+        burst('\u2728',tmp.copy(g.spot.out).setY(groundY(g.spot.out.x,g.spot.out.z)+.95),4,{size:.42,speed:.7,life:1.1});}}
+      const o=g.spot.obj;g.wig-=dt;if(g.wig<=0){g.wig=rand(1.1,2);g.shake=.7;}
+      if(g.shake>0){g.shake-=dt;o.rotation.z=g.spot.rz+Math.sin(g.shake*34)*.17;}else o.rotation.z=g.spot.rz;},
     hits(g){return g.spot?HIDE_SPOTS.map(s=>s.obj):[];},
     tap(g,h){if(!g.spot)return true;if(h.kind!=='hidespot')return true;const s=HIDE_SPOTS.find(x=>x.obj===h.obj);if(!s)return true;
       if(s===g.spot){if(g.tip)g.tip.visible=false;popText(g.hint>0?'+3':'+2',s.out,'#7CF29A');g.pts=(g.pts||0)+(g.hint>0?3:2);s.obj.rotation.z=s.rz;G.root.position.copy(s.out);AI.vy=0;G.root.rotation.y=0;G.root.visible=true;popT=0;g.score++;g.spot=null;g.wait=2.4;SFX.yay();burst('✨',tmp.copy(s.out).setY(.8),10,{size:.4});setTimeout(()=>{startAct('happy',1);say(pick(['You found me!','Peekaboo!','Aww, you found me!']),2);},200);}
-      else{g.wrong++;tone(200,.15,'triangle',.05);burst('❓',h.point,1,{size:.5,g:.3});say(pick(['Not in there!','Nope! Try again!','Getting warmer...']),1.3);}return true;},
+      else{g.wrong++;tone(200,.15,'triangle',.05);burst('❓',h.point,1,{size:.5,g:.3});
+        const far=h.point.distanceTo(g.spot.out);
+        say(far<2.6?pick(['Ooh, so close!','Warmer! Very warm!','Nearly!']):pick(['Not in there!','Cold! Try over there.','Nope, miles away!']),1.4);}return true;},
     target(g){return STAY;},
     stop(g){showCd(null);if(g.tip){scene.remove(g.tip);g.tip=null;}if(HIDE_SPOTS)HIDE_SPOTS.forEach(s=>{s.obj.rotation.z=s.rz;if(s.prevKind)s.obj.userData.kind=s.prevKind;else delete s.obj.userData.kind;});G.root.visible=true;},noCd:true,coins(g){return g.pts||0;},starsFn(g){return g.score<3?1:Math.max(1,3-Math.floor((g.wrong+g.hints)/2));},
     bar(g){return '🙈 Found '+g.score+' of 3';},result(s){return 'You found '+S.name+' '+s+' time'+(s===1?'':'s')+'!';}},
@@ -2476,7 +2499,7 @@ buildDecor();setBg(S.bg||'desert');wearHat(S.hat||'none');updateLampVisual();sea
 const justMoved=!!S.justMoved;if(justMoved){S.justMoved=false;save();}
 if(!S.hatched)G.root.visible=false;
 updateUI();
-const pctGrown=g=>Math.round(clamp((g-.5)/.72,0,1)*100);
+const pctGrown=g=>Math.round(clamp((g-.5)/GROW_MAX,0,1)*100);
 function welcomeBack(){
   if(peekMode)return;   /* just previewing his full size - nothing has actually happened */
   const td=todayKey(),now=growth(),was=S.seenGrowth||0;
