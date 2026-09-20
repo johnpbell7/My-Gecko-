@@ -7,13 +7,13 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="9">
+<meta name="build" content="10">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=9">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=9">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=9">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=9">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=9">
+<link rel="manifest" href="manifest.webmanifest?v=10">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=10">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=10">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=10">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -418,7 +418,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
 <div id="countdown" hidden></div>
 <div id="outBar" class="bar" hidden><span>🚪 Out on the table</span><button id="obHome">Home</button></div>
-<div id="peekBar" class="bar" hidden><span>👀 This is him fully grown</span><button id="pkDone">Done</button></div>
+<div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
 <div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
 <div id="toast"></div>
 <script>
@@ -467,20 +467,24 @@ const MORPHS={
 };
 
 /* ---------- saved state ---------- */
-const BUILD='9';
+/* peeking at him grown up shows the big tank as well. It rides in sessionStorage
+   so it cannot outlive the tab, and saving is off while it is on. */
+const PEEK_KEY='gecko-peek';
+let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
+const BUILD='10';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
 const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',tasks:null,taskDay:'',stars:0,chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
-let resetting=false,peek=false;
+let resetting=false,peek=peekMode;
 function hardReset(){resetting=true;S.name='';
   try{[KEY,PHOTO_KEY,'gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
     'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6']
     .forEach(k=>localStorage.removeItem(k));}catch(e){}
   try{sessionStorage.clear();}catch(e){}
   location.reload();}
-function save(){if(resetting||!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function save(){if(resetting||peekMode||!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 /* ---------- sound ---------- */
 let AC=null;
@@ -522,7 +526,7 @@ function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;
 function blob(mat,sx,sy,sz,x,y,z,parent){const m=new THREE.Mesh(SPH,mat);m.scale.set(sx,sy,sz);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;if(parent)parent.add(m);return m;}
 
 /* ---------- terrarium ---------- */
-const TL=S.tank||1,KX=TL>1?1.35:1,KZ=TL>1?1.25:1;
+const TL=peekMode?2:(S.tank||1),KX=TL>1?1.35:1,KZ=TL>1?1.25:1;
 const TANK={w:15*KX,d:8.6*KZ,h:5.4},BX=6.3*KX,Z0=-1.7*KZ,Z1=3.4*KZ;
 /* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
 const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62,rIn:1.2,mouth:.72,h:1.15};
@@ -2387,16 +2391,14 @@ function refreshMore(){}
 function openSettings(){$('#setBuild').textContent=BUILD;$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
   const rb=$('#setReset');rb.classList.remove('sure');rb.textContent='Start again with a new egg';
   $('#settings').hidden=false;}
-let resetArm=0;
-$('#setReset').onclick=()=>{const b=$('#setReset'),why=$('#setResetWhy');
-  if(!b.classList.contains('sure')){b.classList.add('sure');
-    b.textContent='Tap again to say goodbye to '+(S.name||'your gecko');
-    why.textContent='Are you sure? '+(S.name||'Your gecko')+' and everything you have collected will be gone.';
-    clearTimeout(resetArm);resetArm=setTimeout(()=>{b.classList.remove('sure');
-      b.textContent='\uD83E\uDD5A Start again with a new egg';
-      why.textContent='This says goodbye to your gecko for good \u2014 his name, his age, his coins, every sticker, every photo and everything you have bought. There is no undo. Save a backup first if you might want him back.';},14000);
-    return;}
-  clearTimeout(resetArm);hardReset();};
+/* a card to confirm, not two taps on a button that moves between them */
+$('#setReset').onclick=()=>{
+  $('#settings').hidden=true;$('#more').hidden=true;
+  $('#cExtra').innerHTML='<button class="wipe" id="resetYes">Yes, start again</button>';
+  openCard('\uD83E\uDD5A','Start again?',
+    (S.name||'Your gecko')+', his age, his coins, every sticker, every photo and everything you have bought will be gone for good. There is no undo.',true);
+  $('#cOk').textContent='No, keep him';
+  const y=$('#resetYes');if(y)y.onclick=()=>{$('#card').hidden=true;$('#cOk').textContent='OK';hardReset();};};
 $('#setSchool').onchange=e=>{S.school=e.target.checked;save();};$('#setBed').onchange=e=>{S.bedtime=parseFloat(e.target.value);save();updateUI();};
 $('#photoSave').onclick=()=>{
   try{const src=$('#photoImg').src;if(!src)return;
@@ -2426,9 +2428,13 @@ $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return
     catch(err){toast('That file is not a My Gecko backup.');}};
   r.onerror=()=>toast('Could not read that file.');
   r.readAsText(f);e.target.value='';};
-$('#setPeek').onclick=()=>{peek=true;$('#settings').hidden=true;$('#more').hidden=true;$('#peekBar').hidden=false;
-  say('Look how big I get!',3);updateUI();};
-$('#pkDone').onclick=()=>{peek=false;$('#peekBar').hidden=true;updateUI();};
+$('#setPeek').onclick=()=>{
+  try{sessionStorage.setItem(PEEK_KEY,'1');}catch(e){}
+  save();location.reload();};
+$('#setPeekOld')&&($('#setPeekOld').onclick=()=>{peek=true;$('#settings').hidden=true;$('#more').hidden=true;$('#peekBar').hidden=false;
+  say('Look how big I get!',3);updateUI();});
+$('#pkDone').onclick=()=>{try{sessionStorage.removeItem(PEEK_KEY);}catch(e){}location.reload();};
+if(peekMode){$('#peekBar').hidden=false;setTimeout(()=>say('Look how big I get \u2014 and what a big tank!',3.5),1400);}
 $('#setSound').onchange=e=>{S.sound=e.target.checked;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 function moreAction(k){({catch:()=>startGame('catch'),hide:()=>startGame('hide'),feather:()=>startGame('feather'),bubbles:()=>startGame('bubbles'),water:refill,treat:giveTreat,lamp:toggleLamp,vet:vet,call:callName,
   out:()=>{outside?sendHome():letOut();},jobs:openTasks,journey:openJourney,album:openAlbum,shop:openShop,decorate:()=>startDecorate(),stickers:openStickers,fact:showFact,settings:openSettings}[k]||function(){})();}
@@ -2472,6 +2478,7 @@ if(!S.hatched)G.root.visible=false;
 updateUI();
 const pctGrown=g=>Math.round(clamp((g-.5)/.72,0,1)*100);
 function welcomeBack(){
+  if(peekMode)return;   /* just previewing his full size - nothing has actually happened */
   const td=todayKey(),now=growth(),was=S.seenGrowth||0;
   const grew=was>0&&now-was>.008, newDay=!!S.seenDay&&S.seenDay!==td;
   S.seenGrowth=now;S.seenDay=td;save();
