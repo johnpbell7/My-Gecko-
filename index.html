@@ -6,12 +6,14 @@
 <title>My Gecko</title>
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta name="build" content="6">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest?v=6">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=6">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=6">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=6">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -95,6 +97,7 @@ canvas{position:fixed;inset:0;display:block}
 .go{width:100%;border:0;border-radius:22px;background:#3FCB7A;color:#fff;font:400 24px var(--display);letter-spacing:.3px;padding:12px;box-shadow:0 6px 0 #25915A;cursor:pointer}
 .reset{margin-top:14px;border:0;background:none;color:var(--ink);opacity:.7;font:700 15px var(--font);text-decoration:underline;cursor:pointer;padding:6px}
 .reset[hidden]{display:none}
+.build{margin:10px 0 0;text-align:center;font:600 12px var(--font);opacity:.45}
 .reset.sure{opacity:1;color:#fff;background:#FF5A5F;text-decoration:none;border-radius:14px;padding:8px 14px}
 .overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(30,20,60,.35);padding:16px;z-index:6}
 .overlay[hidden]{display:none}
@@ -394,6 +397,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <label class="row"><span><b>Bedtime</b><small>He gets sleepy from this time</small></span><select id="setBed"><option value="19">7:00pm</option><option value="19.5">7:30pm</option><option value="20">8:00pm</option><option value="20.5">8:30pm</option><option value="21">9:00pm</option></select></label>
   <label class="row"><span><b>Sound</b></span><input type="checkbox" id="setSound"></label>
   <button class="reset" id="setReset">Start again with a new egg</button>
+  <p class="build">Version <b id="setBuild"></b></p>
   <button class="go ghost" data-close>Done</button></div></div>
 <div id="card" class="overlay" hidden><div class="sheet"><div class="big" id="cIcon"></div><h1 id="cTitle"></h1><p id="cText"></p><div id="cExtra"></div><button class="go" id="cOk" data-close>OK</button></div></div>
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
@@ -447,9 +451,10 @@ const MORPHS={
 };
 
 /* ---------- saved state ---------- */
-const KEY='gecko-pet-v5';
-try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4',
-  'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+const BUILD='6';
+const KEY='gecko-pet-v6';
+try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5',
+  'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5'].forEach(k=>localStorage.removeItem(k));}catch(e){}
 const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',tasks:null,taskDay:'',stars:0,chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
 let resetting=false;
@@ -1915,7 +1920,7 @@ $('#obHome').onclick=sendHome;
 $('#dbRemove').onclick=()=>{if(sel<0)return;S.decor.splice(sel,1);sel=-1;buildDecor();updDecoBar();SFX.pop();save();};
 
 /* ---------- photo album ---------- */
-const PHOTO_KEY='gecko-photos-v5';
+const PHOTO_KEY='gecko-photos-v6';
 function loadPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||'[]');}catch(e){return [];}}
 function savePhoto(c){try{const t=document.createElement('canvas');t.width=t.height=360;t.getContext('2d').drawImage(c,0,0,360,360);let arr=loadPhotos();arr.unshift({d:t.toDataURL('image/jpeg',.72),cap:S.name+', day '+(Math.floor(ageDays())+1)});arr=arr.slice(0,12);
   for(let k=0;k<4;k++){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(arr));break;}catch(e){arr=arr.slice(0,Math.max(1,arr.length-3));}}}catch(e){}}
@@ -2093,7 +2098,7 @@ function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
 
 /* ---------- More sheet actions, settings ---------- */
 function refreshMore(){}
-function openSettings(){$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
+function openSettings(){$('#setBuild').textContent=BUILD;$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
   const rb=$('#setReset');rb.classList.remove('sure');rb.textContent='Start again with a new egg';
   $('#settings').hidden=false;}
 $('#setReset').onclick=()=>{const b=$('#setReset');
