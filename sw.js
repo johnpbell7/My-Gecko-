@@ -37,12 +37,17 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (url.pathname.endsWith('/version.json')) {
+    e.respondWith(fetch(req, { cache: 'no-store' }).catch(() => new Response('{}', {
+      headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
 
   /* the page itself: newest build when there is signal, cached copy when there is not */
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       try {
-        const fresh = await timeout(fetch(req), 4000);
+        const fresh = await timeout(fetch(req, { cache: 'reload' }), 4000);
         const c = await caches.open(VERSION);
         c.put('./index.html', fresh.clone());
         return fresh;

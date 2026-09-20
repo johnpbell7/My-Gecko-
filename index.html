@@ -1561,6 +1561,16 @@ function updateUI(){checkAwards();for(const k of['hunger','fun','clean','energy'
 setInterval(updateUI,700);setInterval(()=>{if(S.hatched)save();},5000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.hatched)save();});
 window.addEventListener('pagehide',()=>{if(S.hatched)save();});
+/* if this copy is older than the one on the server, take the new one, once.
+   version.json is a few bytes, so the check costs nothing on mobile data. */
+try{if(!sessionStorage.getItem('gecko-refreshed')){
+  setTimeout(()=>{fetch('version.json?t='+Date.now(),{cache:'no-store'})
+    .then(r=>r.json()).then(v=>{
+      if(v&&v.build&&String(v.build)!==BUILD){
+        try{sessionStorage.setItem('gecko-refreshed','1');}catch(e){}
+        toast('\u2728 Getting the newest version...');
+        setTimeout(()=>location.reload(true),1200);}})
+    .catch(()=>{});},3500);}}catch(e){}
 /* so you can tell at a glance whether the phone picked up the new build */
 try{const bk='gecko-build',was=localStorage.getItem(bk);
   if(was!==BUILD){localStorage.setItem(bk,BUILD);
