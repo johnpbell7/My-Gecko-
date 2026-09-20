@@ -165,6 +165,13 @@ canvas{position:fixed;inset:0;display:block}
 .grow{display:flex;align-items:center;gap:9px;margin:4px 0 14px;font:800 12px var(--font)}
 .grow span{flex:1;height:15px;border-radius:999px;background:var(--shade);overflow:hidden}
 .grow i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#FFC53D,#3FCB7A);transition:width 1.1s cubic-bezier(.2,1,.3,1)}
+.job{display:flex;align-items:center;gap:10px;background:var(--shade);border-radius:18px;padding:10px 12px;margin-bottom:8px;text-align:left}
+.job.ok{background:rgba(63,203,122,.28)}
+.job .ji{font-size:26px;flex:none;width:38px;text-align:center}
+.job b{display:block;font-size:15px;line-height:1.2}
+.job .bar2{display:block;height:9px;border-radius:99px;background:rgba(0,0,0,.14);overflow:hidden;margin-top:6px}
+.job .bar2 i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#FFC53D,#3FCB7A);transition:width .5s}
+.job .tick{font:700 14px var(--font);flex:none;min-width:34px;text-align:right}
 .starsRow{font-size:40px;letter-spacing:4px;margin:-4px 0 6px}
 .starsRow .off{filter:grayscale(1);opacity:.3}
 .again{width:100%;border:0;border-radius:22px;background:#FF5FA2;color:#fff;font:400 22px var(--display);letter-spacing:.3px;padding:11px;box-shadow:0 6px 0 #C23270;cursor:pointer;margin-bottom:12px}
@@ -176,13 +183,6 @@ canvas{position:fixed;inset:0;display:block}
 #gbStop:active{transform:translateY(3px);box-shadow:none}
 .bar button.alt{background:var(--shade);color:var(--ink)}
 #dbDone{background:#3FCB7A}
-#handsWrap{position:fixed;left:50%;bottom:0;width:min(102%,480px);z-index:3;pointer-events:none;
-  transform:translate(-50%,44%);opacity:0;filter:drop-shadow(0 -6px 14px rgba(90,50,20,.22));
-  transition:transform .5s cubic-bezier(.2,1.25,.4,1),opacity .4s ease}
-#handsWrap.show{transform:translate(-50%,0);opacity:1}
-#handsWrap[hidden]{display:none}
-#handsWrap svg{width:100%;height:auto;display:block}
-body.holding #tray{opacity:0;pointer-events:none}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 110px);transform:translate(-50%,10px);opacity:0;background:#2B1D3A;color:#fff;font:800 16px var(--font);padding:10px 16px;border-radius:16px;z-index:9;transition:.3s;pointer-events:none;max-width:86vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 body[data-bg="jungle"] #sky{background:linear-gradient(#6FD19A,#D8F5C8)}
@@ -356,7 +356,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <button class="act" id="bClean" style="--b:#35A9F0;--s:#1A74B0"><i>🧽</i>Clean<b class="n" id="cleanN" hidden>0</b></button>
   <button class="act" id="bSleep" style="--b:#8B6CF0;--s:#5A3FB8"><i>🌙</i><span>Sleep</span></button>
   <button class="act" id="bMed"   style="--b:#3FCB7A;--s:#25915A"><i>💊</i>Medicine</button>
-  <button class="act" id="bMore" style="--b:#FFC53D;--s:#C78F0A;--t:#2B1D3A"><i>✨</i>More</button>
+  <button class="act" id="bMore" style="--b:#FFC53D;--s:#C78F0A;--t:#2B1D3A"><i>✨</i>More<b class="n" id="moreN" hidden>⭐</b></button>
 </nav>
 
 <div id="picker" hidden>
@@ -383,6 +383,10 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="shop" class="overlay" hidden><div class="sheet scroll"><h1>Shop</h1><p>You have 🪙 <b id="shopCoins">0</b> coins</p>
   <h2>Decorations</h2><div class="tiles" id="shopDecor"></div><h2>Backgrounds</h2><div class="tiles" id="shopBg"></div><h2>Hats</h2><div class="tiles" id="shopHat"></div>
   <button class="go ghost" data-close>Close</button></div></div>
+<div id="tasks" class="overlay" hidden><div class="sheet scroll"><h1>Today's jobs</h1>
+  <p id="tkSub"></p><div id="tkList"></div>
+  <button class="again" id="tkClaim" hidden>⭐ Collect your star!</button>
+  <button class="go ghost" data-close>Close</button></div></div>
 <div id="stickers" class="overlay" hidden><div class="sheet scroll"><h1>Sticker book</h1><p id="stSub"></p><div class="tiles" id="stTiles"></div><button class="go ghost" data-close>Close</button></div></div>
 <div id="album" class="overlay" hidden><div class="sheet scroll"><h1>Photo album</h1><p id="albumSub"></p><div class="album" id="albumGrid"></div><button class="go ghost" data-close>Close</button></div></div>
 <div id="settings" class="overlay" hidden><div class="sheet"><h1>For grown-ups</h1>
@@ -394,39 +398,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="card" class="overlay" hidden><div class="sheet"><div class="big" id="cIcon"></div><h1 id="cTitle"></h1><p id="cText"></p><div id="cExtra"></div><button class="go" id="cOk" data-close>OK</button></div></div>
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
 <div id="countdown" hidden></div>
-<div id="holdBar" class="bar" hidden><span>🤲 Holding </span><button id="hbBack">Put him back</button></div>
 <div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
-<div id="handsWrap" hidden aria-hidden="true">
-<svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
-<defs>
- <linearGradient id="hSk" x1=".1" y1="0" x2=".5" y2="1">
-  <stop offset="0" stop-color="#FDE0C8"/><stop offset=".5" stop-color="#F3C8A4"/><stop offset="1" stop-color="#DFA980"/></linearGradient>
- <linearGradient id="hSl" x1="0" y1="0" x2=".2" y2="1">
-  <stop offset="0" stop-color="#78C0F2"/><stop offset="1" stop-color="#3C8AD0"/></linearGradient>
- <g id="hnd">
-  <path d="M-36 230 L-52 60 q-2 -14 12 -16 l58 0 q13 2 12 16 l-22 170 Z" fill="url(#hSl)"/>
-  <rect x="-50" y="34" width="100" height="30" rx="15" fill="#EAF4FE"/>
-  <path d="M-62 44 q-12 -48 2 -76 q14 -30 52 -32 q40 -2 56 26 q16 28 8 74 q-4 22 -30 24 l-58 2 q-26 -2 -30 -18 Z" fill="url(#hSk)"/>
-  <g fill="url(#hSk)" stroke="#D69A71" stroke-width="2.2" stroke-linejoin="round">
-   <rect x="-64" y="-108" width="28" height="66" rx="14" transform="rotate(-16 -50 -75)"/>
-   <rect x="-33" y="-118" width="28" height="74" rx="14" transform="rotate(-6 -19 -81)"/>
-   <rect x="-2" y="-116" width="28" height="72" rx="14" transform="rotate(5 12 -80)"/>
-   <rect x="29" y="-102" width="27" height="62" rx="13.5" transform="rotate(16 42 -71)"/></g>
-  <g fill="#FFCFC4">
-   <ellipse cx="-52" cy="-99" rx="9" ry="6.5" transform="rotate(-16 -52 -99)"/>
-   <ellipse cx="-21" cy="-109" rx="9" ry="6.5" transform="rotate(-6 -21 -109)"/>
-   <ellipse cx="10" cy="-107" rx="9" ry="6.5" transform="rotate(5 10 -107)"/>
-   <ellipse cx="40" cy="-93" rx="8.5" ry="6" transform="rotate(16 40 -93)"/></g>
-  <g fill="url(#hSk)" stroke="#D69A71" stroke-width="2.2">
-   <rect x="-100" y="-56" width="30" height="76" rx="15" transform="rotate(-36 -85 -18)"/></g>
-  <ellipse cx="-104" cy="-42" rx="9.5" ry="7" transform="rotate(-36 -104 -42)" fill="#FFCFC4"/>
-  <path d="M-58 -34 q58 30 116 4 q-2 40 -56 42 q-56 -2 -60 -46 Z" fill="#DFA57B" opacity=".32"/>
-  <ellipse cx="-4" cy="-30" rx="46" ry="16" fill="#C98F66" opacity=".22"/>
- </g>
-</defs>
-<use href="#hnd" transform="translate(140 158) rotate(-15)"/>
-<use href="#hnd" transform="translate(260 158) scale(-1 1) rotate(-15)"/>
-</svg></div>
 <div id="toast"></div>
 <script>
 /* ---------- intro splash controller (runs before the 3D engine loads) ---------- */
@@ -477,7 +449,7 @@ const MORPHS={
 const KEY='gecko-pet-v5';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4'].forEach(k=>localStorage.removeItem(k));}catch(e){}
-const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
+const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',tasks:null,taskDay:'',stars:0,chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
 let resetting=false;
 function hardReset(){resetting=true;S.name='';
@@ -680,10 +652,10 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
 })();
 function dotTexR(){if(dotTexR.t)return dotTexR.t;return dotTexR.t=canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});}
 /* ---------- upper level ---------- */
-const LEDGE_H=1.32;
-const LEDGE={x0:-3.05*KX,x1:2.2*KX,z0:Z0-.05,z1:-.30*KZ};
-const RAMP ={x0:2.2*KX, x1:4.8*KX, z0:Z0-.05,z1:-.42*KZ};
-const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.4,0,(RAMP.z0+RAMP.z1)/2);
+const LEDGE_H=1.16;
+const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-.05,z1:-.34*KZ};
+const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
+const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
 const RAMP_TOP =new THREE.Vector3(LEDGE.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
 function inRect(r,x,z){return x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1;}
 function groundY(x,z){
@@ -701,17 +673,23 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   body.position.set(cx,LEDGE_H/2,cz-.85);body.castShadow=body.receiveShadow=true;scene.add(body);
   const top=new THREE.Mesh(new THREE.BoxGeometry(w-.06,.1,d-.06),M(0xD89D5A,{roughness:.96}));
   top.position.set(cx,LEDGE_H-.045,cz);top.receiveShadow=true;scene.add(top);
-  /* boulders along the face so it reads as rock, not a crate */
-  for(let i=0;i<6;i++){const r=.5+((i*37)%13)/26;
-    const b=new THREE.Mesh(rockGeo(r,130+i*7),rockMat);
-    b.position.set(LEDGE.x0+(i+.5)*w/6+rand(-.2,.2),r*.42,LEDGE.z1+.12);
-    b.scale.y=rand(.75,1.15);b.rotation.y=rand(0,3);b.castShadow=b.receiveShadow=true;scene.add(b);}
+  /* a rounded lip, then boulders at the ends and behind - never in front,
+     so nothing can stand between her and the gecko */
+  const lip=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,w,20),rockMat);
+  lip.rotation.z=Math.PI/2;lip.position.set(cx,LEDGE_H-.12,LEDGE.z1);
+  lip.castShadow=lip.receiveShadow=true;scene.add(lip);
+  [[LEDGE.x0-.34,.9,.1],[LEDGE.x0-.2,.66,-1.0],[LEDGE.x1+.32,.86,.05],[LEDGE.x1+.16,.6,-.95],
+   [cx-1.5,.72,-1.5],[cx+1.2,.8,-1.6]].forEach(([bx,br,bz],i)=>{
+    const k=new THREE.Mesh(rockGeo(br,140+i*11),rockMat);
+    k.position.set(bx,br*.5,cz+bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
+    k.castShadow=k.receiveShadow=true;scene.add(k);});
+  body.name='ledgeBody';body.userData.kind='ledge';
   /* the ramp he walks up */
   const rw=RAMP.x1-RAMP.x0,len=Math.hypot(rw,LEDGE_H),ang=Math.atan2(LEDGE_H,rw);
   const bt2=barkTex();bt2.wrapS=bt2.wrapT=THREE.RepeatWrapping;bt2.repeat.set(3,1);
   const plank=new THREE.Mesh(new THREE.BoxGeometry(len+.3,.2,RAMP.z1-RAMP.z0),M(0xffffff,{map:bt2,bumpMap:bt2,bumpScale:.04,roughness:.92}));
   plank.position.set((RAMP.x0+RAMP.x1)/2,LEDGE_H/2,(RAMP.z0+RAMP.z1)/2);plank.rotation.z=-ang;
-  plank.castShadow=plank.receiveShadow=true;scene.add(plank);
+  plank.castShadow=plank.receiveShadow=true;plank.userData.kind='ledge';plank.name='rampPlank';scene.add(plank);
   for(let i=1;i<7;i++){const t=i/7;
     const rg=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,RAMP.z1-RAMP.z0-.1),M(0x6B4326,{roughness:.9}));
     rg.position.set(RAMP.x0+rw*t,LEDGE_H*(1-t)+.13,(RAMP.z0+RAMP.z1)/2);rg.rotation.z=-ang;scene.add(rg);}
@@ -727,21 +705,22 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   for(let i=0;i<9;i++){const l=new THREE.Mesh(snakeLeaf(rand(.8,1.5),rand(.3,1)),snakeMat);
     l.rotation.set(rand(-.3,.15),i/9*6.28,rand(-.35,.35));l.userData.rz=l.rotation.z;l.castShadow=true;fern.add(l);}
   /* extra cover down on the sand */
-  [[-5.4,1.5,.8],[5.5,.4,.72]].forEach(([x,z,r],i)=>{
+  [[-6.0,2.9,.68],[6.0,-1.15,.62]].forEach(([x,z,r],i)=>{
     const b=new THREE.Mesh(rockGeo(r,211+i*9),rockMat);
     b.position.set(x*KX,r*.45,z*KZ);b.scale.y=rand(.85,1.2);b.rotation.y=rand(0,3);
     b.castShadow=b.receiveShadow=true;scene.add(b);});
 })();
-const STATIC_OBS=[{x:-4.6,z:-2.3,r:1.55},{x:4.9,z:2.1,r:.8},{x:5.7,z:-2.9,r:.9},{x:-6.5,z:.9,r:.6},{x:3.2,z:-3.1,r:.8},
-  {x:-5.4,z:1.5,r:.85},{x:5.5,z:.4,r:.78}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
+const STATIC_OBS=[{x:-4.6,z:-2.3,r:1.5},{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x:3.2,z:-3.1,r:.72},
+  {x:-6.0,z:2.9,r:.7}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
 function obstacles(){const o=STATIC_OBS.slice();for(const d of S.decor)o.push({x:d.x,z:d.z,r:.55});return o;}
 function keepIn(p){p.x=clamp(p.x,-BX,BX);p.z=clamp(p.z,Z0,Z1);
+  if(inRect(RAMP,p.x,p.z)&&p.y>.1){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
   if(p.y<LEDGE_H-.42&&inRect(LEDGE,p.x,p.z)&&!inRect(RAMP,p.x,p.z)){
     const outF=LEDGE.z1-p.z,outL=p.x-LEDGE.x0,outR=LEDGE.x1-p.x;
     if(outF<=outL&&outF<=outR)p.z=LEDGE.z1+.06;
     else if(outL<outR)p.x=LEDGE.x0-.06;else p.x=LEDGE.x1+.06;}
   if(onHigh(p))return;
-  for(const o of obstacles()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+.35;if(d<r&&d>1e-4){p.x=o.x+dx/d*r;p.z=o.z+dz/d*r;}}}
+  for(const o of obstacles()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+.2;if(d<r&&d>1e-4){p.x=o.x+dx/d*r;p.z=o.z+dz/d*r;}}}
 function avoidAngle(p,a){if(onHigh(p))return a;
   for(const o of obstacles()){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
   if(Math.abs(side)<r){const push=(1-Math.abs(side)/r)*1.2*Math.min(1,(r+1.8-d)/1.8);a+=side>0?-push:push;}}return a;}
@@ -869,7 +848,7 @@ function safeHome(){const free=v=>obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.
 function freeMouth(){if(ball&&ball.state==='carried'){dropBall();return true;}return false;}
 function pickUpBall(){if(!ball||ball.state!=='flying'||ball.m.position.y>.9)return;ball.state='carried';ball.v.set(0,0,0);const sc=G.root.scale.x||1;G.head.add(ball.m);ball.m.position.set(0,-.14,.98);ball.m.scale.setScalar(.8/sc);ball.m.rotation.set(0,0,0);
   ball.carryT=0;FETCH_HOME.copy(safeHome());SFX.pop();startAct('happy',.35);say(pick(['Got it!','Mine!','Coming back!']),1.3);}
-function dropBall(){if(!ball||ball.state!=='carried')return;G.head.remove(ball.m);scene.add(ball.m);ball.m.scale.setScalar(1);ball.m.position.copy(readySpot());ball.state='ready';ball.idle=0;ball.fetches++;
+function dropBall(){if(!ball||ball.state!=='carried')return;G.head.remove(ball.m);scene.add(ball.m);ball.m.scale.setScalar(1);ball.m.position.copy(readySpot());ball.state='ready';ball.idle=0;ball.fetches++;bumpTask('fetch');
   G.root.rotation.y=lerpAngle(G.root.rotation.y,0,1);S.fun=clamp(S.fun+8,0,100);S.energy=clamp(S.energy-2,0,100);popText('+1',ball.m.position,'#7CF29A');earn(1);SFX.chirp();
   setTimeout(()=>{startAct('happy',.8);say(S.energy<12?"Phew, I'm tired now...":pick(['Again! Again!','Throw it again!','That was fun!','One more time!']),2);},150);if(ball.fetches===5)award('game');updateUI();}
 function updateBall(dt){if(!ball)return;
@@ -895,8 +874,8 @@ function addWee(x,z){const g=new THREE.Group();g.userData.kind='wee';const m=MP(
   const px=clamp(x,-BX,BX),pz=clamp(z,Z0-.2,Z1);g.position.set(px,groundY(px,pz),pz);g.rotation.y=rand(0,6);scene.add(g);wees.push(g);}
 for(let i=0;i<Math.min(S.poops||0,POOP_MAX);i++){const q=looSpot();addPoop(q.x,q.z);}
 for(let i=0;i<Math.min(S.wees||0,WEE_MAX);i++){const q=looSpot();addWee(q.x,q.z);}
-function scoop(g){const i=poops.indexOf(g);if(i<0)return;poops.splice(i,1);scene.remove(g);burst('💧',g.position,4,{size:.35});burst('✨',g.position,3,{size:.35});S.clean=clamp(S.clean+10,0,100);SFX.pop();earn(poops.length||wees.length?0:1);updateUI();}
-function wipe(g){const i=wees.indexOf(g);if(i<0)return;wees.splice(i,1);scene.remove(g);burst('💧',g.position,4,{size:.32});burst('✨',g.position,2,{size:.3});S.clean=clamp(S.clean+7,0,100);SFX.splash();updateUI();}
+function scoop(g){const i=poops.indexOf(g);if(i<0)return;poops.splice(i,1);scene.remove(g);burst('💧',g.position,4,{size:.35});burst('✨',g.position,3,{size:.35});S.clean=clamp(S.clean+10,0,100);SFX.pop();bumpTask('tidy');earn(poops.length||wees.length?0:1);updateUI();}
+function wipe(g){const i=wees.indexOf(g);if(i<0)return;wees.splice(i,1);scene.remove(g);burst('💧',g.position,4,{size:.32});burst('✨',g.position,2,{size:.3});S.clean=clamp(S.clean+7,0,100);SFX.splash();bumpTask('tidy');updateUI();}
 /* he needs the loo on his own schedule, not only after a meal */
 let pooT=rand(30,70);
 function goLoo(both){if(poops.length>=POOP_MAX&&wees.length>=WEE_MAX)return;
@@ -950,7 +929,7 @@ function startAct(type,d){AI.act=type;AI.actT=0;AI.actD=d;}
 function lerpAngle(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t;}
 function angDiff(a,b){return ((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;}
 let T=0;
-function eatCricket(c){scene.remove(c.g);crickets.splice(crickets.indexOf(c),1);startAct('eat',.55);S.hunger=clamp(S.hunger+15,0,100);earn(1);award('feed');S.fun=clamp(S.fun+2,0,100);SFX.crunch();
+function eatCricket(c){scene.remove(c.g);crickets.splice(crickets.indexOf(c),1);startAct('eat',.55);bumpTask('eat');S.hunger=clamp(S.hunger+15,0,100);earn(1);award('feed');S.fun=clamp(S.fun+2,0,100);SFX.crunch();
   G.head.getWorldPosition(tmp2);burst('✨',tmp2,3,{size:.35});
   if(!crickets.length){say(pick(['Yum yum!','Crunchy! Thank you!','My tummy is happy!']));
     if(Math.random()<.85)setTimeout(()=>{if(!S.asleep&&!game)goLoo();},rand(6000,14000));}}
@@ -988,10 +967,10 @@ function updateGecko(dt){
         else if(h.kind==='treat'){if(treat)eatTreat();}
         else{const c=h.c;
           if(c&&crickets.indexOf(c)>=0&&c.g.position.distanceTo(p)<2.4*growth()){
-            burst('\U0001f4a8',c.g.position,4,{size:.34,speed:.9,life:.7});popText('GOT IT!',c.g.position,'#FFD23F');eatCricket(c);}
+            burst('💨',c.g.position,4,{size:.34,speed:.9,life:.7});popText('GOT IT!',c.g.position,'#FFD23F');eatCricket(c);}
           else say(pick(['Missed it!','So close!','It got away!']),1.4);}}}}
   else if(AI.strokeT>0){}
-  else if(!holding&&(!S.asleep||!AI.inBed)){
+  else if(!S.asleep||!AI.inBed){
     let tgt=null,kind=null;
     const ext=S.asleep?null:extTarget();
     if(ext){tgt=ext.pos;kind=ext.kind;}
@@ -1001,7 +980,7 @@ function updateGecko(dt){
     else if(ball&&ball.state==='flying'){if(ball.chase<=0){tgt=ball.m.position;kind='ball';}}
     else if(ball&&(ball.state==='ready'||ball.state==='held')){tmp2.set(ball.m.position.x-p.x,0,ball.m.position.z-p.z);G.root.rotation.y=lerpAngle(G.root.rotation.y,Math.atan2(tmp2.x,tmp2.z),Math.min(1,dt*4));AI.crouch=ball.state==='held'?.8:0;}
     else{AI.wander-=dt;
-      if(AI.wander<=0){AI.wander=rand(3,7);
+      if(AI.wander<=0&&!AI.route){AI.wander=rand(3,7);
         const want=Math.random()<.34?ledgeSpot():(Math.random()<.78?freeSpot(p):null);
         AI.route=want?planRoute(want):null;AI.target=AI.route?AI.route[0]:null;}
       tgt=AI.target;kind='wander';}
@@ -1024,11 +1003,11 @@ function updateGecko(dt){
   }
   if(AI.act==='pounce'&&AI.actT<AI.actD*.65){p.x+=Math.sin(G.root.rotation.y)*3.2*dt;p.z+=Math.cos(G.root.rotation.y)*3.2*dt;}
   if(!moving&&AI.act!=='pounce'){if(AI.v>.02){p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;}AI.v*=Math.max(0,1-dt*10);}
-  if(!holding){keepIn(p);
+  {keepIn(p);
     const gy=groundY(p.x,p.z);
     if(p.y>gy+1e-4){AI.vy=(AI.vy||0)-15*dt;p.y+=AI.vy*dt;
       if(p.y<=gy){const hard=AI.vy<-2.2;p.y=gy;AI.vy=0;
-        if(hard){burst('\U0001f4a8',tmp2.set(p.x,gy+.14,p.z),4,{size:.3,speed:.8,life:.6});tone(150,.09,'triangle',.045);}}}
+        if(hard){burst('💨',tmp2.set(p.x,gy+.14,p.z),4,{size:.3,speed:.8,life:.6});tone(150,.09,'triangle',.045);}}}
     else{p.y=gy;AI.vy=0;}}
   if(S.asleep&&AI.inBed&&!AI.act)G.root.rotation.y=lerpAngle(G.root.rotation.y,.3,Math.min(1,dt*2));
   if(AI.act==='spin'){G.root.rotation.y+=dt*Math.PI*2/AI.actD;AI.turnAcc+=dt*Math.PI*2/AI.actD;}
@@ -1136,10 +1115,6 @@ function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.
 window.addEventListener('resize',resize);resize();
 function updateCam(dt){if(cine){cineCam();return;}
   camA+=(camT-camA)*Math.min(1,dt*6);const portrait=camera.aspect<1;const wide=typeof game!=='undefined'&&game&&game.kind==='hide';
-  if(holding){const hd=portrait?6.9:5.4,drop=portrait?1.18:.92;
-    look.x+=(HOLD.x-look.x)*Math.min(1,dt*3.5);look.z+=(HOLD.z-look.z)*Math.min(1,dt*3.5);
-    look.y+=((HOLD.y+drop)-look.y)*Math.min(1,dt*3.5);
-    camera.position.set(HOLD.x,HOLD.y+drop+.18,HOLD.z+hd);camera.lookAt(look);return;}
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
   const dist=((portrait?8.6:10.5)+(growth()-.85)*5+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
@@ -1175,19 +1150,19 @@ let itch=null,itchT=rand(40,80);
 function startItch(){if(itch||!S.hatched||S.asleep||S.shed>0||game||hatch.active||!G.root.visible)return;
   const sp=pick(ITCH_SPOTS);itch={u:sp[0],name:sp[1],amt:1,t:0,said:false};SFX.chirp();
   say(pick(['Ooh! My '+sp[1]+' is itchy!',"I've got an itch on my "+sp[1]+'!','Scratch my '+sp[1]+', please!']),4);
-  toast('☝️ Rub the red circle to scratch his '+sp[1]+'!');updateUI();}
+  toast('☝️ He is sitting still — rub the red circle on his '+sp[1]+'!');updateUI();}
 function clearItch(){itch=null;itchMark.visible=false;}
 function updateItch(dt){
   if(!itch||!G.root.visible||S.asleep){itchMark.visible=false;return;}
   const u=itch.u,i=Math.round(u*(NR-1)),rx=prof(PRX,u),ry=rx*prof(PRY,u);
   tmp2.set(SP.x[i],prof(PCY,u)+ry*.95,SP.z[i]);G.bodyP.localToWorld(tmp2);
   itchMark.position.copy(tmp2);itchMark.visible=true;
-  const sz=(.5+.5*itch.amt)*growth()*(1+.14*Math.sin(T*7));itchMark.scale.set(sz,sz,1);
+  const sz=(.78+.5*itch.amt)*growth()*(1+.14*Math.sin(T*7));itchMark.scale.set(sz,sz,1);
   itchMark.material.rotation=Math.sin(T*8)*.3;itchMark.material.opacity=.6+.4*Math.abs(Math.sin(T*3));
-  itch.t+=dt;if(itch.t>95){clearItch();if(bubbleTimer<=0)say('Phew, the itch went away.',2);updateUI();}}
+  itch.t+=dt;if(itch.t>150){clearItch();if(bubbleTimer<=0)say('Phew, the itch went away.',2);updateUI();}}
 function scratchAt(pt){
   if(!itch||S.asleep||!itchMark.visible)return false;
-  if(pt.distanceTo(itchMark.position)>.55*growth()+.45){
+  if(pt.distanceTo(itchMark.position)>.8*growth()+.7){
     if(AI.strokes%16===0)say(pick(['Not there — a bit further!','Over here! The red spot!']),1.8);
     return false;}
   itch.amt=Math.max(0,itch.amt-.05);
@@ -1196,7 +1171,7 @@ function scratchAt(pt){
   if(!itch.said&&itch.amt<.72){itch.said=true;say(pick(['Ahh, right there!',"Ooh yes! That's the spot!",'Scratchy scratchy!']),2.2);}
   if(itch.amt<=0){const w=itchMark.position.clone();clearItch();SFX.yay();
     burst('✨',w,10,{size:.4,speed:1.2});G.head.getWorldPosition(tmp2);burst('😌',tmp2,2,{size:.45});
-    S.fun=clamp(S.fun+12,0,100);earn(2);award('itch');startAct('happy',1);
+    S.fun=clamp(S.fun+12,0,100);earn(2);award('itch');bumpTask('itch');startAct('happy',1);
     say('Ahhh, thank you! So much better!',3);save();updateUI();}
   return true;}
 const flakeTex=canvasTex(64,64,(x)=>{x.fillStyle='rgba(250,246,238,.95)';x.strokeStyle='rgba(180,170,160,.8)';x.lineWidth=2;x.beginPath();x.moveTo(10,30);x.lineTo(28,8);x.lineTo(52,16);x.lineTo(56,40);x.lineTo(34,56);x.lineTo(14,48);x.closePath();x.fill();x.stroke();});
@@ -1205,8 +1180,7 @@ function strokeAt(pt,speed){AI.strokeT=.5;AI.strokes++;
   if(S.asleep){AI.stroke=Math.min(.6,AI.stroke+.05);if(AI.strokes%8===0){burst('💗',pt,1,{size:.3,g:.2,speed:.4,life:1.8});}if(!AI.saidBliss&&AI.strokes%10===0){AI.saidBliss=true;say('Zzz... *happy sigh*',2.5);}return;}
   const tickle=speed>.8;
   if(tickle){AI.tickle=Math.min(1,AI.tickle+.35);if(AI.strokes%3===0)tone(rand(1300,1900),.07,'triangle',.05,1.3);
-    if(holding)ticklesGiven++;
-    if(AI.tickle>=1&&!AI.act&&AI.strokes%14===0){startAct(holding?'dance':'roll',1.1);SFX.yay();S.fun=clamp(S.fun+8,0,100);earn(1);
+    if(AI.tickle>=1&&!AI.act&&AI.strokes%14===0){startAct('roll',1.1);SFX.yay();S.fun=clamp(S.fun+8,0,100);earn(1);
       say(pick(["Hahaha, I'm rolling!",'Too tickly!','Weeee!']),2.2);updateUI();}if(bubbleTimer<=0||!/tickle|Hah|Heh/i.test(bubble.textContent))say(pick(['Hehe! That tickles!','Hahaha, stop it!','Tickle tickle!','Heehee!']),2);}
   else{AI.stroke=Math.min(1,AI.stroke+.1);if(AI.strokes%4===0)tone(rand(420,520),.18,'sine',.035,.85);
     if(AI.stroke>.6&&!AI.saidBliss){AI.saidBliss=true;say(pick(["Mmm, that's lovely...",'Ahh, I love strokes','More please...','So cosy...']),2.5);}}
@@ -1221,7 +1195,7 @@ function pet(pt){if(S.asleep){say('Zzz...',1.5);return;}
     S.fun=clamp(S.fun+4,0,100);startAct('lick',.75);tone(1250,.07,'sine',.06,1.7);
     tmp2.y+=.3;burst(pick(['😝','✨','💛']),tmp2,2,{size:.4});award('boop');
     say(pick(['Boop!','Hehe, my nose!','Eep! My snoot!','*tongue flick*']),1.8);updateUI();return;}
-  S.fun=clamp(S.fun+5,0,100);tmp2.y+=.3;burst('❤️',tmp2,4,{size:.4});startAct('happy',.9);SFX.chirp();
+  S.fun=clamp(S.fun+5,0,100);tmp2.y+=.3;burst('❤️',tmp2,4,{size:.4});startAct('happy',.9);SFX.chirp();bumpTask('pet');
   say(pick(['I love you!','Hehe, that tickles!','More cuddles!','You are my best friend!',"That's the spot!"]));updateUI();}
 
 /* ---------- buttons ---------- */
@@ -1235,10 +1209,11 @@ $('#bPlay').onclick=()=>{if(!S.hatched||asleepBlock())return;leaveGame();if(S.en
   throwBall();SFX.pop();say(pick(['Ball! Ball!','Catch me if you can!','Wheee!']));};
 $('#bClean').onclick=()=>{if(!S.hatched)return;leaveGame();
   poops.slice().forEach(g=>{burst('💧',g.position,4,{size:.35});scene.remove(g);});poops.length=0;
-  wees.slice().forEach(g=>{burst('💧',g.position,3,{size:.3});scene.remove(g);});wees.length=0;
+  wees.slice().forEach(g=>{burst('💧',g.position,3,{size:.3});scene.remove(g);});
+  if(poops.length+wees.length)bumpTask('tidy',poops.length+wees.length);wees.length=0;
   const p=G.root.position;burst('💧',tmp.set(p.x,.8,p.z),6,{size:.35});burst('✨',tmp.set(p.x,.8,p.z),5,{size:.4});
   S.clean=100;earn(2);award('clean');SFX.splash();if(!S.asleep)startAct('happy',.8);say('Sparkly clean!');save();updateUI();};
-$('#bSleep').onclick=()=>{if(!S.hatched)return;if(holding)putBack();
+$('#bSleep').onclick=()=>{if(!S.hatched)return;
   if(S.asleep){S.asleep=false;AI.inBed=false;SFX.chirp();say(S.energy>70?'Good morning!':'Yawn... still a bit sleepy.');}
   else{if(game)endGame(true);clearItch();crickets.forEach(c=>scene.remove(c.g));crickets.length=0;removeBall();S.asleep=true;AI.inBed=false;AI.act=null;SFX.yawn();say('Night night! Off to my cave 🌙');}
   save();updateUI();};
@@ -1278,7 +1253,7 @@ function showOff(what){
   AI.target=null;startAct('spin',1.15);
   G.head.getWorldPosition(tmp2);burst('\u2728',tmp2,8,{size:.42,speed:1.1});
   setTimeout(()=>{if(S.asleep)return;startAct('dance',1.5);SFX.yay();
-    G.head.getWorldPosition(tmp2);burst(pick(['\U0001f389','\u2b50','\U0001f496']),tmp2,7,{size:.45,speed:1.2});
+    G.head.getWorldPosition(tmp2);burst(pick(['🎉','\u2b50','💖']),tmp2,7,{size:.45,speed:1.2});
     popText('TA-DA!',tmp2,'#FFD23F');},1150);
   if(what)setTimeout(()=>say(what,2.6),1300);}
 function wearHat(k){for(const h in HATS)HATS[h].visible=(h===k);S.hat=k;}
@@ -1289,7 +1264,7 @@ function drawHats(){const box=$('#hatTiles');box.innerHTML='';HAT_LIST.filter(h=
     if(k!=='none'&&!S.asleep)showOff(pick(['Do I look cool?','I love it!','So fancy!','How do I look?']));save();};box.appendChild(b);});}
 const TRICKS={spin:{d:1.3,say:['Wheee!','Round and round!']},wave:{d:1.6,say:['Hello!','Hi there!']},jump:{d:.9,say:['Boing!','Up I go!']}};
 function doTrick(k){if(!S.hatched||asleepBlock())return;freeMouth();if(S.sick){say("I'm too poorly for tricks...");return;}if(S.energy<8){say('Too tired for tricks...');return;}
-  AI.target=null;startAct(k,TRICKS[k].d);S.tricks[k]=(S.tricks[k]||0)+1;S.fun=clamp(S.fun+6,0,100);S.energy=clamp(S.energy-2,0,100);SFX.chirp();const n=S.tricks[k];earn(1);if(['spin','wave','jump'].every(t=>(S.tricks[t]||0)>=3))award('tricks');
+  AI.target=null;startAct(k,TRICKS[k].d);bumpTask('trick');S.tricks[k]=(S.tricks[k]||0)+1;S.fun=clamp(S.fun+6,0,100);S.energy=clamp(S.energy-2,0,100);SFX.chirp();const n=S.tricks[k];earn(1);if(['spin','wave','jump'].every(t=>(S.tricks[t]||0)>=3))award('tricks');
   setTimeout(()=>{G.head.getWorldPosition(tmp2);burst('⭐',tmp2,n===3?10:3,{size:.4});if(n===3){SFX.yay();say('I learned to '+k+'! ⭐⭐⭐',3.5);}else say(pick(TRICKS[k].say));},TRICKS[k].d*650);save();updateUI();}
 function mist(){if(!S.hatched)return;const p=G.root.position;for(let i=0;i<16;i++)burst('💧',tmp.set(p.x+rand(-1.6,1.6),rand(3,4.2),p.z+rand(-1,1.3)),1,{g:-7,speed:.3,life:.9,size:.26});
   SFX.splash();AI.wet=1;S.clean=clamp(S.clean+3,0,100);S.fun=clamp(S.fun+4,0,100);
@@ -1299,7 +1274,7 @@ function photo(){if(!S.hatched)return;bubble.classList.remove('show');bubbleTime
   const cx=clamp((tmp2.x+1)/2*W,sz/2,W-sz/2),cy=clamp((1-tmp2.y)/2*H+sz*.18,sz/2,H-sz/2);
   const c=document.createElement('canvas');c.width=c.height=600;const x=c.getContext('2d');const gr=x.createLinearGradient(0,0,0,600);const n=isNight();
   gr.addColorStop(0,n?'#10143A':'#6CCBFF');gr.addColorStop(1,n?'#4A2F6E':'#FFF1D6');x.fillStyle=gr;x.fillRect(0,0,600,600);
-  try{x.drawImage(src,cx-sz/2,cy-sz/2,sz,sz,0,0,600,600);$('#photoImg').src=c.toDataURL('image/jpeg',.9);savePhoto(c);award('photo');}catch(e){return;}
+  try{x.drawImage(src,cx-sz/2,cy-sz/2,sz,sz,0,0,600,600);$('#photoImg').src=c.toDataURL('image/jpeg',.9);savePhoto(c);award('photo');bumpTask('photo');}catch(e){return;}
   const f=$('#flash');f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');tone(1800,.05,'square',.05);
   $('#photoCap').textContent=S.name+', day '+(Math.floor(ageDays())+1);setTimeout(()=>{$('#photo').hidden=false;},380);}
 let menuTab='care';
@@ -1308,16 +1283,17 @@ const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function bestTxt(k){const b=(S.best||{})[k];return b?'Best score: '+b:'Tap to play!';}
 function trickTxt(k){const n=Math.min(3,(S.tricks||{})[k]||0);return n>=3?'⭐⭐⭐ Learned!':n?'⭐'.repeat(n)+' Keep practising':'Practise 3 times to learn';}
 function menuItems(tab){const nm=esc(S.name);return({
-  care:[...(tankSmall()?[['tank','🏠','Bigger tank',nm+' needs more room!','#FF8A3D','Needed']]:[]),['water','🚰','Fill water',S.water<25?'Bowl is nearly empty!':'Bowl '+Math.round(S.water)+'% full','#35A9F0',S.water<25?'Needed':''],
+  care:[['jobs','📋',"Today's jobs",(3-tasksLeft())+' of 3 done'+(tasksReady()?' — star ready!':''),'#3FCB7A',tasksReady()?'⭐':(tasksLeft()?'':'✅')],
+    ...(tankSmall()?[['tank','🏠','Bigger tank',nm+' needs more room!','#FF8A3D','Needed']]:[]),['water','🚰','Fill water',S.water<25?'Bowl is nearly empty!':'Bowl '+Math.round(S.water)+'% full','#35A9F0',S.water<25?'Needed':''],
     ['lamp','💡',S.lamp?'Lamp off':'Lamp on',S.lamp?'Warm and toasty':(S.warm<35?nm+' is chilly!':'Warm spot for basking'),'#FFB020',!S.lamp&&S.warm<35?'Needed':''],
     ['treat','🐛','Treat','A wiggly waxworm. Just sometimes!','#FF8A3D',''],['mist','💦','Mist','A little rain shower','#5EC8F2',S.shed>0?'Helps shedding':''],
-    ['hold','🤲','Hold him','Lift '+nm+' out for a cuddle','#FF8FB8',''],
     ['call','📣','Call '+nm,'Come here, '+nm+'!','#FF5FA2',''],['vet','🩺','Vet check-up','Weigh in and health check','#3FCB7A','']],
   play:[['fetch','🎾','Fetch','Throw the ball, '+nm+' brings it back','#FF5FA2',''],['catch','🦗','Cricket catch',bestTxt('catch'),'#FF8A3D',''],['hide','🙈','Hide and seek','Find where '+nm+' is hiding','#8B6CF0',''],
     ['feather','🪶','Feather',bestTxt('feather'),'#35A9F0',''],['bubbles','🫧','Bubbles',bestTxt('bubbles'),'#5EC8F2','']],
   tricks:[['spin','🌀','Spin',trickTxt('spin'),'#8B6CF0',''],['wave','👋','Wave',trickTxt('wave'),'#FF5FA2',''],['jump','🦘','Jump',trickTxt('jump'),'#3FCB7A','']],
   style:[['hats','🎩','Hats','Dress '+nm+' up','#8B6CF0',''],['colours','🎨','Colour and name','Change the look','#FFB020',''],['photo','📸','Take a photo','Say cheese!','#FF5FA2',''],['album','🖼️','Photo album','All your photos','#35A9F0','']],
-  collect:[['shop','🛍️','Shop','You have '+(S.coins||0)+' coins','#FFB020',''],['decorate','🪴','Decorate','Move things around the tank','#3FCB7A',''],
+  collect:[['journey','🏆',nm+"'s journey",'Stars, stickers and how big he is','#8B6CF0',''],
+    ['shop','🛍️','Shop','You have '+(S.coins||0)+' coins','#FFB020',''],['decorate','🪴','Decorate','Move things around the tank','#3FCB7A',''],
     ['stickers','📒','Sticker book',Object.keys(S.stickers||{}).length+' of '+STICKERS.length+' stickers','#FF5FA2',''],['fact','🧠','Gecko fact','Learn something new','#35A9F0',''],['settings','⚙️','Grown-ups','School mode, bedtime, sound','#9A8FB0','']]
 })[tab];}
 function drawMenu(){const tabs=$('#menuTabs');tabs.innerHTML='';TABS.forEach(([k,ic,lab,c])=>{const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',k===menuTab);b.style.setProperty('--tc',c);b.innerHTML='<b>'+ic+'</b>'+lab;b.onclick=()=>{menuTab=k;SFX.pop();drawMenu();};tabs.appendChild(b);});
@@ -1366,6 +1342,8 @@ function updateUI(){for(const k of['hunger','fun','clean','energy']){const el=$(
   const mess=poops.length+wees.length,nb=$('#cleanN');
   nb.textContent=mess;nb.hidden=!mess||!S.hatched;
   $('#bClean').classList.toggle('glow',mess>=3&&S.hatched);
+  const rdy=S.hatched&&tasksReady(),mn=$('#moreN');mn.hidden=!rdy;
+  $('#bMore').classList.toggle('glow',!!rdy);
   $('#bSleep').querySelector('i').textContent=S.asleep?'☀️':'🌙';$('#bSleep').querySelector('span').textContent=S.asleep?'Wake':'Sleep';
   $('#bFeed').classList.toggle('dim',S.asleep);$('#bPlay').classList.toggle('dim',S.asleep);}
 setInterval(updateUI,700);setInterval(()=>{if(S.hatched)save();},5000);
@@ -1394,10 +1372,72 @@ function openCard(icon,title,text,keepExtra,onClose){$('#cOk').textContent='OK';
 $('#cOk').addEventListener('click',()=>{$('#cOk').textContent='OK';if(cardClose){const f=cardClose;cardClose=null;f();}});
 function updateCoins(){$('#coins').textContent=S.coins;}
 function earn(n){if(!n)return;S.coins+=n;updateCoins();const el=$('#coinPill');el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');tone(1320,.08,'triangle',.05,1.5);if(S.coins>=50)award('rich');}
-const STICKERS=[['feed','🦗','First dinner'],['clean','🧽','Squeaky clean'],['shed','✨','First shed'],['tricks','⭐','Trick master'],['photo','📸','Say cheese'],['hat','🎩','Dressed up'],['treat','🐛','Yummy treat'],['game','🎮','Game time'],['streak','🔥','7 days in a row'],['rich','🪙','50 coins'],['vet','🏅','Gold star check-up'],['bday','🎂','Week birthday'],['decor','🏡','Home decorator'],['present','🎁','Daily present'],['warm','☀️','Toasty basking'],['water','💧','Fresh water'],['bigtank','🏠','Big new home'],['cuddle','🤲','Cuddle time'],['itch','🫰','Itch scratcher'],['boop','👆','Nose booper']];
+const STICKERS=[['feed','🦗','First dinner'],['clean','🧽','Squeaky clean'],['shed','✨','First shed'],['tricks','⭐','Trick master'],['photo','📸','Say cheese'],['hat','🎩','Dressed up'],['treat','🐛','Yummy treat'],['game','🎮','Game time'],['streak','🔥','7 days in a row'],['rich','🪙','50 coins'],['vet','🏅','Gold star check-up'],['bday','🎂','Week birthday'],['decor','🏡','Home decorator'],['present','🎁','Daily present'],['warm','☀️','Toasty basking'],['water','💧','Fresh water'],['bigtank','🏠','Big new home'],['sevenstars','🌟','Seven stars'],['itch','🫰','Itch scratcher'],['boop','👆','Nose booper']];
 function award(id){if(S.stickers[id])return;S.stickers[id]=Date.now();const st=STICKERS.find(x=>x[0]===id);if(!st)return;setTimeout(()=>{toast(st[1]+' New sticker: '+st[2]+'!');SFX.yay();},500);save();}
 function openStickers(){const box=$('#stTiles');box.innerHTML='';let n=0;STICKERS.forEach(([id,ic,lab])=>{const got=!!S.stickers[id];if(got)n++;const d=document.createElement('div');d.className='tile'+(got?'':' locked');d.innerHTML='<i>'+(got?ic:'❔')+'</i>'+lab;box.appendChild(d);});
   $('#stSub').textContent='You have '+n+' of '+STICKERS.length+' stickers.';$('#stickers').hidden=false;}
+
+/* ---------- today's jobs ---------- */
+const TASK_POOL=[
+ {id:'eat',ic:'🦗',t:'Feed him {n} crickets',g:4},
+ {id:'tidy',ic:'🧽',t:'Tidy up {n} messes',g:3},
+ {id:'game',ic:'🎮',t:'Play {n} games',g:2},
+ {id:'fetch',ic:'🎾',t:'Play fetch {n} times',g:3},
+ {id:'itch',ic:'🫰',t:'Scratch an itchy spot',g:1},
+ {id:'water',ic:'🚰',t:'Fill his water bowl',g:1},
+ {id:'photo',ic:'📸',t:'Take a photo of him',g:1},
+ {id:'trick',ic:'\u2b50',t:'Do {n} tricks',g:3},
+ {id:'pet',ic:'\u2764\ufe0f',t:'Give him {n} cuddles',g:5},
+ {id:'treat',ic:'🐛',t:'Give him a treat',g:1}];
+const taskDef=id=>TASK_POOL.find(x=>x.id===id);
+const taskLabel=t=>{const d=taskDef(t.id);return d?d.t.replace('{n}',t.g):t.id;};
+function rollTasks(){
+  const td=todayKey();
+  if(S.tasks&&S.tasks.list&&S.taskDay===td)return S.tasks;
+  const d=new Date();let sd=(d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate())||1;
+  const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+  const pool=TASK_POOL.slice(),three=[];
+  while(three.length<3&&pool.length)three.push(pool.splice(Math.floor(rnd()*pool.length),1)[0]);
+  S.taskDay=td;S.tasks={list:three.map(t=>({id:t.id,g:t.g,n:0})),claimed:false};
+  save();return S.tasks;}
+function tasksLeft(){const t=rollTasks();return t.list.filter(x=>x.n<x.g).length;}
+function tasksReady(){const t=rollTasks();return !t.claimed&&t.list.every(x=>x.n>=x.g);}
+function bumpTask(id,n){
+  if(!S.hatched||cine)return;
+  const t=rollTasks();let hit=false;
+  t.list.forEach(x=>{if(x.id===id&&x.n<x.g){x.n=Math.min(x.g,x.n+(n||1));hit=true;
+    if(x.n>=x.g){earn(4);SFX.yay();toast('\u2705 Job done \u2014 '+taskLabel(x)+'!');}}});
+  if(hit){save();updateUI();}}
+function drawTasks(){
+  const t=rollTasks(),box=$('#tkList');box.innerHTML='';
+  t.list.forEach(x=>{const d=taskDef(x.id),ok=x.n>=x.g;
+    const el=document.createElement('div');el.className='job'+(ok?' ok':'');
+    el.innerHTML='<span class="ji">'+(d?d.ic:'\u2753')+'</span><span style="flex:1"><b>'+esc(taskLabel(x))+'</b>'+
+      '<span class="bar2"><i style="width:'+Math.round(x.n/x.g*100)+'%"></i></span></span>'+
+      '<span class="tick">'+(ok?'\u2705':x.n+'/'+x.g)+'</span>';
+    box.appendChild(el);});
+  const ready=tasksReady();
+  $('#tkClaim').hidden=!ready;
+  $('#tkSub').textContent=t.claimed?'All done today \u2014 come back tomorrow for three more!':
+    (ready?'All three done! Collect your star.':'Finish all three to earn a star \u2b50');}
+function openTasks(){drawTasks();$('#tasks').hidden=false;}
+function claimTasks(){const t=rollTasks();if(!tasksReady())return;
+  t.claimed=true;S.stars=(S.stars||0)+1;earn(10);SFX.yay();
+  G.head.getWorldPosition(tmp2);burst('\u2b50',tmp2,12,{size:.5,speed:1.3});
+  if(!S.asleep)startAct('dance',1.8);
+  openCard('\u2b50','You earned a star!','That is '+S.stars+' star'+(S.stars===1?'':'s')+' now. Here are 10 bonus coins too \u2014 three new jobs tomorrow!');
+  if(S.stars>=7)award('sevenstars');
+  save();drawTasks();updateUI();}
+function openJourney(){
+  const dn=Math.floor(ageDays())+1,pc=pctGrown(growth());
+  const st=Object.keys(S.stickers||{}).length;
+  $('#cExtra').innerHTML='<div class="grow"><b>Baby</b><span><i style="width:'+pc+'%"></i></span><b>Grown-up</b></div>'+
+    '<ul class="checks"><li>\u2b50 Stars earned: <b>'+(S.stars||0)+'</b></li>'+
+    '<li>📒 Stickers: <b>'+st+' of '+STICKERS.length+'</b></li>'+
+    '<li>💰 Coins: <b>'+(S.coins||0)+'</b></li>'+
+    '<li>🔥 Days in a row: <b>'+(S.streak||0)+'</b></li></ul>';
+  openCard('🏆',S.name+"'s journey",
+    S.name+' is '+stageName().toLowerCase()+' on day '+dn+'. He is fully grown on day 21.',true);}
 
 /* ---------- gecko facts ---------- */
 const FACTS=['Leopard geckos lick their eyes to keep them clean!','Leopard geckos have eyelids, but lots of other geckos don\'t.','Geckos store fat in their tails, so a chunky tail means a healthy gecko.','If a gecko gets a big fright it can drop its tail! It grows back, but looks a bit different.','Leopard geckos come from dry, rocky places in countries like Pakistan, India and Afghanistan.','Leopard geckos are busiest at dawn and dusk.','Baby leopard geckos have stripes that turn into spots as they grow up.','Geckos shed their old skin, and then often eat it!','Leopard geckos can live for 15 to 20 years with good care.','Geckos make little chirps and squeaks to talk.','Leopard geckos can\'t climb glass like other geckos, because they don\'t have sticky toe pads.','A gecko\'s ears are little holes on the sides of its head.','Geckos wave their tails slowly when they\'re hunting or feeling curious.','Leopard geckos need a warm spot to help them digest their food.','Leopard geckos usually pick one corner of their home as their toilet.','There are more than 1,500 kinds of gecko in the world!','A baby leopard gecko hatches from an egg about the size of a grape.','Whether a gecko egg hatches a boy or a girl depends on how warm the egg is!','Geckos flick their tongues to taste and smell the air.','Leopard geckos love fresh water every day, even though they don\'t drink much.'];
@@ -1419,11 +1459,16 @@ function toggleLamp(){S.lamp=!S.lamp;updateLampVisual();tone(S.lamp?900:500,.08,
 
 /* ---------- water bowl ---------- */
 const waterMesh=scene.getObjectByName('water'),dishMesh=scene.getObjectByName('bowl'),sandMesh=scene.getObjectByName('sand');
-function refill(){S.water=100;SFX.splash();burst('💧',tmp.set(4.9*KX,.6,2.1*KZ),6,{size:.3});award('water');say('Fresh water! Thank you!',2);updateUI();save();}
+function refill(){S.water=100;SFX.splash();bumpTask('water');burst('💧',tmp.set(4.9*KX,.6,2.1*KZ),6,{size:.3});award('water');say('Fresh water! Thank you!',2);updateUI();save();}
 
 /* ---------- call him ---------- */
 let callPt=null,callT=0;
-function callTo(pt){if(!S.hatched||!G.root.visible)return;if(S.asleep){say('Zzz...',1.2);return;}callPt=new THREE.Vector3(clamp(pt.x,-BX,BX),0,clamp(pt.z,Z0,Z1));callT=0;AI.target=null;
+function callTo(pt){if(!S.hatched||!G.root.visible)return;if(S.asleep){say('Zzz...',1.2);return;}
+  if(inRect(LEDGE,pt.x,pt.z)||inRect(RAMP,pt.x,pt.z)){
+    const up=new THREE.Vector3(clamp(pt.x,LEDGE.x0+.6,LEDGE.x1-.6),LEDGE_H,clamp(pt.z,LEDGE.z0+.5,LEDGE.z1-.4));
+    callPt=null;AI.route=planRoute(up);AI.target=AI.route[0];
+    burst('\u2728',tmp.set(up.x,LEDGE_H+.2,up.z),3,{size:.3});tone(700,.1,'sine',.05,1.5);
+    if(Math.random()<.6)say(pick(['Climbing up!','Up I go!','To the top!']),1.8);return;}callPt=new THREE.Vector3(clamp(pt.x,-BX,BX),0,clamp(pt.z,Z0,Z1));callT=0;AI.target=null;
   burst('✨',tmp.set(callPt.x,.2,callPt.z),3,{size:.3});tone(700,.1,'sine',.05,1.5);if(Math.random()<.35)say(pick(['Coming!','On my way!','Here I come!']),1.5);}
 function callName(){if(!S.hatched||asleepBlock())return;freeMouth();say(S.name+'? That\'s me!',2);SFX.chirp();setTimeout(()=>callTo(new THREE.Vector3(look.x,0,2.4)),500);}
 
@@ -1434,7 +1479,7 @@ function giveTreat(){if(!S.hatched||asleepBlock())return;freeMouth();if(treat){s
   const p=G.root.position;g.position.set(clamp(p.x+rand(-1.5,1.5),-4,4),0,clamp(p.z+rand(.6,1.5),Z0,Z1-.3));g.rotation.y=rand(0,6);scene.add(g);treat={g:g};SFX.pop();say(pick(['A waxworm?! My favourite!','Ooh, a treat!']),2);}
 function eatTreat(){if(!treat)return;scene.remove(treat.g);treat=null;startAct('eat',.45);SFX.crunch();
   const td=todayKey();if(S.treatDay!==td){S.treatDay=td;S.treatCount=0;}S.treatCount++;
-  S.hunger=clamp(S.hunger+6,0,100);S.fun=clamp(S.fun+12,0,100);award('treat');
+  S.hunger=clamp(S.hunger+6,0,100);S.fun=clamp(S.fun+12,0,100);award('treat');bumpTask('treat');
   setTimeout(()=>{startAct('dance',1.8);SFX.yay();G.head.getWorldPosition(tmp2);burst('🎉',tmp2,4,{size:.4});},450);
   if(S.treatCount>3){S.chubby=Math.min(1,S.chubby+.25);setTimeout(()=>say(S.chubby>.5?"Oof, I'm getting a bit chubby!":'Treats are for sometimes!',3),2300);}
   else setTimeout(()=>say(pick(['Best. Treat. Ever!','Yum yum yum!','Happy dance!']),2.2),500);save();updateUI();}
@@ -1462,7 +1507,7 @@ function cineSetShot(i){
     G.root.position.set(.6*KX,0,1.2);G.root.rotation.y=-.5;
   }}
 function startCine(){
-  if(!S.hatched||hatch.active||holding||game)return;
+  if(!S.hatched||hatch.active||game)return;
   clearItch();callPt=null;want=null;
   cine={t:0,shot:-1,st:0,drive:false,tgt:new THREE.Vector3()};
   cineSetShot(0);}
@@ -1495,56 +1540,18 @@ function cineCam(){
     look.set(0,.45+e*.3,1.1);}
   camera.lookAt(look);}
 
-/* ---------- lifting him out for a cuddle ---------- */
-const HOLD=new THREE.Vector3(0,2.2,5.6);
-let holding=false,holdT=0,holdIdle=3,ticklesGiven=0;
-const handsEl=()=>document.getElementById('handsWrap');
-function holdHim(){
-  if(!S.hatched||!G.root.visible||hatch.active)return;
-  if(S.asleep){say('Zzz... wake me up first!',2.2);return;}
-  if(game)endGame(true);
-  if(decorating)stopDecorate();
-  freeMouth();clearItch();AI.act=null;AI.target=null;callPt=null;want=null;
-  crickets.forEach(c=>scene.remove(c.g));crickets.length=0;
-  holding=true;holdT=0;holdIdle=2.5;ticklesGiven=0;
-  document.body.classList.add('holding');
-  const hw=handsEl();hw.hidden=false;void hw.offsetWidth;hw.classList.add('show');
-  $('#holdBar').hidden=false;SFX.chirp();
-  say(pick(['Ooh, up I go!','Hello up here!','I like cuddles!']),2.6);
-  toast('👉 Stroke him gently, or rub fast to tickle!');}
-function putBack(){if(!holding)return;holding=false;$('#holdBar').hidden=true;
-  document.body.classList.remove('holding');
-  const hw=handsEl();hw.classList.remove('show');setTimeout(()=>{if(!holding)hw.hidden=true;},420);
-  G.root.position.set(clamp(look.x,-BX+1,BX-1),0,Z1-1);G.root.position.y=0;AI.vy=0;keepIn(G.root.position);
-  AI.v=0;AI.target=null;popT=0;SFX.pop();
-  S.fun=clamp(S.fun+6,0,100);
-  say(pick(['That was lovely!','Back home again!','Thank you for the cuddle!']),2.4);
-  if(ticklesGiven>=6)award('cuddle');
-  save();updateUI();}
-function updateHold(dt){
-  if(!holding)return;
-  holdT+=dt;
-  const sit=tmp.set(HOLD.x,HOLD.y+Math.sin(T*1.15)*.045,HOLD.z);
-  G.root.position.lerp(sit,Math.min(1,dt*(holdT<.8?4:8)));
-  G.root.rotation.y=lerpAngle(G.root.rotation.y,.22+Math.sin(T*.45)*.16,Math.min(1,dt*3));
-  S.fun=clamp(S.fun+dt*.35,0,100);
-  holdIdle-=dt;
-  if(holdIdle<=0&&!AI.act){holdIdle=rand(3.5,7);
-    if(Math.random()<.5)startAct('lick',.7);else startAct('happy',.6);
-    if(bubbleTimer<=0&&Math.random()<.6)say(pick(['This is nice.','I can see everything!','Your hands are warm!','Hehe!']),2.2);}}
-
 /* ---------- idle wants: basking & drinking ---------- */
 let want=null,wantT=6;
 const STAY={pos:new THREE.Vector3(),kind:'stay',reach:1e9,arrive(){}};
 function extTarget(){
   if(cine&&cine.drive)return{pos:cine.tgt,kind:'cine',reach:.3,speed:1.55,arrive(){}};
-  if(holding)return STAY;
   if(game)return game.def.target?(game.def.target(game)||STAY):STAY;
   if(scaleObj)return STAY;
   if(callPt)return{pos:callPt,kind:'call',reach:.3,speed:1.25,arrive(){callPt=null;startAct('happy',.6);SFX.chirp();}};
   if(treat)return{pos:treat.g.position,kind:'treat',reach:2.1*growth(),speed:1.1,
     arrive(){if(!hunt){hunt={kind:'treat'};startAct('stalk',rand(.4,.7));AI.crouch=1;}}};
   if(crickets.length||ball)return null;
+  if(itch&&!S.asleep)return STAY;
   if(want==='bask'){if(!S.lamp){want=null;return null;}return{pos:SLATE,kind:'bask',reach:.35,speed:.8,arrive(){want=null;startAct('bask',7);say(pick(['Ahh, toasty!','So warm and cosy...','Sunbathing time!']),2.5);award('warm');}};}
   if(want==='drink'){if(S.water<5){want=null;return null;}const s=growth();return{pos:new THREE.Vector3(4.9*KX-.6-1.4*s,0,2.1*KZ),kind:'drink',reach:.3,speed:.8,arrive(){want=null;startAct('drink',2.2);}};}
   return null;}
@@ -1732,7 +1739,7 @@ function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or t
 function startDecorate(i){if(game)endGame(true);decorating=true;sel=(i===undefined)?-1:i;$('#decoBar').hidden=false;updDecoBar();}
 function stopDecorate(){decorating=false;sel=-1;$('#decoBar').hidden=true;decorGroups.forEach(g=>g.scale.setScalar(1));save();}
 $('#dbDone').onclick=stopDecorate;
-$('#hbBack').onclick=putBack;
+$('#tkClaim').onclick=claimTasks;
 $('#dbRemove').onclick=()=>{if(sel<0)return;S.decor.splice(sel,1);sel=-1;buildDecor();updDecoBar();SFX.pop();save();};
 
 /* ---------- photo album ---------- */
@@ -1769,8 +1776,25 @@ function catchIt(g,i,byKid){const o=g.objs[i];const v=o.gold?3:1;const now=T;g.c
   const bonus=g.combo>=3?1:0;g.score+=v+bonus;popText('+'+(v+bonus),o.g.position,o.gold?'#FFD23F':'#7CF29A');
   burst(o.gold?'🌟':'✨',o.g.position,o.gold?6:3,{size:.3});scene.remove(o.g);g.objs.splice(i,1);byKid?SFX.pop():SFX.crunch();if(o.gold)SFX.yay();
   if(g.combo>=3&&g.combo%3===0)say('Combo x'+g.combo+'!',1.2);}
-function makeFeather(){const g=new THREE.Group();const stick=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.9,6),M(0xF6F0E0));stick.rotation.x=Math.PI/2;g.add(stick);
-  blob(MP(0xFF6FAE,{clearcoat:0,roughness:.8}),.13,.02,.38,0,0,.12,g);blob(MP(0x7BE0FF,{clearcoat:0,roughness:.8}),.08,.025,.2,0,.01,.3,g);g.rotation.x=-.25;return g;}
+function makeFeather(){
+  /* a quill with barbs fanning off it, not two blobs on a stick */
+  const g=new THREE.Group(),L=1.16;
+  const quill=new THREE.Mesh(new THREE.CylinderGeometry(.007,.024,L,8),M(0xFBF4E4,{roughness:.55}));
+  quill.rotation.x=Math.PI/2;quill.position.z=L/2-.42;g.add(quill);
+  const grip=new THREE.Mesh(new THREE.CylinderGeometry(.036,.042,.32,12),M(0xC2561A,{roughness:.45}));
+  grip.rotation.x=Math.PI/2;grip.position.z=-.56;g.add(grip);
+  const band=new THREE.Mesh(new THREE.TorusGeometry(.043,.012,8,14),M(0xFFD23F,{metalness:.5,roughness:.3}));
+  band.position.z=-.41;g.add(band);
+  const cols=[0xFF5FA2,0xFF7FB8,0xFFA3CE,0xFFC2DE];
+  const N=20,SW=.52,cs=Math.cos(SW),sn=Math.sin(SW);
+  for(let i=0;i<N;i++){
+    const t=i/(N-1), z=-.34+t*L*.95;
+    const len=Math.sin(Math.pow(t,.62)*Math.PI)*.33+.035;
+    const m=MP(cols[Math.min(3,Math.floor(t*4.4))],{roughness:.86,clearcoat:0});
+    for(const sd of[-1,1]){
+      const b=blob(m,len*.5,.007,.034,sd*cs*len*.5,0,z-sn*len*.5,g);
+      b.rotation.y=sd*SW;b.castShadow=false;}}
+  g.rotation.x=-.18;return g;}
 function bubbleTex(rainbow){return canvasTex(512,512,(x,w,h)=>{const cx=256,cy=256,R=242;
   let g=x.createRadialGradient(cx,cy,R*.1,cx,cy,R);
   g.addColorStop(0,'rgba(214,246,255,.16)');g.addColorStop(.55,'rgba(186,238,255,.26)');
@@ -1859,11 +1883,11 @@ const GAMES={
       return{pos:best.position,kind:'bub',reach:1.5*growth(),speed:1.2,arrive(){startAct('jump',.7);GAMES.bubbles.pop(g,best);}};},
     stop(g){g.objs.forEach(b=>{scene.remove(b);b.material.dispose();});},bar(g){return '🫧 '+g.score+'   ⏱ '+Math.max(0,Math.ceil(g.time));},stars:[10,20,30],result(s){return 'You scored '+s+' bubble points! Rainbow bubbles are worth 3.';}}
 };
-function startGame(kind){if(!S.hatched||asleepBlock())return;if(holding)putBack();if(S.sick){say("I'm too poorly to play...");return;}if(S.energy<10){say('Too tired to play...');return;}
+function startGame(kind){if(!S.hatched||asleepBlock())return;if(S.sick){say("I'm too poorly to play...");return;}if(S.energy<10){say('Too tired to play...');return;}
   if(game)endGame(true);if(decorating)stopDecorate();crickets.forEach(c=>scene.remove(c.g));crickets.length=0;removeBall();callPt=null;want=null;if(treat){scene.remove(treat.g);treat=null;}AI.act=null;
   game={kind:kind,def:GAMES[kind],score:0,objs:[]};game.time=game.def.dur;game.cd=game.def.noCd?0:3.7;game.lastTick=99;game.def.start(game);$('#gameBar').hidden=false;$('#gameBar').classList.remove('hurry');$('#gbText').textContent=game.def.bar(game);$('#gbFill').style.display=game.def.noCd?'none':'block';$('#gbFill').style.setProperty('--p','100%');if(game.def.noCd)say(game.def.intro,3);}
 function endGame(quiet){if(!game)return;const g=game;game=null;g.def.stop(g);showCd(null);$('#gameBar').hidden=true;G.root.visible=true;if(quiet)return;
-  const coins=g.def.coins?g.def.coins(g):g.score*(g.def.rate||1);S.fun=clamp(S.fun+15,0,100);S.energy=clamp(S.energy-5,0,100);earn(coins);award('game');save();updateUI();
+  const coins=g.def.coins?g.def.coins(g):g.score*(g.def.rate||1);S.fun=clamp(S.fun+15,0,100);S.energy=clamp(S.energy-5,0,100);earn(coins);award('game');bumpTask('game');save();updateUI();
   const th=g.def.stars||[1,2,3];const st=g.def.starsFn?g.def.starsFn(g):(g.score>=th[2]?3:g.score>=th[1]?2:g.score>=th[0]?1:0);
   S.best=S.best||{};const prev=S.best[g.kind]||0;const nb=g.kind!=='hide'&&g.score>prev;if(g.score>prev)S.best[g.kind]=g.score;save();
   let html='<div class="starsRow">'+[0,1,2].map(i=>'<span class="'+(i<st?'':'off')+'">⭐</span>').join('')+'</div>';
@@ -1875,10 +1899,12 @@ function endGame(quiet){if(!game)return;const g=game;game=null;g.def.stop(g);sho
 $('#gbStop').onclick=()=>endGame();
 
 /* ---------- touch hooks ---------- */
-function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
+function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);
+  const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank');
+  if(lb)a.push(lb);if(rp)a.push(rp);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
   if(h.kind==='present'){openPresent();return true;}if(h.kind==='lamp'){toggleLamp();return true;}if(h.kind==='bowl'){refill();return true;}
-  if(h.kind==='sand'||h.kind==='decor'){if(decorating){sel=-1;updDecoBar();}else callTo(h.point);return true;}return false;}
+  if(h.kind==='sand'||h.kind==='decor'||h.kind==='ledge'){if(decorating){sel=-1;updDecoBar();}else callTo(h.point);return true;}return false;}
 function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
   if(!game&&!decorating&&ball&&ball.state==='ready'){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='ball'){ball.state='held';ball.samples=[];const p=groundPoint(e);if(p)ball.samples.push({x:p.x,z:p.z,t:performance.now()});ball.moved=0;return true;}}
   if(decorating){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='decor'){const i=h.obj.userData.idx;wasSel=(sel===i);sel=i;dragging=true;dragMoved=false;updDecoBar();return true;}}return false;}
@@ -1901,7 +1927,7 @@ $('#setReset').onclick=()=>{const b=$('#setReset');
 $('#setSchool').onchange=e=>{S.school=e.target.checked;save();};$('#setBed').onchange=e=>{S.bedtime=parseFloat(e.target.value);save();updateUI();};
 $('#setSound').onchange=e=>{S.sound=e.target.checked;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 function moreAction(k){({catch:()=>startGame('catch'),hide:()=>startGame('hide'),feather:()=>startGame('feather'),bubbles:()=>startGame('bubbles'),water:refill,treat:giveTreat,lamp:toggleLamp,vet:vet,call:callName,
-  hold:holdHim,album:openAlbum,shop:openShop,decorate:()=>startDecorate(),stickers:openStickers,fact:showFact,settings:openSettings}[k]||function(){})();}
+  jobs:openTasks,journey:openJourney,album:openAlbum,shop:openShop,decorate:()=>startDecorate(),stickers:openStickers,fact:showFact,settings:openSettings}[k]||function(){})();}
 
 /* ---------- per-frame ---------- */
 function updateExtras(dt){
@@ -1962,7 +1988,7 @@ window.__geckoStart=function(){
   welcomeBack();};
 let last=performance.now(),booted=false;
 function loop(now){if(resetting)return;const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
-  tickStats(dt);updateHatch(dt);updateGrowth(dt);updateHold(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
+  tickStats(dt);updateHatch(dt);updateGrowth(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
   renderer.render(scene,camera);
   if(!booted){booted=true;if(S.hatched)startCine();if(window.__geckoReady)window.__geckoReady();}
   requestAnimationFrame(loop);}
