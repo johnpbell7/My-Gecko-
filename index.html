@@ -7,13 +7,13 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="11">
+<meta name="build" content="12">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=11">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=11">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=11">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=11">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=11">
+<link rel="manifest" href="manifest.webmanifest?v=12">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=12">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=12">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=12">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -418,6 +418,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
 <div id="countdown" hidden></div>
 <div id="outBar" class="bar" hidden><span>🚪 Out on the table</span><button id="obHome">Home</button></div>
+<div id="ballBar" class="bar" hidden><span>🎾 Playing fetch</span><button id="bbStop">✕ Put it away</button></div>
 <div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
 <div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
 <div id="toast"></div>
@@ -471,7 +472,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='11';
+const BUILD='12';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -945,7 +946,7 @@ function readySpot(){const p=G.root.position,r=G.root.rotation.y,sc=growth();
 function throwBall(){if(ball&&ball.state!=='ready'){say(ball.state==='carried'?"I've got it!":'Go on, throw it!',1.5);return;}
   if(!ball){const m=new THREE.Mesh(new THREE.SphereGeometry(BR,28,18),M(0xffffff,{map:ballTex,roughness:.35}));m.castShadow=true;m.userData.kind='ball';scene.add(m);ball={m:m,v:new THREE.Vector3(),state:'ready',idle:0,fetches:0,chase:0};}
   ball.m.position.copy(readySpot());ball.state='ready';ball.idle=0;SFX.pop();say('Throw my ball! Swipe it away!',2.5);}
-function removeBall(){if(ball){if(ball.m.parent)ball.m.parent.remove(ball.m);ball=null;}}
+function removeBall(){try{ballBar(false);}catch(e){}if(ball){if(ball.m.parent)ball.m.parent.remove(ball.m);ball=null;}}
 function launch(vx,vz){const h=Math.hypot(vx,vz),cap=11;if(h>cap){vx*=cap/h;vz*=cap/h;}ball.v.set(vx,3+Math.min(h,cap)*.32,vz);ball.state='flying';ball.chase=.35;ball.idle=0;
   tone(300,.25,'sine',.05,3);setTimeout(()=>{if(ball&&ball.state==='flying')say(pick(['Wheee!',"I'll get it!",'Here I come!']),1.4);},250);}
 function autoThrow(){const a=rand(-.7,.7)+Math.PI;launch(Math.sin(a)*rand(6,8)+(Math.random()-.5)*2,Math.cos(a)*rand(5,7));}
@@ -1140,6 +1141,7 @@ function updateGecko(dt){
       G.bodyP.rotation.z=Math.sin(T*22)*.055;}
     if(AI.actT>=AI.actD){const done=AI.act;AI.act=null;G.bodyP.rotation.z=0;
       if(hunt&&done==='stalk'){startAct('pounce',.62);tone(300,.2,'sawtooth',.045,2.6);}
+      else if(hunt&&done!=='pounce'){hunt=null;}   /* a wee, a trick, anything cut the stalk short - let him hunt again */
       else if(hunt&&done==='pounce'){const h=hunt;hunt=null;
         if(h.kind==='ball'){if(ball&&ball.state==='flying')pickUpBall();}
         else if(h.kind==='treat'){if(treat)eatTreat();}
@@ -1295,6 +1297,7 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   heartT-=dt;if(heartT<=0){heartT=9;if(!S.asleep&&!S.sick&&S.hunger>70&&S.fun>70&&S.clean>70){G.head.getWorldPosition(tmp2);burst('❤️',tmp2,1,{size:.4,g:.1,speed:.6,life:2});}}
   pooT-=dt;if(pooT<=0){pooT=rand(S.asleep?110:45,S.asleep?190:90);
     if(!hatch.active&&!game&&!outside&&!(poops.length>=POOP_MAX&&wees.length>=WEE_MAX))goLoo(Math.random()<.4?'wee':null);}
+  if(hunt){hunt.t=(hunt.t||0)+dt;if(hunt.t>7)hunt=null;}
   ballT-=dt;if(ballT<=0){ballT=1;if(ball&&ball.state!=='carried'&&ball.state!=='held')ballSettle();}
   itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
   if(caveT>0){caveT-=dt;AI.v=0;
@@ -1417,8 +1420,14 @@ $('#bFeed').onclick=()=>{if(!S.hatched||asleepBlock())return;if(outside||trip){s
   if(S.hunger>95){say("I'm full up! Maybe later.");return;}
   if(crickets.length>=4){say("I'm still catching these ones!");return;}
   spawnCrickets(3);SFX.pop();say(pick(['Bugs! Yum!','Ooh, crickets!','Dinner time!']));};
-$('#bPlay').onclick=()=>{if(!S.hatched||asleepBlock())return;if(outside||trip){sendHome();return;}leaveGame();if(S.energy<10){say('Too tired to play...');return;}if(S.sick){say("I'm too poorly to play...");return;}
-  throwBall();SFX.pop();say(pick(['Ball! Ball!','Catch me if you can!','Wheee!']));};
+$('#bPlay').onclick=()=>{if(!S.hatched||asleepBlock())return;if(outside||trip){sendHome();return;}leaveGame();
+  /* tapping Play again puts the ball away, so fetch can always be stopped */
+  if(ball){freeMouth();removeBall();hunt=null;AI.target=null;AI.route=null;
+    ballBar(false);SFX.pop();say(pick(['Ball away!','All done with the ball.','Shall we do something else?']),2);return;}
+  if(S.energy<10){say('Too tired to play...');return;}if(S.sick){say("I'm too poorly to play...");return;}
+  throwBall();ballBar(true);SFX.pop();say(pick(['Ball! Ball!','Catch me if you can!','Wheee!']));};
+function ballBar(on){const b=$('#ballBar');if(b)b.hidden=!on;}
+$('#bbStop')&&($('#bbStop').onclick=()=>{$('#bPlay').click();});
 $('#bClean').onclick=()=>{if(!S.hatched)return;leaveGame();
   poops.slice().forEach(g=>{burst('💧',g.position,4,{size:.35});scene.remove(g);});poops.length=0;
   wees.slice().forEach(g=>{burst('💧',g.position,3,{size:.3});scene.remove(g);});
