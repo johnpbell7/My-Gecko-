@@ -584,7 +584,7 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
   // sideboard the tank sits on
   const sbT=wood('#c98f5d','rgba(80,45,20,.5)',6);const sbM=M(0xffffff,{map:sbT,roughness:.6});
   const sbW=W+12,sbD=D+1.6,sbH=topY-floorY;const sb=new THREE.Mesh(new THREE.BoxGeometry(sbW,sbH,sbD),sbM);sb.position.set(0,floorY+sbH/2,0);sb.receiveShadow=true;sb.castShadow=true;scene.add(sb);
-  const top=new THREE.Mesh(new THREE.BoxGeometry(sbW+.3,.25,sbD+.3),M(0xffffff,{map:sbT,roughness:.45}));top.position.set(0,topY-.12,0);top.receiveShadow=true;scene.add(top);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(sbW+.3,.25,sbD+.3),M(0xffffff,{map:sbT,roughness:.45}));top.position.set(0,topY-.12,0);top.receiveShadow=true;top.name='sideboardTop';top.userData.kind='table';scene.add(top);
   const doorM=M(0xF5EBDD,{roughness:.5});const kn=M(0xD9A441,{metalness:.8,roughness:.3});
   for(let i=0;i<4;i++){const dw=sbW/4-.3;const d=new THREE.Mesh(new THREE.BoxGeometry(dw,sbH-.8,.12),doorM);d.position.set(-sbW/2+sbW/8+i*sbW/4,floorY+sbH/2-.1,sbD/2+.06);d.receiveShadow=true;scene.add(d);
     const k=new THREE.Mesh(new THREE.SphereGeometry(.14,16,12),kn);k.position.set(d.position.x+(i%2?-1:1)*(dw/2-.45),d.position.y+.5,sbD/2+.18);scene.add(k);}
@@ -657,7 +657,8 @@ const LEDGE_H=1.16;
 const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-.05,z1:-.34*KZ};
 const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
 const DOOR={x:TANK.w/2,z:1.15,w:2.3,h:1.8};
-const TABLE={x0:TANK.w/2+1.0,x1:12.6,z0:-3.9,z1:3.9,y:-0.95};
+const TABLE={x0:TANK.w/2+1.0,x1:12.6,z0:-2.9,z1:3.4,y:-0.95};
+const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
 let outside=false,trip=null,doorOpen=0,doorG=null;
 const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
 const RAMP_TOP =new THREE.Vector3(LEDGE.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
@@ -719,7 +720,12 @@ const STATIC_OBS=[{x:-4.6,z:-2.3,r:1.5},{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85}
   {x:-6.0,z:2.9,r:.7}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
 function obstacles(){const o=STATIC_OBS.slice();for(const d of S.decor)o.push({x:d.x,z:d.z,r:.55});return o;}
 function keepIn(p){
-  if(outside){p.x=clamp(p.x,TABLE.x0,TABLE.x1);p.z=clamp(p.z,TABLE.z0,TABLE.z1);return;}
+  /* mid-doorway the tween owns his position - clamping here would wall him out */
+  if(trip&&(trip.phase==='through'||trip.phase==='throughIn'))return;
+  if(outside){p.x=clamp(p.x,TABLE.x0,TABLE.x1);p.z=clamp(p.z,TABLE.z0,TABLE.z1);
+    for(const o of TABLE_OBS){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
+      if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
+    return;}
   p.x=clamp(p.x,-BX,BX);p.z=clamp(p.z,Z0,Z1);
   if(inRect(RAMP,p.x,p.z)&&p.y>.1){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
   if(p.y<LEDGE_H-.42&&inRect(LEDGE,p.x,p.z)&&!inRect(RAMP,p.x,p.z)){
@@ -728,9 +734,13 @@ function keepIn(p){
     else if(outL<outR)p.x=LEDGE.x0-.06;else p.x=LEDGE.x1+.06;}
   if(onHigh(p))return;
   for(const o of obstacles()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+.2;if(d<r&&d>1e-4){p.x=o.x+dx/d*r;p.z=o.z+dz/d*r;}}}
-function avoidAngle(p,a){if(outside||onHigh(p))return a;
-  for(const o of obstacles()){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
+function avoidAngle(p,a){if(onHigh(p))return a;
+  for(const o of (outside?TABLE_OBS:obstacles())){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
   if(Math.abs(side)<r){const push=(1-Math.abs(side)/r)*1.2*Math.min(1,(r+1.8-d)/1.8);a+=side>0?-push:push;}}return a;}
+function tableSpot(){let v;
+  for(let t=0;t<8;t++){v=new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5));
+    if(TABLE_OBS.every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.5))break;}
+  return v;}
 function freeSpot(p){for(let t=0;t<10;t++){const v=new THREE.Vector3(clamp(p.x+rand(-BX,BX),-BX+.4,BX-.4),0,rand(Z0+.2,Z1-.2));if(obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7))return v;}return null;}
 
 /* ---------- the gecko ---------- */
@@ -1033,16 +1043,16 @@ function updateGecko(dt){
     else if(ball&&ball.state==='flying'){if(ball.chase<=0){tgt=ball.m.position;kind='ball';}}
     else if(ball&&(ball.state==='ready'||ball.state==='held')){tmp2.set(ball.m.position.x-p.x,0,ball.m.position.z-p.z);G.root.rotation.y=lerpAngle(G.root.rotation.y,Math.atan2(tmp2.x,tmp2.z),Math.min(1,dt*4));AI.crouch=ball.state==='held'?.8:0;}
     else{AI.wander-=dt;
-      if(AI.wander<=0&&!AI.route){AI.wander=rand(3,7);
-        const want=outside?new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5))
+      if(AI.wander<=0&&!AI.route){AI.wander=outside?rand(1,2.4):rand(3,7);
+        const want=outside?tableSpot()
           :(Math.random()<.34?ledgeSpot():(Math.random()<.78?freeSpot(p):null));
         AI.route=want?planRoute(want):null;AI.target=AI.route?AI.route[0]:null;}
       tgt=AI.target;kind='wander';}
     if(tgt){tmp.set(tgt.x-p.x,0,tgt.z-p.z);const dist=tmp.length();const reach=ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
       const ang=Math.atan2(tmp.x,tmp.z);
       if(dist>reach){const steer=avoidAngle(p,ang);const dA=angDiff(G.root.rotation.y,steer);const turn=clamp(dA*Math.min(1,dt*5),-3.2*dt,3.2*dt);G.root.rotation.y+=turn;AI.turnAcc+=turn;
-        let spd=(S.sick||S.warm<25?.6:1.35)*((ext&&ext.speed)||1)*(kind==='wander'||kind==='bed'?.7:1)*Math.max(.1,Math.cos(Math.min(1.5,Math.abs(dA))))*(.6+.4*sc);
-        if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:0;}
+        let spd=(S.sick||S.warm<25?.6:1.35)*((ext&&ext.speed)||1)*(kind==='wander'?(outside?1.05:.7):kind==='bed'?.7:1)*Math.max(.1,Math.cos(Math.min(1.5,Math.abs(dA))))*(.6+.4*sc);
+        if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:(outside?.6:0);}
         spd*=Math.max(.35,Math.min(1,(dist-reach)/.8+.35));AI.v+=(spd-AI.v)*Math.min(1,dt*(spd>AI.v?5:9));
         p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;moving=AI.v>.08||Math.abs(turn)>dt*.6;}
       else if(kind==='cricket'){
@@ -1172,8 +1182,11 @@ function updateCam(dt){if(cine){cineCam();return;}
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
   const dist=((portrait?8.6:10.5)+(growth()-.85)*5+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
-  if(outside){look.x+=(gx*.95-look.x)*Math.min(1,dt*2);look.z+=(gz*.5-look.z)*Math.min(1,dt*1.5);
-    camera.position.set(look.x+Math.sin(camA)*dist,look.y+dist*camP,look.z+Math.cos(camA)*dist);camera.lookAt(look);return;}
+  if(outside){const tcx=(TABLE.x0+TABLE.x1)/2,tcz=(TABLE.z0+TABLE.z1)/2;
+    look.x+=((gx*.85+tcx*.15)-look.x)*Math.min(1,dt*2);
+    look.z+=((gz*.8+tcz*.2)-look.z)*Math.min(1,dt*1.5);
+    const d2=dist*.95;
+    camera.position.set(look.x+Math.sin(camA)*d2,look.y+d2*1.35,look.z+Math.cos(camA)*d2);camera.lookAt(look);return;}
   const fx=wide?0:clamp(gx*(portrait?.92:.6),-lim,lim),fz=wide?.6:1.1+(gz-1.1)*.45;
   look.x+=(fx-look.x)*Math.min(1,dt*2);look.z+=(fz-look.z)*Math.min(1,dt*1.5);
   camP+=(camPT-camP)*Math.min(1,dt*6);camera.position.set(look.x+Math.sin(camA)*dist,dist*camP,look.z+Math.cos(camA)*dist);camera.lookAt(look);}
@@ -1203,7 +1216,7 @@ const itchTex=canvasTex(128,128,(x)=>{x.strokeStyle='#FF5A5F';x.lineWidth=10;x.s
 const itchMark=new THREE.Sprite(new THREE.SpriteMaterial({map:itchTex,transparent:true,depthWrite:false,depthTest:false}));
 itchMark.visible=false;itchMark.renderOrder=9;itchMark.raycast=function(){};scene.add(itchMark);
 let itch=null,itchT=rand(40,80);
-function startItch(){if(itch||!S.hatched||S.asleep||S.shed>0||game||hatch.active||!G.root.visible)return;
+function startItch(){if(itch||!S.hatched||S.asleep||S.shed>0||game||hatch.active||outside||trip||!G.root.visible)return;
   const sp=pick(ITCH_SPOTS);itch={u:sp[0],name:sp[1],amt:1,t:0,said:false};SFX.chirp();
   say(pick(['Ooh! My '+sp[1]+' is itchy!',"I've got an itch on my "+sp[1]+'!','Scratch my '+sp[1]+', please!']),4);
   toast('☝️ He is sitting still — rub the red circle on his '+sp[1]+'!');updateUI();}
@@ -1521,6 +1534,11 @@ function refill(){S.water=100;SFX.splash();bumpTask('water');burst('💧',tmp.se
 /* ---------- call him ---------- */
 let callPt=null,callT=0;
 function callTo(pt){if(!S.hatched||!G.root.visible)return;if(S.asleep){say('Zzz...',1.2);return;}
+  if(outside){if(trip)return;
+    callPt=new THREE.Vector3(clamp(pt.x,TABLE.x0+.35,TABLE.x1-.35),TABLE.y,clamp(pt.z,TABLE.z0+.35,TABLE.z1-.35));
+    callT=0;AI.target=null;AI.route=null;
+    burst('✨',tmp.set(callPt.x,TABLE.y+.2,callPt.z),3,{size:.3});tone(700,.1,'sine',.05,1.5);
+    if(Math.random()<.45)say(pick(['Coming!','Off I go!','Exploring!']),1.5);return;}
   if(inRect(LEDGE,pt.x,pt.z)||inRect(RAMP,pt.x,pt.z)){
     const up=new THREE.Vector3(clamp(pt.x,LEDGE.x0+.6,LEDGE.x1-.6),LEDGE_H,clamp(pt.z,LEDGE.z0+.5,LEDGE.z1-.4));
     callPt=null;AI.route=planRoute(up);AI.target=AI.route[0];
@@ -1646,12 +1664,16 @@ function updateTrip(dt){
     G.root.rotation.y=lerpAngle(G.root.rotation.y,trip.phase==='through'?Math.PI/2:-Math.PI/2,Math.min(1,dt*5));
     if(k>=1){
       if(trip.phase==='through'){outside=true;outBar(true);burst('✨',tmp.copy(DOOR_OUT).setY(TABLE.y+.3),6,{size:.32});
-        say(pick(['So much room out here!','A whole table!','Adventure!']),2.8);}
+        AI.wander=.3;AI.route=null;AI.target=null;callPt=null;
+        say(pick(['So much room out here!','A whole table!','Adventure!']),2.8);
+        toast('👆 Tap the table to send him there, or press Home when he has had enough.');}
       else{outside=false;outBar(false);S.fun=clamp(S.fun+8,0,100);
         say(pick(['Home sweet home.','Back in my tank!']),2.4);save();updateUI();}
       trip=null;AI.vy=0;}
     return;}
-  if(trip.t>26)trip=null;
+  /* if he dawdles, walk him through anyway - he must never be stranded */
+  if(trip.t>26){trip={phase:trip.phase==='backToDoor'?'throughIn':'through',t:0};
+    const a=trip.phase==='through'?DOOR_IN:DOOR_OUT;p.copy(a);}
 }
 /* ---------- idle wants: basking & drinking ---------- */
 let want=null,wantT=6;
@@ -1659,6 +1681,12 @@ const STAY={pos:new THREE.Vector3(),kind:'stay',reach:1e9,arrive(){}};
 function extTarget(){
   if(trip&&trip.phase==='toDoor')return{pos:DOOR_IN,kind:'door',reach:.45,speed:1.25,arrive(){trip={phase:'through',t:0};}};
   if(trip&&trip.phase==='backToDoor')return{pos:DOOR_OUT,kind:'door',reach:.45,speed:1.25,arrive(){trip={phase:'throughIn',t:0};}};
+  /* out on the table: the basking slate, the water bowl and an itch all live in
+     the tank, and chasing one pins him against the wall. Only a tap counts. */
+  if(outside){want=null;
+    if(callPt)return{pos:callPt,kind:'call',reach:.35,speed:1.2,
+      arrive(){callPt=null;startAct('happy',.5);SFX.chirp();}};
+    return null;}
   if(cine&&cine.drive)return{pos:cine.tgt,kind:'cine',reach:.3,speed:1.55,arrive(){}};
   if(game)return game.def.target?(game.def.target(game)||STAY):STAY;
   if(scaleObj)return STAY;
@@ -2017,11 +2045,12 @@ $('#gbStop').onclick=()=>endGame();
 /* ---------- touch hooks ---------- */
 function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);
   if(doorG)a.push(doorG);
-  const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank');
-  if(lb)a.push(lb);if(rp)a.push(rp);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
+  const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank'),tb=scene.getObjectByName('sideboardTop');
+  if(lb)a.push(lb);if(rp)a.push(rp);if(outside&&tb)a.push(tb);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
   if(h.kind==='door'){outside?sendHome():letOut();return true;}
   if(h.kind==='present'){openPresent();return true;}if(h.kind==='lamp'){toggleLamp();return true;}if(h.kind==='bowl'){refill();return true;}
+  if(h.kind==='table'){if(outside)callTo(h.point);return true;}
   if(h.kind==='sand'||h.kind==='decor'||h.kind==='ledge'){if(decorating){sel=-1;updDecoBar();}else callTo(h.point);return true;}return false;}
 function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
   if(!game&&!decorating&&ball&&ball.state==='ready'){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='ball'){ball.state='held';ball.samples=[];const p=groundPoint(e);if(p)ball.samples.push({x:p.x,z:p.z,t:performance.now()});ball.moved=0;return true;}}
@@ -2066,9 +2095,9 @@ function updateExtras(dt){updateMess();
   if(snow){const a=snow.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*.45;if(y<0)y=5;a.setY(i,y);a.setX(i,a.getX(i)+Math.sin(T+i)*dt*.1);}a.needsUpdate=true;}
   if(AI.act==='bask')S.warm=Math.min(100,S.warm+dt*4);
   if(AI.act==='drink')S.water=Math.max(0,S.water-dt*3);
-  if(callPt){callT+=dt;if(callT>8)callPt=null;}
+  if(callPt){callT+=dt;if(callT>(outside?18:8))callPt=null;}
   if(S.hatched&&!S.asleep&&!game){if(S.lamp&&S.warm<40&&!want)want='bask';
-    wantT-=dt;if(wantT<=0){wantT=rand(9,16);if(!want&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.45)want='bask';else if(S.water>10&&Math.random()<.3)want='drink';}}}
+    wantT-=dt;if(wantT<=0){wantT=rand(9,16);if(!want&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.45)want='bask';else if(S.water>10&&Math.random()<.3)want='drink';}}}
   if(game){if(game.cd>0){game.cd-=dt;if(bubbleTimer>0){bubble.classList.remove('show');bubbleTimer=0;}if(game.cd<=0)say(game.def.intro,2.5);const n=Math.ceil(game.cd-.7);if(n>0){if(cdShown!==String(n))tone(660,.12,'triangle',.06);showCd(String(n));}else{if(cdShown!=='Go!')tone(990,.25,'triangle',.07);showCd('Go!');}if(game.cd<=0)showCd(null);}
     else{game.time-=dt;game.def.update(game,dt);if(game){$('#gbText').textContent=game.def.bar(game);
       if(!game.def.noCd){$('#gbFill').style.setProperty('--p',(100*Math.max(0,game.time)/game.def.dur)+'%');const hurry=game.time<5.5;$('#gameBar').classList.toggle('hurry',hurry);const sec=Math.ceil(game.time);if(hurry&&sec!==game.lastTick&&sec>0){game.lastTick=sec;tone(880,.06,'square',.03);}}
