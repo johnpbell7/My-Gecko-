@@ -98,6 +98,7 @@ canvas{position:fixed;inset:0;display:block}
 .reset{margin-top:14px;border:0;background:none;color:var(--ink);opacity:.7;font:700 15px var(--font);text-decoration:underline;cursor:pointer;padding:6px}
 .reset[hidden]{display:none}
 .build{margin:10px 0 0;text-align:center;font:600 12px var(--font);opacity:.45}
+.bk{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .reset.sure{opacity:1;color:#fff;background:#FF5A5F;text-decoration:none;border-radius:14px;padding:8px 14px}
 .overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(30,20,60,.35);padding:16px;z-index:6}
 .overlay[hidden]{display:none}
@@ -397,6 +398,8 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <label class="row"><span><b>Bedtime</b><small>He gets sleepy from this time</small></span><select id="setBed"><option value="19">7:00pm</option><option value="19.5">7:30pm</option><option value="20">8:00pm</option><option value="20.5">8:30pm</option><option value="21">9:00pm</option></select></label>
   <label class="row"><span><b>Sound</b></span><input type="checkbox" id="setSound"></label>
   <button class="reset" id="setReset">Start again with a new egg</button>
+  <div class="bk"><button class="reset" id="setBackup">Save a backup</button><button class="reset" id="setRestore">Restore a backup</button></div>
+  <input id="bkFile" type="file" accept="application/json,.json" hidden>
   <button class="reset" id="setPeek">Peek at him fully grown</button>
   <p class="build">Version <b id="setBuild"></b></p>
   <button class="go ghost" data-close>Done</button></div></div>
@@ -507,6 +510,8 @@ function blob(mat,sx,sy,sz,x,y,z,parent){const m=new THREE.Mesh(SPH,mat);m.scale
 /* ---------- terrarium ---------- */
 const TL=S.tank||1,KX=TL>1?1.35:1,KZ=TL>1?1.25:1;
 const TANK={w:15*KX,d:8.6*KZ,h:5.4},BX=6.3*KX,Z0=-1.7*KZ,Z1=3.4*KZ;
+/* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
+const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62,rIn:1.2,mouth:.72,h:1.15};
 const plants=[];
 function srnd(seed){let sd=seed||1;return()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};}
 function rockGeo(r,seed){const g=new THREE.SphereGeometry(r,40,28);const p=g.attributes.position,rn=srnd(seed),bumps=[];for(let i=0;i<8;i++)bumps.push([new THREE.Vector3(rn()-.5,rn()-.5,rn()-.5).normalize(),rn()*.28+.06]);
@@ -559,8 +564,6 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
   const stone=M(0xB9A58F,{flatShading:true,roughness:.9});
   [[-6.2,-4.25,1.35],[-3.3,-4.4,1.0],[-.3,-4.35,1.22],[2.7,-4.3,.95],[6.0,-4.15,1.4]].forEach(([x,z,sc])=>{const m=new THREE.Mesh(rockGeo(sc,Math.round(x*10+50)),rockMat);m.position.set(x,sc*.45,z);m.scale.y=rand(.9,1.5);m.rotation.y=rand(0,3);m.castShadow=m.receiveShadow=true;scene.add(m);});
   // hide cave
-  const hide=new THREE.Mesh(rockGeo(1,7),rockMat);hide.scale.set(1.7,1.05,1.25);hide.position.set(-4.6,.3,-2.3);hide.castShadow=hide.receiveShadow=true;hide.name='hideRock';scene.add(hide);
-  const cave=new THREE.Mesh(new THREE.CircleGeometry(.44,24),new THREE.MeshBasicMaterial({color:0x2a1d18}));cave.scale.set(1.35,.85,1);cave.position.set(-4.15,.34,-1.03);cave.rotation.y=.2;scene.add(cave);
   // log
   const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(2,1.5);const log=new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,2.9,28,4),M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.95}));log.rotation.z=Math.PI/2;log.rotation.y=.3;log.position.set(.4,.34,-2.35);log.castShadow=log.receiveShadow=true;log.name='log';scene.add(log);
   const ringM=M(0xffffff,{map:ringTex,roughness:.9});
@@ -580,9 +583,42 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
   // basking slate
   const slate=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.2,.12,7),M(0x8F8E9E,{roughness:.85,flatShading:true}));slate.position.set(-1.6,.04,1.3);slate.receiveShadow=true;slate.name='slate';scene.add(slate);
   for(let i=absStart;i<scene.children.length;i++){const o=scene.children[i];o.position.x*=KX;o.position.z*=KZ;}
-  cave.position.set(hide.position.x+.45,.34,hide.position.z+1.27);
   ring.position.set(log.position.x+Math.cos(.3)*1.46,.34,log.position.z-Math.sin(.3)*1.46);
   ring2.position.set(log.position.x-Math.cos(.3)*1.46,.34,log.position.z+Math.sin(.3)*1.46);
+})();
+(function buildCave(){
+    const R=CAVE.rOut,ri=CAVE.rIn,H=CAVE.h,m=CAVE.mouth;
+    const g=new THREE.Group();g.position.set(CAVE.x,0,CAVE.z);g.name='hideRock';scene.add(g);
+    const wallM=M(0xffffff,{map:rockTex,bumpMap:rockTex,bumpScale:.07,roughness:.97,side:THREE.DoubleSide});
+    /* the wall, with a gap left at the front for the way in */
+    const wall=new THREE.Mesh(new THREE.CylinderGeometry(R,R*1.06,H,30,1,true,m,Math.PI*2-2*m),wallM);
+    wall.position.y=H/2;wall.castShadow=wall.receiveShadow=true;g.add(wall);
+    const inner=new THREE.Mesh(new THREE.CylinderGeometry(ri,ri,H,26,1,true,m+.04,Math.PI*2-2*(m+.04)),
+      M(0x7A6552,{roughness:1,side:THREE.BackSide}));
+    inner.position.y=H/2;g.add(inner);
+    /* a low domed roof over the top */
+    const roof=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,30,14,0,Math.PI*2,0,Math.PI/2),wallM);
+    roof.scale.y=.62;roof.position.y=H-.04;roof.castShadow=roof.receiveShadow=true;g.add(roof);
+    const roofIn=new THREE.Mesh(new THREE.SphereGeometry(R*.96,26,12,0,Math.PI*2,0,Math.PI/2),
+      M(0x6E5B4A,{roughness:1,side:THREE.BackSide}));
+    roofIn.scale.y=.6;roofIn.position.y=H-.06;g.add(roofIn);
+    /* thicker jambs either side of the opening, so the mouth reads as a doorway */
+    for(const sd of[-1,1]){
+      const j=new THREE.Mesh(rockGeo(.42,61+(sd>0?7:0)),rockMat);
+      j.position.set(Math.sin(sd*m)*R*.99,.4,Math.cos(sd*m)*R*.99);
+      j.scale.set(1,1.5,.9);j.castShadow=j.receiveShadow=true;g.add(j);}
+    /* boulders piled on top so it looks like rock, not a pot */
+    [[-.7,.52,-.55],[.35,.6,-.75],[.85,.44,.1],[-.35,.46,-1.0]].forEach(([bx,br,bz],i)=>{
+      const k=new THREE.Mesh(rockGeo(br,91+i*17),rockMat);
+      k.position.set(bx*R*.8,H+.18,bz*R*.8);k.scale.y=.8;k.rotation.y=i*1.3;
+      k.castShadow=k.receiveShadow=true;g.add(k);});
+    /* darker sand inside, and a soft shadow in the mouth so it reads as deep */
+    const fl=new THREE.Mesh(new THREE.CircleGeometry(ri,28),M(0x8A6B4A,{roughness:1}));
+    fl.rotation.x=-Math.PI/2;fl.position.y=.012;g.add(fl);
+    const gloom=new THREE.Mesh(new THREE.CircleGeometry(ri*.98,28),
+      new THREE.MeshBasicMaterial({color:0x2A1D18,transparent:true,opacity:.34,depthWrite:false}));
+    gloom.rotation.x=-Math.PI/2;gloom.position.y=.02;g.add(gloom);
+    g.userData.kind='cave';
 })();
 const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
 (function buildRoom(){const W=TANK.w,D=TANK.d,H=TANK.h,topY=-.95,floorY=-5.2,wallZ=-D/2-3;
@@ -701,9 +737,9 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
     const k=new THREE.Mesh(rockGeo(br,140+i*11),rockMat);
     k.position.set(bx,br*.5,bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
     k.castShadow=k.receiveShadow=true;scene.add(k);});
-  [[-1.75,.62],[.15,.52],[1.3,.58]].forEach(([bx,br],i)=>{
+  [[.16,.62],[.58,.52]].forEach(([fx,br],i)=>{
     const k=new THREE.Mesh(rockGeo(br,183+i*13),rockMat);
-    k.position.set(bx,LEDGE_H+br*.3,LEDGE.z0+.42);k.scale.y=.8;k.rotation.y=i*1.7;
+    k.position.set(LEDGE.x0+w*fx,LEDGE_H+br*.3,LEDGE.z0+.42);k.scale.y=.8;k.rotation.y=i*1.7;
     k.castShadow=k.receiveShadow=true;scene.add(k);});
   body.name='ledgeBody';body.userData.kind='ledge';
   /* the ramp he walks up */
@@ -727,12 +763,12 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   for(let i=0;i<9;i++){const l=new THREE.Mesh(snakeLeaf(rand(.8,1.5),rand(.3,1)),snakeMat);
     l.rotation.set(rand(-.3,.15),i/9*6.28,rand(-.35,.35));l.userData.rz=l.rotation.z;l.castShadow=true;fern.add(l);}
   /* extra cover down on the sand */
-  [[-6.0,2.9,.68],[6.0,-1.15,.62]].forEach(([x,z,r],i)=>{
+  [[-6.0,2.9,.68]].forEach(([x,z,r],i)=>{
     const b=new THREE.Mesh(rockGeo(r,211+i*9),rockMat);
     b.position.set(x*KX,r*.45,z*KZ);b.scale.y=rand(.85,1.2);b.rotation.y=rand(0,3);
     b.castShadow=b.receiveShadow=true;scene.add(b);});
 })();
-const STATIC_OBS=[{x:-4.6,z:-2.3,r:1.5},{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x:3.2,z:-3.1,r:.72},
+const STATIC_OBS=[{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x:3.2,z:-3.1,r:.72},
   {x:-6.0,z:2.9,r:.7}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
 function obstacles(){const o=STATIC_OBS.slice();for(const d of S.decor)o.push({x:d.x,z:d.z,r:.55});return o;}
 function keepIn(p){
@@ -742,7 +778,16 @@ function keepIn(p){
     for(const o of TABLE_OBS){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
       if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
     return;}
-  p.x=clamp(p.x,-BX,BX);p.z=clamp(p.z,Z0,Z1);
+  p.x=clamp(p.x,-BX,BX);
+  /* the cave: he may pass through the mouth, but not through the walls, and once
+     he is inside he may stand further back than the open sand allows */
+  {const dx=p.x-CAVE.x,dz=p.z-CAVE.z,d=Math.hypot(dx,dz)||1e-4;
+   const atMouth=Math.abs(Math.atan2(dx,dz))<CAVE.mouth;
+   if(AI.inCave){if(d>CAVE.rIn&&!atMouth){p.x=CAVE.x+dx/d*CAVE.rIn;p.z=CAVE.z+dz/d*CAVE.rIn;}}
+   else if(d<CAVE.rOut&&!atMouth){p.x=CAVE.x+dx/d*CAVE.rOut;p.z=CAVE.z+dz/d*CAVE.rOut;}}
+  {const d=Math.hypot(p.x-CAVE.x,p.z-CAVE.z);
+   p.z=clamp(p.z,d<CAVE.rIn?Math.min(Z0,CAVE.z-CAVE.rIn+.14):Z0,Z1);
+   AI.inCave=Math.hypot(p.x-CAVE.x,p.z-CAVE.z)<CAVE.rIn-.03;}
   const onRamp=inRect(RAMP,p.x,p.z);
   if(onRamp&&p.y>.15){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
   /* up on the shelf he cannot walk off the edge - he takes the ramp down */
@@ -869,7 +914,16 @@ function updateCrickets(dt){for(const c of crickets){const p=c.g.position;tmp.se
 let ball=null;
 const ballTex=(function(){const c=document.createElement('canvas');c.width=128;c.height=64;const x=c.getContext('2d');const cols=['#FF5FA2','#FFFFFF','#FFC53D','#FFFFFF'];for(let i=0;i<8;i++){x.fillStyle=cols[i%4];x.fillRect(0,i*8,128,8);}const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;})();
 const BR=.28,FETCH_HOME=new THREE.Vector3();
-function readySpot(){const p=G.root.position,r=G.root.rotation.y,sc=growth();return new THREE.Vector3(clamp(p.x+Math.sin(r)*1.9*sc,-BX+.4,BX-.4),BR,clamp(p.z+Math.cos(r)*1.9*sc,Z0,Z1));}
+/* the one place that decides where the ball may sit: open sand he can walk to */
+function sandSpot(x,z){const q=new THREE.Vector3(x,0,z);
+  for(let i=0;i<2;i++){
+    if(groundY(q.x,q.z)>.05){q.z=clamp(q.z,LEDGE.z1+.6,Z1-.35);q.x=clamp(q.x,-BX+.4,BX-.4);}
+    q.x=clamp(q.x,-BX+.3,BX-.3);q.z=clamp(q.z,Z0+.3,Z1-.3);q.y=0;
+    const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;}
+  q.x=clamp(q.x,-BX+.3,BX-.3);q.z=clamp(q.z,Z0+.3,Z1-.3);
+  q.y=groundY(q.x,q.z)+BR;return q;}
+function readySpot(){const p=G.root.position,r=G.root.rotation.y,sc=growth();
+  return sandSpot(p.x+Math.sin(r)*1.9*sc,p.z+Math.cos(r)*1.9*sc);}
 function throwBall(){if(ball&&ball.state!=='ready'){say(ball.state==='carried'?"I've got it!":'Go on, throw it!',1.5);return;}
   if(!ball){const m=new THREE.Mesh(new THREE.SphereGeometry(BR,28,18),M(0xffffff,{map:ballTex,roughness:.35}));m.castShadow=true;m.userData.kind='ball';scene.add(m);ball={m:m,v:new THREE.Vector3(),state:'ready',idle:0,fetches:0,chase:0};}
   ball.m.position.copy(readySpot());ball.state='ready';ball.idle=0;SFX.pop();say('Throw my ball! Swipe it away!',2.5);}
@@ -877,6 +931,12 @@ function removeBall(){if(ball){if(ball.m.parent)ball.m.parent.remove(ball.m);bal
 function launch(vx,vz){const h=Math.hypot(vx,vz),cap=11;if(h>cap){vx*=cap/h;vz*=cap/h;}ball.v.set(vx,3+Math.min(h,cap)*.32,vz);ball.state='flying';ball.chase=.35;ball.idle=0;
   tone(300,.25,'sine',.05,3);setTimeout(()=>{if(ball&&ball.state==='flying')say(pick(['Wheee!',"I'll get it!",'Here I come!']),1.4);},250);}
 function autoThrow(){const a=rand(-.7,.7)+Math.PI;launch(Math.sin(a)*rand(6,8)+(Math.random()-.5)*2,Math.cos(a)*rand(5,7));}
+/* decorations go on open sand - never half inside a rock, the shelf or the cave */
+function decorSpot(x,z){const q=new THREE.Vector3(clamp(x,-BX+.5,BX-.5),0,clamp(z,Z0+.45,Z1-.4));
+  const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;
+  for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r=o.r+.5;
+    if(d<r&&d>1e-4){q.x=o.x+dx/d*r;q.z=o.z+dz/d*r;}}
+  q.x=clamp(q.x,-BX+.5,BX-.5);q.z=clamp(q.z,Z0+.45,Z1-.4);return q;}
 function safeHome(){const free=v=>obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7);
   const first=new THREE.Vector3(clamp(look.x,-BX+1,BX-1),0,Z1-.6);if(free(first))return first;
   for(let i=0;i<16;i++){const v=new THREE.Vector3(rand(-BX+.7,BX-.7),0,rand(Z1-1.8,Z1-.4));if(free(v))return v;}
@@ -892,10 +952,22 @@ function updateBall(dt){if(!ball)return;
     if(ball.carryT>10){say(pick(['Here you go!','I brought it back!']),1.7);dropBall();}return;}
   if(ball.state==='ready'){ball.idle+=dt;if(ball.idle>70){say("I'll tidy my ball away.",2);removeBall();}return;}
   if(ball.state!=='flying')return;ball.chase-=dt;const b=ball.m.position,v=ball.v;v.y-=16*dt;b.addScaledVector(v,dt);
-  if(b.y<BR){b.y=BR;if(v.y<-1.6){v.y*=-.45;tone(180+rand(0,60),.07,'triangle',.05);}else v.y=0;}
-  if(b.y<=BR+.001){v.x*=Math.max(0,1-1.6*dt);v.z*=Math.max(0,1-1.6*dt);}
-  if(b.x<-BX-.3||b.x>BX+.3){v.x*=-.7;b.x=clamp(b.x,-BX-.3,BX+.3);tone(240,.06,'triangle',.04);}if(b.z<Z0-.4||b.z>Z1+.3){v.z*=-.7;b.z=clamp(b.z,Z0-.4,Z1+.3);tone(240,.06,'triangle',.04);}
+  /* the floor under the ball is the shelf or the ramp where there is one, not always zero */
+  const gy=groundY(b.x,b.z)+BR;
+  if(b.y<gy){b.y=gy;if(v.y<-1.6){v.y*=-.45;tone(180+rand(0,60),.07,'triangle',.05);}else v.y=0;}
+  if(b.y<=gy+.001){v.x*=Math.max(0,1-1.6*dt);v.z*=Math.max(0,1-1.6*dt);}
+  if(b.x<-BX+.25||b.x>BX-.25){v.x*=-.7;b.x=clamp(b.x,-BX+.25,BX-.25);tone(240,.06,'triangle',.04);}
+  if(b.z<Z0+.25||b.z>Z1-.25){v.z*=-.7;b.z=clamp(b.z,Z0+.25,Z1-.25);tone(240,.06,'triangle',.04);}
+  /* once it stops, make sure it has not come to rest somewhere he cannot reach */
+  /* hold the invariant every frame it is at rest, not just the first one */
+  if(Math.hypot(v.x,v.z)<.6&&b.y<=gy+.05)ballSettle();
   ball.m.rotation.x+=v.z*dt/BR;ball.m.rotation.z-=v.x*dt/BR;}
+/* nudge a stopped ball back onto ground he can stand on: off the shelf, out of
+   the cave, clear of the rocks. Otherwise fetch deadlocks with the ball buried. */
+function ballSettle(){if(!ball||outside)return;const b=ball.m.position;
+  const q=sandSpot(b.x,b.z);
+  if(Math.abs(q.x-b.x)>1e-3||Math.abs(q.z-b.z)>1e-3)ball.v.set(0,0,0);
+  b.copy(q);}
 
 const poops=[],wees=[],POOP_MAX=10,WEE_MAX=10;
 /* real leopard geckos pick one corner as their toilet, so he does too */
@@ -1192,7 +1264,10 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   heartT-=dt;if(heartT<=0){heartT=9;if(!S.asleep&&!S.sick&&S.hunger>70&&S.fun>70&&S.clean>70){G.head.getWorldPosition(tmp2);burst('❤️',tmp2,1,{size:.4,g:.1,speed:.6,life:2});}}
   pooT-=dt;if(pooT<=0){pooT=rand(S.asleep?110:45,S.asleep?190:90);
     if(!hatch.active&&!game&&!outside&&!(poops.length>=POOP_MAX&&wees.length>=WEE_MAX))goLoo(Math.random()<.4?'wee':null);}
-  itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}}
+  itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
+  if(caveT>0){caveT-=dt;
+    if(caveT<=0){want=null;wantT=rand(12,20);if(AI.inCave){AI.route=[CAVE_PORCH.clone()];AI.target=AI.route[0];}
+      say(pick(['That was a nice rest!','Out I come!','Hello again!']),2.2);}}}
 
 /* ---------- lights / day & night ---------- */
 let lightMix=S.asleep?1:0,nightShown=null,envT=0;
@@ -1455,6 +1530,14 @@ function updateUI(){for(const k of['hunger','fun','clean','energy']){const el=$(
 setInterval(updateUI,700);setInterval(()=>{if(S.hatched)save();},5000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.hatched)save();});
 window.addEventListener('pagehide',()=>{if(S.hatched)save();});
+/* offline play: cache the game on her phone, but still take a new build when there is signal */
+try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){
+  addEventListener('load',()=>{navigator.serviceWorker.register('sw.js')
+    .then(r=>{r.update();}).catch(()=>{});});}}catch(e){}
+/* a phone can kill the app without firing either of those, so write now and then too */
+setInterval(()=>{if(S.hatched&&!resetting&&!document.hidden)save();},20000);
+/* ask the browser to treat her gecko as worth keeping, not as throwaway cache */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>{if(!p)navigator.storage.persist();});}catch(e){}
 
 function updateBubble(dt){if(bubbleTimer>0){bubbleTimer-=dt;if(bubbleTimer<=0)bubble.classList.remove('show');}
   if(!bubble.classList.contains('show'))return;
@@ -1712,7 +1795,9 @@ function updateTrip(dt){
     const a=trip.phase==='through'?DOOR_IN:DOOR_OUT;p.copy(a);}
 }
 /* ---------- idle wants: basking & drinking ---------- */
-let want=null,wantT=6;
+let want=null,wantT=6,caveT=0;
+const CAVE_PORCH=new THREE.Vector3(CAVE.x,0,CAVE.z+CAVE.rOut+.62);
+const CAVE_MID  =new THREE.Vector3(CAVE.x,0,CAVE.z+.18);
 const STAY={pos:new THREE.Vector3(),kind:'stay',reach:1e9,arrive(){}};
 function extTarget(){
   if(trip&&trip.phase==='toDoor')return{pos:DOOR_IN,kind:'door',reach:.45,speed:1.25,arrive(){trip={phase:'through',t:0};}};
@@ -1723,6 +1808,7 @@ function extTarget(){
     if(callPt)return{pos:callPt,kind:'call',reach:.35,speed:1.2,
       arrive(){callPt=null;startAct('happy',.5);SFX.chirp();}};
     return null;}
+  if(caveT>0&&!game&&!crickets.length&&!callPt&&!treat)return STAY;
   if(cine&&cine.drive)return{pos:cine.tgt,kind:'cine',reach:.3,speed:1.55,arrive(){}};
   if(game)return game.def.target?(game.def.target(game)||STAY):STAY;
   if(scaleObj)return STAY;
@@ -1731,6 +1817,13 @@ function extTarget(){
     arrive(){if(!hunt){hunt={kind:'treat'};startAct('stalk',rand(.4,.7));AI.crouch=1;}}};
   if(crickets.length||ball)return null;
   if(itch&&!S.asleep)return STAY;
+  if(want==='cave'){const q=G.root.position;
+    const lined=AI.inCave||(q.z>CAVE.z+CAVE.rOut*.25&&Math.abs(q.x-CAVE.x)<CAVE.rOut*.85);
+    const to=lined?CAVE_MID:CAVE_PORCH;
+    return{pos:to,kind:'cave',reach:.32,speed:.95,arrive(){
+      if(!lined)return;
+      want=null;caveT=rand(10,20);SFX.pop();
+      say(pick(['My cave! So cosy.','Shh... I am hiding!','I love it in here.']),2.6);}};}
   if(want==='bask'){if(!S.lamp){want=null;return null;}return{pos:SLATE,kind:'bask',reach:.35,speed:.8,arrive(){want=null;startAct('bask',7);say(pick(['Ahh, toasty!','So warm and cosy...','Sunbathing time!']),2.5);award('warm');}};}
   if(want==='drink'){if(S.water<5){want=null;return null;}const s=growth();return{pos:new THREE.Vector3(4.9*KX-.6-1.4*s,0,2.1*KZ),kind:'drink',reach:.3,speed:.8,arrive(){want=null;startAct('drink',2.2);}};}
   return null;}
@@ -1741,8 +1834,35 @@ function makePresent(){const g=new THREE.Group();const box=new THREE.Mesh(new TH
   const r1=new THREE.Mesh(new THREE.BoxGeometry(.62,.52,.12),rib);r1.position.y=.25;g.add(r1);const r2=new THREE.Mesh(new THREE.BoxGeometry(.12,.52,.62),rib);r2.position.y=.25;g.add(r2);
   blob(rib,.12,.08,.07,-.09,.55,0,g).rotation.z=.5;blob(rib,.12,.08,.07,.09,.55,0,g).rotation.z=-.5;g.userData.kind='present';return g;}
 function spawnPresent(){present=makePresent();present.position.set(clamp(look.x+1.6,-BX,BX),0,1.9);scene.add(present);setTimeout(()=>say('Ooh, a present! Tap it!',2.5),800);}
-function openPresent(){if(!present)return;S.presentDay=todayKey();const c=Math.floor(rand(5,11));burst('🎊',tmp.copy(present.position).setY(.6),8,{size:.4,speed:1.3});scene.remove(present);present=null;SFX.yay();earn(c);award('present');
-  openCard('🎁','Daily present!','You got '+c+' coins!'+(S.streak>1?' You\'ve looked after '+S.name+' '+S.streak+' days in a row 🔥':'')+' Come back tomorrow for another present.');save();}
+/* the daily present is a real thing, not a handful of coins */
+function presentGift(){
+  const locked=SHOP.filter(it=>it.price>0&&it.type!=='decor'&&!S.owned[it.id]);
+  if(locked.length){locked.sort((a,b)=>a.price-b.price);return{kind:'unlock',it:pick(locked.slice(0,3))};}
+  const decor=SHOP.filter(it=>it.type==='decor');
+  if((S.decor||[]).length<12&&Math.random()<.65)return{kind:'decor',it:pick(decor)};
+  return{kind:'coins',n:Math.floor(rand(10,19))};}
+function openPresent(){if(!present)return;S.presentDay=todayKey();
+  burst('\uD83C\uDF8A',tmp.copy(present.position).setY(.6),10,{size:.45,speed:1.4});
+  scene.remove(present);present=null;SFX.yay();award('present');
+  const streak=S.streak>1?' You\u2019ve looked after '+S.name+' '+S.streak+' days in a row \uD83D\uDD25.':'';
+  const g=presentGift();
+  if(g.kind==='unlock'){
+    S.owned[g.it.id]=true;
+    $('#cExtra').innerHTML='<button class="again" id="giftUse">'+g.it.ic+' '+(g.it.type==='bg'?'Try it out!':'Wear it now!')+'</button>';
+    openCard(g.it.ic,'A present for you!','It\u2019s a '+g.it.name.toLowerCase()+', and it\u2019s yours to keep!'+streak,true);
+    $('#giftUse').onclick=()=>{$('#card').hidden=true;
+      if(g.it.type==='bg')setBg(g.it.id);
+      else{wearHat(g.it.id);award('hat');showOff(pick(['Brand new!','Look at me!','I love it!']));}
+      drawShop();save();};
+  }else if(g.kind==='decor'){
+    {const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4));S.decor.push({t:g.it.id,x:q.x,z:q.z,r:0});}
+    buildDecor();award('decor');
+    $('#cExtra').innerHTML='<button class="again" id="giftMove">\uD83C\uDFE1 Put it somewhere</button>';
+    openCard(g.it.ic,'A present for you!','It\u2019s '+g.it.name.toLowerCase()+' for the tank!'+streak,true);
+    $('#giftMove').onclick=()=>{$('#card').hidden=true;startDecorate(S.decor.length-1);};
+  }else{earn(g.n);
+    openCard('\uD83E\uDE99','A present for you!','You got '+g.n+' coins!'+streak);}
+  save();}
 function makeBday(){const g=new THREE.Group();const cake=new THREE.Group();cake.position.set(2.2,0,.4);g.add(cake);
   const l1=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.3,28),MP(0xFFB3CF));l1.position.y=.15;const l2=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.25,28),MP(0xFFFFFF));l2.position.y=.42;cake.add(l1,l2);
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2;blob(MP([0xFF5F7A,0x5FC8FF,0xFFE36E,0x7CE08A][i%4]),.04,.04,.04,Math.cos(a)*.44,.3,Math.sin(a)*.44,cake);}
@@ -1910,10 +2030,12 @@ function buy(it){const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);
   if(own){if(it.type==='bg')setBg(it.id);else{wearHat(S.hat===it.id?'none':it.id);if(S.hat!=='none'){award('hat');showOff(pick(['Do I look cool?','I love it!','So fancy!']));}}SFX.pop();drawShop();save();return;}
   if(S.coins<it.price){tone(220,.2,'square',.04);toast('You need '+(it.price-S.coins)+' more coins. Play games and care for '+S.name+' to earn some!');return;}
   S.coins-=it.price;updateCoins();SFX.yay();
-  if(it.type==='decor'){S.decor.push({t:it.id,x:clamp(look.x+rand(-1.5,1.5),-BX,BX),z:rand(-.3,1.0),r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
+  if(it.type==='decor'){const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4));S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
   else{S.owned[it.id]=true;if(it.type==='bg')setBg(it.id);else{wearHat(it.id);award('hat');$('#shop').hidden=true;showOff(pick(['Brand new!','Look at me!','I love it!']));}drawShop();}save();}
 const decorGroups=[];let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
-function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;scene.add(g);decorGroups.push(g);});}
+function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;
+  S.decor.forEach(d=>{const q=decorSpot(d.x,d.z);d.x=q.x;d.z=q.z;});
+  S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;scene.add(g);decorGroups.push(g);});}
 function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or tap to turn':'Tap to pick'):'Visit the Shop!';$('#dbRemove').hidden=sel<0;}
 function startDecorate(i){if(game)endGame(true);decorating=true;sel=(i===undefined)?-1:i;$('#decoBar').hidden=false;updDecoBar();}
 function stopDecorate(){decorating=false;sel=-1;$('#decoBar').hidden=true;decorGroups.forEach(g=>g.scale.setScalar(1));save();}
@@ -2017,7 +2139,7 @@ const GAMES={
       if(!HIDE_SPOTS)HIDE_SPOTS=[['hideRock',1.7,2.6],['log',-.5,2.5],['plant',-2.3,2.4],['plant2',2.6,.2],['ledgeLog',0,-.55],['perchRock',-.1,.5]]
         .map(([n,x,z])=>{const o=scene.getObjectByName(n);if(!o)return null;const ox=o.position.x+x,oz=o.position.z+z;
           return{obj:o,out:new THREE.Vector3(ox,groundY(ox,oz),oz)};}).filter(Boolean);
-      HIDE_SPOTS.forEach(s=>{s.rz=s.obj.rotation.z;s.obj.userData.kind='hidespot';});},
+      HIDE_SPOTS.forEach(s=>{s.rz=s.obj.rotation.z;s.prevKind=s.obj.userData.kind;s.obj.userData.kind='hidespot';});},
     update(g,dt){if(!g.spot){g.wait-=dt;if(g.round<3&&g.wait<3&&g.wait>0){showCd('🙈 '+Math.ceil(g.wait),true);}if(g.wait<=0){showCd(null);if(g.round>=3){endGame();return;}g.round++;g.spot=pick(HIDE_SPOTS.filter(s=>s!==g.last));g.last=g.spot;
         G.head.getWorldPosition(tmp2);burst('💨',tmp2,5,{size:.4});G.root.visible=false;tone(500,.15,'sine',.05,.5);say('Ready or not... find me!',2.2);g.wig=1.5;g.hint=5;
         if(!g.tip){const tg=new THREE.ConeGeometry(.13,1,12);tg.rotateZ(Math.PI/2);g.tip=new THREE.Mesh(tg,G.mats.skin);g.tip.castShadow=true;scene.add(g.tip);}
@@ -2030,7 +2152,7 @@ const GAMES={
       if(s===g.spot){if(g.tip)g.tip.visible=false;popText(g.hint>0?'+3':'+2',s.out,'#7CF29A');g.pts=(g.pts||0)+(g.hint>0?3:2);s.obj.rotation.z=s.rz;G.root.position.copy(s.out);AI.vy=0;G.root.rotation.y=0;G.root.visible=true;popT=0;g.score++;g.spot=null;g.wait=2.4;SFX.yay();burst('✨',tmp.copy(s.out).setY(.8),10,{size:.4});setTimeout(()=>{startAct('happy',1);say(pick(['You found me!','Peekaboo!','Aww, you found me!']),2);},200);}
       else{g.wrong++;tone(200,.15,'triangle',.05);burst('❓',h.point,1,{size:.5,g:.3});say(pick(['Not in there!','Nope! Try again!','Getting warmer...']),1.3);}return true;},
     target(g){return STAY;},
-    stop(g){showCd(null);if(g.tip){scene.remove(g.tip);g.tip=null;}if(HIDE_SPOTS)HIDE_SPOTS.forEach(s=>{s.obj.rotation.z=s.rz;delete s.obj.userData.kind;});G.root.visible=true;},noCd:true,coins(g){return g.pts||0;},starsFn(g){return g.score<3?1:Math.max(1,3-Math.floor((g.wrong+g.hints)/2));},
+    stop(g){showCd(null);if(g.tip){scene.remove(g.tip);g.tip=null;}if(HIDE_SPOTS)HIDE_SPOTS.forEach(s=>{s.obj.rotation.z=s.rz;if(s.prevKind)s.obj.userData.kind=s.prevKind;else delete s.obj.userData.kind;});G.root.visible=true;},noCd:true,coins(g){return g.pts||0;},starsFn(g){return g.score<3?1:Math.max(1,3-Math.floor((g.wrong+g.hints)/2));},
     bar(g){return '🙈 Found '+g.score+' of 3';},result(s){return 'You found '+S.name+' '+s+' time'+(s===1?'':'s')+'!';}},
   feather:{dur:25,intro:'Drag the feather and I\'ll chase it!',
     start(g){g.f=makeFeather();g.f.position.set(clamp(G.root.position.x+2,-4,4),.15,1.8);scene.add(g.f);g.cool=0;g.held=false;},
@@ -2081,11 +2203,17 @@ $('#gbStop').onclick=()=>endGame();
 /* ---------- touch hooks ---------- */
 function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);
   if(doorG)a.push(doorG);
+  const cv=scene.getObjectByName('hideRock');if(cv)a.push(cv);
   const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank'),tb=scene.getObjectByName('sideboardTop');
   if(lb)a.push(lb);if(rp)a.push(rp);if(outside&&tb)a.push(tb);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
   if(h.kind==='door'){outside?sendHome():letOut();return true;}
   if(h.kind==='present'){openPresent();return true;}if(h.kind==='lamp'){toggleLamp();return true;}if(h.kind==='bowl'){refill();return true;}
+  if(h.kind==='cave'){if(!outside&&!trip&&!game&&!S.asleep){
+      want='cave';caveT=0;callPt=null;AI.route=null;AI.target=null;
+      burst('\u2728',tmp.set(CAVE.x,.7,CAVE.z+CAVE.rOut),3,{size:.3});tone(700,.1,'sine',.05,1.5);
+      say(pick(['To my cave!','Off to hide!','Cosy time!']),2);}
+    return true;}
   if(h.kind==='table'){if(outside)callTo(h.point);return true;}
   if(h.kind==='sand'||h.kind==='decor'||h.kind==='ledge'){if(decorating){sel=-1;updDecoBar();}else callTo(h.point);return true;}return false;}
 function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
@@ -2093,7 +2221,7 @@ function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
   if(decorating){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='decor'){const i=h.obj.userData.idx;wasSel=(sel===i);sel=i;dragging=true;dragMoved=false;updDecoBar();return true;}}return false;}
 function extMove(e){if(game&&game.def.move)return game.def.move(game,e);
   if(ball&&ball.state==='held'){const p=groundPoint(e);if(p){const b=ball.m.position;ball.moved+=Math.hypot(p.x-b.x,p.z-b.z);b.set(clamp(p.x,-BX,BX),.75,clamp(p.z,Z0-.3,Z1+.3));const now=performance.now();ball.samples.push({x:b.x,z:b.z,t:now});while(ball.samples.length>2&&now-ball.samples[0].t>110)ball.samples.shift();}return true;}
-  if(dragging&&sel>=0){const p=groundPoint(e);if(p){dragMoved=true;const d=S.decor[sel];d.x=clamp(p.x,-6.9*KX,6.9*KX);d.z=clamp(p.z,-3.9*KZ,4.0*KZ);decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
+  if(dragging&&sel>=0){const p=groundPoint(e);if(p){dragMoved=true;const d=S.decor[sel];const q=decorSpot(p.x,p.z);d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
 function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
   if(ball&&ball.state==='held'){const a=ball.samples[0],z=ball.samples[ball.samples.length-1];const dt2=a&&z?Math.max(16,z.t-a.t)/1000:1;
     if(!a||ball.moved<.3||z.t-a.t<5){autoThrow();}else{const vx=(z.x-a.x)/dt2*.55,vz=(z.z-a.z)/dt2*.55;const hv=Math.hypot(vx,vz);if(hv<.05)autoThrow();else{const k=Math.max(hv,4.5)/hv;launch(vx*k,vz*k);}}return true;}
@@ -2108,6 +2236,27 @@ $('#setReset').onclick=()=>{const b=$('#setReset');
   if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
   hardReset();};
 $('#setSchool').onchange=e=>{S.school=e.target.checked;save();};$('#setBed').onchange=e=>{S.bedtime=parseFloat(e.target.value);save();updateUI();};
+$('#setBackup').onclick=()=>{
+  try{const data={v:BUILD,when:new Date().toISOString(),save:localStorage.getItem(KEY),photos:localStorage.getItem(PHOTO_KEY)};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;
+    a.download=(S.name||'gecko').replace(/[^A-Za-z0-9]/g,'')+'-backup.json';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast('\u2705 Backup saved to your downloads.');}
+  catch(e){toast('Sorry, the backup did not save.');}};
+$('#setRestore').onclick=()=>$('#bkFile').click();
+$('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+      if(!d||typeof d.save!=='string')throw 0;
+      JSON.parse(d.save);
+      resetting=true;
+      localStorage.setItem(KEY,d.save);
+      if(typeof d.photos==='string')localStorage.setItem(PHOTO_KEY,d.photos);
+      location.reload();}
+    catch(err){toast('That file is not a My Gecko backup.');}};
+  r.onerror=()=>toast('Could not read that file.');
+  r.readAsText(f);e.target.value='';};
 $('#setPeek').onclick=()=>{peek=true;$('#settings').hidden=true;$('#more').hidden=true;$('#peekBar').hidden=false;
   say('Look how big I get!',3);updateUI();};
 $('#pkDone').onclick=()=>{peek=false;$('#peekBar').hidden=true;updateUI();};
@@ -2136,7 +2285,7 @@ function updateExtras(dt){updateMess();
   if(AI.act==='drink')S.water=Math.max(0,S.water-dt*3);
   if(callPt){callT+=dt;if(callT>(outside?18:8))callPt=null;}
   if(S.hatched&&!S.asleep&&!game){if(S.lamp&&S.warm<40&&!want)want='bask';
-    wantT-=dt;if(wantT<=0){wantT=rand(9,16);if(!want&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.45)want='bask';else if(S.water>10&&Math.random()<.3)want='drink';}}}
+    wantT-=dt;if(wantT<=0){wantT=rand(9,16);if(!want&&caveT<=0&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.4)want='bask';else if(S.water>10&&Math.random()<.28)want='drink';else if(Math.random()<.4)want='cave';}}}
   if(game){if(game.cd>0){game.cd-=dt;if(bubbleTimer>0){bubble.classList.remove('show');bubbleTimer=0;}if(game.cd<=0)say(game.def.intro,2.5);const n=Math.ceil(game.cd-.7);if(n>0){if(cdShown!==String(n))tone(660,.12,'triangle',.06);showCd(String(n));}else{if(cdShown!=='Go!')tone(990,.25,'triangle',.07);showCd('Go!');}if(game.cd<=0)showCd(null);}
     else{game.time-=dt;game.def.update(game,dt);if(game){$('#gbText').textContent=game.def.bar(game);
       if(!game.def.noCd){$('#gbFill').style.setProperty('--p',(100*Math.max(0,game.time)/game.def.dur)+'%');const hurry=game.time<5.5;$('#gameBar').classList.toggle('hurry',hurry);const sec=Math.ceil(game.time);if(hurry&&sec!==game.lastTick&&sec>0){game.lastTick=sec;tone(880,.06,'square',.03);}}
