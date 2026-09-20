@@ -654,7 +654,9 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
 function dotTexR(){if(dotTexR.t)return dotTexR.t;return dotTexR.t=canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});}
 /* ---------- upper level ---------- */
 const LEDGE_H=1.16;
-const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-.05,z1:-.34*KZ};
+const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-1.0,z1:-.34*KZ};
+/* the strip of the shelf he actually walks on - the rest is scenery */
+const WALK={x0:-2.45*KX+.32,x1:1.95*KX+.06,z0:Z0+.08,z1:-.34*KZ-.3};
 const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
 const DOOR={x:TANK.w/2,z:1.15,w:2.3,h:1.8};
 const TABLE={x0:TANK.w/2+1.0,x1:12.6,z0:-2.9,z1:3.4,y:-0.95};
@@ -662,6 +664,9 @@ const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
 let outside=false,trip=null,doorOpen=0,doorG=null;
 const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
 const RAMP_TOP =new THREE.Vector3(LEDGE.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
+/* a step onto the ramp itself, so heading down never stalls at the top of it */
+const RAMP_ENTRY=new THREE.Vector3(RAMP.x0+.6,0,(RAMP.z0+RAMP.z1)/2);
+const RAMP_EXIT =new THREE.Vector3(RAMP.x1+.5,0,(RAMP.z0+RAMP.z1)/2);
 function inRect(r,x,z){return x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1;}
 function groundY(x,z){
   if(inRect(TABLE,x,z))return TABLE.y;
@@ -669,14 +674,15 @@ function groundY(x,z){
   if(inRect(RAMP,x,z))return LEDGE_H*clamp(1-(x-RAMP.x0)/(RAMP.x1-RAMP.x0),0,1);
   return 0;}
 function onHigh(p){return p.y>LEDGE_H*.5;}
-function ledgeSpot(){return new THREE.Vector3(rand(LEDGE.x0+.7,LEDGE.x1-.7),LEDGE_H,rand(LEDGE.z0+.55,LEDGE.z1-.45));}
+function ledgeSpot(){return new THREE.Vector3(rand(WALK.x0+.4,WALK.x1-.5),LEDGE_H,rand(WALK.z0+.14,WALK.z1-.12));}
 function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,dest.x,dest.z);
+  if(hi&&!want)return [RAMP_TOP.clone(),RAMP_FOOT.clone(),dest];
   if(hi||!want)return [dest];
   return [RAMP_FOOT.clone(),RAMP_TOP.clone(),dest];}
 (function buildLedge(){
   const w=LEDGE.x1-LEDGE.x0,d=LEDGE.z1-LEDGE.z0,cx=(LEDGE.x0+LEDGE.x1)/2,cz=(LEDGE.z0+LEDGE.z1)/2;
-  const body=new THREE.Mesh(new THREE.BoxGeometry(w,LEDGE_H,d+1.7),rockMat);
-  body.position.set(cx,LEDGE_H/2,cz-.85);body.castShadow=body.receiveShadow=true;scene.add(body);
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,LEDGE_H,d+.6),rockMat);
+  body.position.set(cx,LEDGE_H/2,cz-.3);body.castShadow=body.receiveShadow=true;scene.add(body);
   const top=new THREE.Mesh(new THREE.BoxGeometry(w-.06,.1,d-.06),M(0xD89D5A,{roughness:.96}));
   top.position.set(cx,LEDGE_H-.045,cz);top.receiveShadow=true;scene.add(top);
   /* a rounded lip, then boulders at the ends and behind - never in front,
@@ -684,10 +690,13 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   const lip=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,w,20),rockMat);
   lip.rotation.z=Math.PI/2;lip.position.set(cx,LEDGE_H-.12,LEDGE.z1);
   lip.castShadow=lip.receiveShadow=true;scene.add(lip);
-  [[LEDGE.x0-.6,.95,-.95],[LEDGE.x0-.25,.7,-1.95],[LEDGE.x1+.8,.9,-.95],[LEDGE.x1+.45,.66,-1.95],
-   [cx-1.5,.72,-1.7],[cx+1.2,.8,-1.8]].forEach(([bx,br,bz],i)=>{
+  [[LEDGE.x0-.72,.95,-1.15],[LEDGE.x0-.34,.72,-2.15]].forEach(([bx,br,bz],i)=>{
     const k=new THREE.Mesh(rockGeo(br,140+i*11),rockMat);
-    k.position.set(bx,br*.5,cz+bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
+    k.position.set(bx,br*.5,bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
+    k.castShadow=k.receiveShadow=true;scene.add(k);});
+  [[-1.75,.62],[.15,.52],[1.3,.58]].forEach(([bx,br],i)=>{
+    const k=new THREE.Mesh(rockGeo(br,183+i*13),rockMat);
+    k.position.set(bx,LEDGE_H+br*.3,LEDGE.z0+.42);k.scale.y=.8;k.rotation.y=i*1.7;
     k.castShadow=k.receiveShadow=true;scene.add(k);});
   body.name='ledgeBody';body.userData.kind='ledge';
   /* the ramp he walks up */
@@ -702,12 +711,12 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   /* things to hide behind and sit on, up top */
   const hollow=new THREE.Mesh(new THREE.CylinderGeometry(.46,.5,1.9,26,3,true),M(0xffffff,{map:bt2,bumpMap:bt2,bumpScale:.05,roughness:.95,side:THREE.DoubleSide}));
   hollow.rotation.z=Math.PI/2;hollow.rotation.y=.22;
-  hollow.position.set(LEDGE.x0+.95,LEDGE_H+.4,LEDGE.z0+.42);hollow.castShadow=hollow.receiveShadow=true;
+  hollow.position.set(LEDGE.x0+1.25,LEDGE_H+.4,LEDGE.z0+1.02);hollow.castShadow=hollow.receiveShadow=true;
   hollow.name='ledgeLog';scene.add(hollow);
   const perch=new THREE.Mesh(rockGeo(.42,171),rockMat);
-  perch.position.set(LEDGE.x0+2.35,LEDGE_H+.16,LEDGE.z0+.36);perch.scale.y=.75;
+  perch.position.set(LEDGE.x0+3.15,LEDGE_H+.16,LEDGE.z0+1.0);perch.scale.y=.75;
   perch.castShadow=perch.receiveShadow=true;perch.name='perchRock';scene.add(perch);
-  const fern=new THREE.Group();fern.position.set(LEDGE.x0+.15,LEDGE_H,LEDGE.z0+.3);scene.add(fern);plants.push(fern);
+  const fern=new THREE.Group();fern.position.set(LEDGE.x0+.18,LEDGE_H,LEDGE.z0+.95);scene.add(fern);plants.push(fern);
   for(let i=0;i<9;i++){const l=new THREE.Mesh(snakeLeaf(rand(.8,1.5),rand(.3,1)),snakeMat);
     l.rotation.set(rand(-.3,.15),i/9*6.28,rand(-.35,.35));l.userData.rz=l.rotation.z;l.castShadow=true;fern.add(l);}
   /* extra cover down on the sand */
@@ -727,7 +736,10 @@ function keepIn(p){
       if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
     return;}
   p.x=clamp(p.x,-BX,BX);p.z=clamp(p.z,Z0,Z1);
-  if(inRect(RAMP,p.x,p.z)&&p.y>.1){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
+  const onRamp=inRect(RAMP,p.x,p.z);
+  if(onRamp&&p.y>.15){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
+  /* up on the shelf he cannot walk off the edge - he takes the ramp down */
+  if(p.y>LEDGE_H-.35&&!onRamp){p.x=clamp(p.x,WALK.x0,WALK.x1);p.z=clamp(p.z,WALK.z0,WALK.z1);return;}
   if(p.y<LEDGE_H-.42&&inRect(LEDGE,p.x,p.z)&&!inRect(RAMP,p.x,p.z)){
     const outF=LEDGE.z1-p.z,outL=p.x-LEDGE.x0,outR=LEDGE.x1-p.x;
     if(outF<=outL&&outF<=outR)p.z=LEDGE.z1+.06;
@@ -817,7 +829,7 @@ function makeGecko(){
     blob(mats.spot,r,r*.55,r,.56*k*Math.sin(v)*.99,.42*k*Math.cos(v),.15+.6*u,head);}
   return {root:root,bodyP:bodyP,head:head,eyes:eyes,tongue:tongue,legs:legs,tail:tail,mats:mats,cheekMat:cheekMat,tube:tube,tubeMat:tubeMat,tipM:tipM};
 }
-const G=makeGecko();scene.add(G.root);G.root.position.set(0,0,1);
+const G=makeGecko();scene.add(G.root);G.root.rotation.order='YXZ';G.root.position.set(0,0,1);
 const lin=h=>new THREE.Color(h).convertSRGBToLinear();G.base={};
 function applyMorph(k){const m=MORPHS[k]||MORPHS.tangerine;G.base.skin=lin(m.skin);G.base.spot=lin(m.spot);G.mats.skin.color.copy(G.base.skin);G.mats.belly.color.copy(lin(m.belly));G.mats.spot.color.copy(G.base.spot);if(G.tubeMat.map)G.tubeMat.map.dispose();G.tubeMat.map=skinTex(m);G.tubeMat.needsUpdate=true;}
 // soft contact shadow under the gecko
@@ -918,7 +930,7 @@ function addPoop(x,z){const g=new THREE.Group();g.userData.kind='poop';
   const tip=blob(hi,.055,.05,.05,-.06,.33,-.05,g);tip.rotation.z=.4;
   /* the chalky white urate a gecko passes with it */
   blob(M(0xF3EFE2,{roughness:.6}),.085,.07,.08,-.19,.07,.09,g);
-  const px=clamp(x,-BX,BX),pz=clamp(z,Z0-.2,Z1);g.position.set(px,groundY(px,pz),pz);g.rotation.y=rand(0,6);
+  const px=clamp(x,-BX,BX),pz=clamp(z,Z0+.05,Z1);g.position.set(px,groundY(px,pz),pz);g.rotation.y=rand(0,6);
   messFx(g,true);scene.add(g);poops.push(g);}
 function addWee(x,z){const g=new THREE.Group();g.userData.kind='wee';
   /* damp sand first, so the puddle is not amber-on-amber and invisible */
@@ -933,7 +945,7 @@ function addWee(x,z){const g=new THREE.Group();g.userData.kind='wee';
   const gl=MP(0xFFFEF6,{roughness:0,clearcoat:1,transparent:true,opacity:.8});
   const sh=blob(gl,.085,.006,.045,-.05,.033,.04,g);sh.rotation.y=.5;
   blob(gl,.04,.005,.026,.13,.031,.05,g);
-  const px=clamp(x,-BX,BX),pz=clamp(z,Z0-.2,Z1);g.position.set(px,groundY(px,pz),pz);g.rotation.y=rand(0,6);
+  const px=clamp(x,-BX,BX),pz=clamp(z,Z0+.05,Z1);g.position.set(px,groundY(px,pz),pz);g.rotation.y=rand(0,6);
   messFx(g,false,1.15);scene.add(g);wees.push(g);}
 for(let i=0;i<Math.min(S.poops||0,POOP_MAX);i++){const q=looSpot();addPoop(q.x,q.z);}
 for(let i=0;i<Math.min(S.wees||0,WEE_MAX);i++){const q=looSpot();addWee(q.x,q.z);}
@@ -1048,13 +1060,23 @@ function updateGecko(dt){
           :(Math.random()<.34?ledgeSpot():(Math.random()<.78?freeSpot(p):null));
         AI.route=want?planRoute(want):null;AI.target=AI.route?AI.route[0]:null;}
       tgt=AI.target;kind='wander';}
-    if(tgt){tmp.set(tgt.x-p.x,0,tgt.z-p.z);const dist=tmp.length();const reach=ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
+    if(tgt){
+      /* up on the shelf and wanting something down on the sand: head for the ramp,
+         not straight at the edge */
+      /* latch: once he sets off down the ramp he follows it all the way to the
+         sand, instead of flip-flopping at the point where he lets go of it */
+      if(AI.descend&&p.y<.1)AI.descend=false;
+      else if(!AI.descend&&p.y>.2&&groundY(tgt.x,tgt.z)<LEDGE_H*.5)AI.descend=true;
+      const descend=!!AI.descend;
+      const aim=descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
+      tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
       const ang=Math.atan2(tmp.x,tmp.z);
       if(dist>reach){const steer=avoidAngle(p,ang);const dA=angDiff(G.root.rotation.y,steer);const turn=clamp(dA*Math.min(1,dt*5),-3.2*dt,3.2*dt);G.root.rotation.y+=turn;AI.turnAcc+=turn;
         let spd=(S.sick||S.warm<25?.6:1.35)*((ext&&ext.speed)||1)*(kind==='wander'?(outside?1.05:.7):kind==='bed'?.7:1)*Math.max(.1,Math.cos(Math.min(1.5,Math.abs(dA))))*(.6+.4*sc);
         if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:(outside?.6:0);}
         spd*=Math.max(.35,Math.min(1,(dist-reach)/.8+.35));AI.v+=(spd-AI.v)*Math.min(1,dt*(spd>AI.v?5:9));
         p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;moving=AI.v>.08||Math.abs(turn)>dt*.6;}
+      else if(descend){}
       else if(kind==='cricket'){
         if(Math.abs(angDiff(G.root.rotation.y,ang))>=.55)G.root.rotation.y=lerpAngle(G.root.rotation.y,ang,Math.min(1,dt*6));
         else if(!hunt){hunt={kind:'cricket',c:AI.prey};startAct('stalk',rand(.45,.85));AI.crouch=1;
@@ -1072,7 +1094,13 @@ function updateGecko(dt){
     if(p.y>gy+1e-4){AI.vy=(AI.vy||0)-15*dt;p.y+=AI.vy*dt;
       if(p.y<=gy){const hard=AI.vy<-2.2;p.y=gy;AI.vy=0;
         if(hard){burst('💨',tmp2.set(p.x,gy+.14,p.z),4,{size:.3,speed:.8,life:.6});tone(150,.09,'triangle',.045);}}}
-    else{p.y=gy;AI.vy=0;}}
+    else if(p.y<gy-1e-4){p.y+=Math.min(gy-p.y,Math.max(1.6,AI.v*1.8)*dt);AI.vy=0;}
+    else{p.y=gy;AI.vy=0;}
+    /* lean into the ramp, and dip his nose while he is falling */
+    let pT=0;
+    if(inRect(RAMP,p.x,p.z)&&p.y>.06)pT=Math.atan(Math.sin(G.root.rotation.y)*(LEDGE_H/(RAMP.x1-RAMP.x0)));
+    else if(AI.vy<-1)pT=clamp(-AI.vy*.055,0,.34);
+    G.root.rotation.x+=(pT-G.root.rotation.x)*Math.min(1,dt*7);}
   if(S.asleep&&AI.inBed&&!AI.act)G.root.rotation.y=lerpAngle(G.root.rotation.y,.3,Math.min(1,dt*2));
   if(AI.act==='spin'){G.root.rotation.y+=dt*Math.PI*2/AI.actD;AI.turnAcc+=dt*Math.PI*2/AI.actD;}
   if(AI.act==='dance')G.root.rotation.y+=dt*5;if(AI.act==='bask')G.root.rotation.y=lerpAngle(G.root.rotation.y,.3,Math.min(1,dt*3));if(AI.act==='drink')G.root.rotation.y=lerpAngle(G.root.rotation.y,Math.PI/2,Math.min(1,dt*5));
@@ -1540,7 +1568,7 @@ function callTo(pt){if(!S.hatched||!G.root.visible)return;if(S.asleep){say('Zzz.
     burst('✨',tmp.set(callPt.x,TABLE.y+.2,callPt.z),3,{size:.3});tone(700,.1,'sine',.05,1.5);
     if(Math.random()<.45)say(pick(['Coming!','Off I go!','Exploring!']),1.5);return;}
   if(inRect(LEDGE,pt.x,pt.z)||inRect(RAMP,pt.x,pt.z)){
-    const up=new THREE.Vector3(clamp(pt.x,LEDGE.x0+.6,LEDGE.x1-.6),LEDGE_H,clamp(pt.z,LEDGE.z0+.5,LEDGE.z1-.4));
+    const up=new THREE.Vector3(clamp(pt.x,WALK.x0+.3,WALK.x1-.4),LEDGE_H,clamp(pt.z,WALK.z0+.1,WALK.z1-.1));
     callPt=null;AI.route=planRoute(up);AI.target=AI.route[0];
     burst('\u2728',tmp.set(up.x,LEDGE_H+.2,up.z),3,{size:.3});tone(700,.1,'sine',.05,1.5);
     if(Math.random()<.6)say(pick(['Climbing up!','Up I go!','To the top!']),1.8);return;}callPt=new THREE.Vector3(clamp(pt.x,-BX,BX),0,clamp(pt.z,Z0,Z1));callT=0;AI.target=null;
