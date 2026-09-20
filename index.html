@@ -7,26 +7,26 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="7">
+<meta name="build" content="8">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=7">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=7">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=7">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=7">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=7">
+<link rel="manifest" href="manifest.webmanifest?v=8">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=8">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=8">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=8">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="My Gecko">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Titan+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Lilita+One&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#2B1D3A; --paper:#FFFFFF; --card:rgba(255,255,255,.9); --shade:rgba(43,29,58,.12);
   --good:#3FCB7A; --mid:#FFB020; --low:#FF5A5F;
-  --font:"Baloo 2", ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
-  --display:"Titan One", "Baloo 2", ui-rounded, "Arial Rounded MT Bold", sans-serif;
+  --font:"Nunito", ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --display:"Lilita One", "Nunito", ui-rounded, "Arial Rounded MT Bold", sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){ --ink:#F5EFFF; --paper:#2A2248; --card:rgba(42,34,72,.92); --shade:rgba(255,255,255,.14); }
@@ -99,6 +99,13 @@ canvas{position:fixed;inset:0;display:block}
 .reset[hidden]{display:none}
 .build{margin:10px 0 0;text-align:center;font:600 12px var(--font);opacity:.45}
 .bk{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.danger{margin-top:18px;padding:14px;border:2px solid #FFD2D4;background:#FFF5F5;border-radius:18px;text-align:center}
+.danger b{display:block;font:400 19px var(--display);color:#D63A40;letter-spacing:.3px}
+.danger small{display:block;margin:6px 0 12px;font:600 12.5px var(--font);color:#8A5A5C;line-height:1.45}
+.wipe{width:100%;border:0;border-radius:16px;background:#FF5A5F;color:#fff;font:400 17px var(--display);
+  letter-spacing:.4px;padding:13px 10px;cursor:pointer;box-shadow:0 3px 0 #C8383D}
+.wipe:active{transform:translateY(2px);box-shadow:0 1px 0 #C8383D}
+.wipe.sure{background:#C8383D;box-shadow:0 3px 0 #8E2226}
 .reset.sure{opacity:1;color:#fff;background:#FF5A5F;text-decoration:none;border-radius:14px;padding:8px 14px}
 .overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(30,20,60,.35);padding:16px;z-index:6}
 .overlay[hidden]{display:none}
@@ -397,10 +404,14 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <label class="row"><span><b>School mode</b><small>Needs go down slowly on weekdays, 8:30am to 3:30pm</small></span><input type="checkbox" id="setSchool"></label>
   <label class="row"><span><b>Bedtime</b><small>He gets sleepy from this time</small></span><select id="setBed"><option value="19">7:00pm</option><option value="19.5">7:30pm</option><option value="20">8:00pm</option><option value="20.5">8:30pm</option><option value="21">9:00pm</option></select></label>
   <label class="row"><span><b>Sound</b></span><input type="checkbox" id="setSound"></label>
-  <button class="reset" id="setReset">Start again with a new egg</button>
   <div class="bk"><button class="reset" id="setBackup">Save a backup</button><button class="reset" id="setRestore">Restore a backup</button></div>
   <input id="bkFile" type="file" accept="application/json,.json" hidden>
   <button class="reset" id="setPeek">Peek at him fully grown</button>
+  <div class="danger">
+    <b>Start again</b>
+    <small id="setResetWhy">This says goodbye to your gecko for good — his name, his age, his coins, every sticker, every photo and everything you have bought. There is no undo. Save a backup first if you might want him back.</small>
+    <button class="wipe" id="setReset">🥚 Start again with a new egg</button>
+  </div>
   <p class="build">Version <b id="setBuild"></b></p>
   <button class="go ghost" data-close>Done</button></div></div>
 <div id="card" class="overlay" hidden><div class="sheet"><div class="big" id="cIcon"></div><h1 id="cTitle"></h1><p id="cText"></p><div id="cExtra"></div><button class="go" id="cOk" data-close>OK</button></div></div>
@@ -456,7 +467,7 @@ const MORPHS={
 };
 
 /* ---------- saved state ---------- */
-const BUILD='7';
+const BUILD='8';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -464,7 +475,10 @@ const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,si
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
 let resetting=false,peek=false;
 function hardReset(){resetting=true;S.name='';
-  try{localStorage.removeItem(KEY);localStorage.removeItem(PHOTO_KEY);}catch(e){}
+  try{[KEY,PHOTO_KEY,'gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
+    'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6']
+    .forEach(k=>localStorage.removeItem(k));}catch(e){}
+  try{sessionStorage.clear();}catch(e){}
   location.reload();}
 function save(){if(resetting||!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
@@ -656,7 +670,7 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
   for(const sd of[-1,1]){const c=new THREE.Mesh(new THREE.PlaneGeometry(1.8,6.4,12,1),M(0xffffff,{map:curT,roughness:.9,side:THREE.DoubleSide}));const cp=c.geometry.attributes.position;for(let i=0;i<cp.count;i++)cp.setZ(i,Math.sin(cp.getX(i)*6)*.12);c.geometry.computeVertexNormals();c.position.set(wx+sd*3.6,wy-.4,wallZ+.45);c.castShadow=true;scene.add(c);}
   const rod=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,9,10),kn);rod.rotation.z=Math.PI/2;rod.position.set(wx,wy+2.9,wallZ+.5);scene.add(rod);
   // poster (a cartoon gecko)
-  const posT=canvasTex(384,480,(x,w,h)=>{x.fillStyle='#FFF4D6';x.fillRect(0,0,w,h);x.fillStyle='#FFB84D';x.fillRect(0,0,w,70);x.fillStyle='#2B1D3A';x.font='400 44px "Titan One","Baloo 2",sans-serif';x.textAlign='center';x.fillText('GECKOS ROCK!',w/2,52);
+  const posT=canvasTex(384,480,(x,w,h)=>{x.fillStyle='#FFF4D6';x.fillRect(0,0,w,h);x.fillStyle='#FFB84D';x.fillRect(0,0,w,70);x.fillStyle='#2B1D3A';x.font='400 44px "Lilita One","Nunito",sans-serif';x.textAlign='center';x.fillText('GECKOS ROCK!',w/2,52);
     x.save();x.translate(w/2,h*.58);x.fillStyle='#F7963B';x.beginPath();x.ellipse(0,0,70,110,0,0,7);x.fill();x.beginPath();x.ellipse(0,-120,62,52,0,0,7);x.fill();
     x.lineWidth=34;x.strokeStyle='#F7963B';x.lineCap='round';x.beginPath();x.moveTo(0,90);x.bezierCurveTo(60,160,110,120,120,60);x.stroke();
     [[-1,-50],[1,-50],[-1,60],[1,60]].forEach(([s2,y])=>{x.beginPath();x.moveTo(s2*55,y);x.lineTo(s2*105,y+(y<0?-25:25));x.stroke();});
@@ -673,7 +687,7 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
   // things on the sideboard next to the tank
   const jar=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1,24),MP(0xE8FBFF,{transparent:true,opacity:.45,roughness:.05}));jar.position.set(W/2+1.6,topY+.5,1);scene.add(jar);
   const lid=new THREE.Mesh(new THREE.CylinderGeometry(.53,.53,.16,24),M(0x3FCB7A));lid.position.set(W/2+1.6,topY+1.07,1);scene.add(lid);
-  const lab=canvasTex(256,128,(x,w,h)=>{x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#2B1D3A';x.font='400 44px "Titan One","Baloo 2",sans-serif';x.textAlign='center';x.fillText('CRICKETS',w/2,78);});
+  const lab=canvasTex(256,128,(x,w,h)=>{x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#2B1D3A';x.font='400 44px "Lilita One","Nunito",sans-serif';x.textAlign='center';x.fillText('CRICKETS',w/2,78);});
   const jl=new THREE.Mesh(new THREE.CylinderGeometry(.505,.505,.4,24,1,true,-.8,1.6),M(0xffffff,{map:lab}));jl.position.copy(jar.position);scene.add(jl);
   const lampBase=new THREE.Mesh(new THREE.CylinderGeometry(.5,.6,.2,24),M(0xFFC53D,{roughness:.4}));lampBase.position.set(-W/2-2,topY+.1,.4);scene.add(lampBase);
   const lampArm=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.4,10),M(0xFFC53D,{roughness:.4}));lampArm.position.set(-W/2-2,topY+1.3,.4);scene.add(lampArm);
@@ -1148,15 +1162,17 @@ function updateGecko(dt){
       if(AI.descend&&p.y<.1)AI.descend=false;
       else if(!AI.descend&&p.y>.2&&groundY(tgt.x,tgt.z)<LEDGE_H*.5)AI.descend=true;
       const descend=!!AI.descend;
-      const aim=descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
-      tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
+      /* he is in the cave and wants something outside it: walk out of the mouth first */
+      const leaveCave=AI.inCave&&Math.hypot(tgt.x-CAVE.x,tgt.z-CAVE.z)>CAVE.rIn-.05;
+      const aim=leaveCave?CAVE_PORCH:descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
+      tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=leaveCave?.4:descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
       const ang=Math.atan2(tmp.x,tmp.z);
       if(dist>reach){const steer=avoidAngle(p,ang);const dA=angDiff(G.root.rotation.y,steer);const turn=clamp(dA*Math.min(1,dt*5),-3.2*dt,3.2*dt);G.root.rotation.y+=turn;AI.turnAcc+=turn;
         let spd=(S.sick||S.warm<25?.6:1.35)*((ext&&ext.speed)||1)*(kind==='wander'?(outside?1.05:.7):kind==='bed'?.7:1)*Math.max(.1,Math.cos(Math.min(1.5,Math.abs(dA))))*(.6+.4*sc);
         if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:(outside?.6:0);}
         spd*=Math.max(.35,Math.min(1,(dist-reach)/.8+.35));AI.v+=(spd-AI.v)*Math.min(1,dt*(spd>AI.v?5:9));
         p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;moving=AI.v>.08||Math.abs(turn)>dt*.6;}
-      else if(descend){}
+      else if(descend||leaveCave){}
       else if(kind==='cricket'){
         if(Math.abs(angDiff(G.root.rotation.y,ang))>=.55)G.root.rotation.y=lerpAngle(G.root.rotation.y,ang,Math.min(1,dt*6));
         else if(!hunt){hunt={kind:'cricket',c:AI.prey};startAct('stalk',rand(.45,.85));AI.crouch=1;
@@ -1596,7 +1612,7 @@ function schoolFactor(d){if(!S.school)return 1;const day=d.getDay();if(day===0||
 const GROUND=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 function groundPoint(e){ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const v=new THREE.Vector3();return ray.ray.intersectPlane(GROUND,v);}
 function dotTex(){return canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});}
-function textSprite(t){const tex=canvasTex(256,96,(x)=>{x.fillStyle='#ffffff';x.beginPath();if(x.roundRect)x.roundRect(4,4,248,88,40);else x.rect(4,4,248,88);x.fill();x.fillStyle='#2B1D3A';x.font='400 56px "Titan One","Baloo 2",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,52);});
+function textSprite(t){const tex=canvasTex(256,96,(x)=>{x.fillStyle='#ffffff';x.beginPath();if(x.roundRect)x.roundRect(4,4,248,88,40);else x.rect(4,4,248,88);x.fill();x.fillStyle='#2B1D3A';x.font='400 56px "Lilita One","Nunito",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,52);});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));s.scale.set(1.2,.45,1);s.raycast=function(){};return s;}
 
 /* ---------- toast, cards, coins, stickers ---------- */
@@ -2199,7 +2215,7 @@ function vet(){if(!S.hatched||asleepBlock()||scaleObj)return;bumpCount('vet');fr
 
 /* ---------- mini-games ---------- */
 const popCache={};
-function popText(t,pos,col){let tex=popCache[t+col];if(!tex){tex=popCache[t+col]=canvasTex(256,128,(x)=>{x.font='400 88px "Titan One","Baloo 2","Arial Rounded MT Bold",sans-serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=14;x.strokeStyle='#2B1D3A';x.lineJoin='round';x.strokeText(t,128,68);x.fillStyle=col||'#FFD23F';x.fillText(t,128,68);});}
+function popText(t,pos,col){let tex=popCache[t+col];if(!tex){tex=popCache[t+col]=canvasTex(256,128,(x)=>{x.font='400 88px "Lilita One","Nunito","Arial Rounded MT Bold",sans-serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=14;x.strokeStyle='#2B1D3A';x.lineJoin='round';x.strokeText(t,128,68);x.fillStyle=col||'#FFD23F';x.fillText(t,128,68);});}
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,.55,1);sp.position.copy(pos).setY(Math.max(pos.y,.4)+.4);scene.add(sp);parts.push({s:sp,v:new THREE.Vector3(0,1.3,0),life:0,max:1.1,g:-.6});}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{for(const k in popCache)delete popCache[k];}).catch(()=>{});
 let cdShown='';function showCd(t,small){const el=$('#countdown');if(t===null){el.hidden=true;cdShown='';return;}if(t===cdShown)return;cdShown=t;el.textContent=t;el.hidden=false;el.classList.toggle('small',!!small);el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
@@ -2340,6 +2356,10 @@ function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(deco
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
   if(h.kind==='door'){outside?sendHome():letOut();return true;}
   if(h.kind==='present'){openPresent();return true;}if(h.kind==='lamp'){toggleLamp();return true;}if(h.kind==='bowl'){refill();return true;}
+  /* he is out on the table and she taps his cage: that means come home */
+  if(outside&&!trip&&(h.kind==='sand'||h.kind==='ledge'||h.kind==='decor'||h.kind==='cave'
+     ||h.kind==='bowl'||h.kind==='lamp'||h.kind==='poop'||h.kind==='wee')){
+    sendHome();return true;}
   if(h.kind==='cave'){if(!outside&&!trip&&!game&&!S.asleep){
       want='cave';caveT=0;callPt=null;AI.route=null;AI.target=null;
       burst('\u2728',tmp.set(CAVE.x,.7,CAVE.z+CAVE.rOut),3,{size:.3});tone(700,.1,'sine',.05,1.5);
@@ -2363,9 +2383,16 @@ function refreshMore(){}
 function openSettings(){$('#setBuild').textContent=BUILD;$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
   const rb=$('#setReset');rb.classList.remove('sure');rb.textContent='Start again with a new egg';
   $('#settings').hidden=false;}
-$('#setReset').onclick=()=>{const b=$('#setReset');
-  if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
-  hardReset();};
+let resetArm=0;
+$('#setReset').onclick=()=>{const b=$('#setReset'),why=$('#setResetWhy');
+  if(!b.classList.contains('sure')){b.classList.add('sure');
+    b.textContent='Tap again to say goodbye to '+(S.name||'your gecko');
+    why.textContent='Are you sure? '+(S.name||'Your gecko')+' and everything you have collected will be gone.';
+    clearTimeout(resetArm);resetArm=setTimeout(()=>{b.classList.remove('sure');
+      b.textContent='\uD83E\uDD5A Start again with a new egg';
+      why.textContent='This says goodbye to your gecko for good \u2014 his name, his age, his coins, every sticker, every photo and everything you have bought. There is no undo. Save a backup first if you might want him back.';},14000);
+    return;}
+  clearTimeout(resetArm);hardReset();};
 $('#setSchool').onchange=e=>{S.school=e.target.checked;save();};$('#setBed').onchange=e=>{S.bedtime=parseFloat(e.target.value);save();updateUI();};
 $('#photoSave').onclick=()=>{
   try{const src=$('#photoImg').src;if(!src)return;
