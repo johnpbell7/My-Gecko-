@@ -7,13 +7,13 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="8">
+<meta name="build" content="9">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=8">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=8">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=8">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=8">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=8">
+<link rel="manifest" href="manifest.webmanifest?v=9">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=9">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=9">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=9">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -467,7 +467,7 @@ const MORPHS={
 };
 
 /* ---------- saved state ---------- */
-const BUILD='8';
+const BUILD='9';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -1162,17 +1162,21 @@ function updateGecko(dt){
       if(AI.descend&&p.y<.1)AI.descend=false;
       else if(!AI.descend&&p.y>.2&&groundY(tgt.x,tgt.z)<LEDGE_H*.5)AI.descend=true;
       const descend=!!AI.descend;
-      /* he is in the cave and wants something outside it: walk out of the mouth first */
-      const leaveCave=AI.inCave&&Math.hypot(tgt.x-CAVE.x,tgt.z-CAVE.z)>CAVE.rIn-.05;
-      const aim=leaveCave?CAVE_PORCH:descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
-      tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=leaveCave?.4:descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
+      /* the cave has one way in and out, so route through the mouth either way.
+         His bed is inside it, so this covers going to sleep as well. */
+      const tgtInCave=Math.hypot(tgt.x-CAVE.x,tgt.z-CAVE.z)<CAVE.rIn-.05;
+      const linedUp=p.z>CAVE.z+CAVE.rOut*.25&&Math.abs(p.x-CAVE.x)<CAVE.rOut*.85;
+      const leaveCave=AI.inCave&&!tgtInCave;
+      const enterCave=!AI.inCave&&tgtInCave&&!linedUp;
+      const aim=(leaveCave||enterCave)?CAVE_PORCH:descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
+      tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=(leaveCave||enterCave)?.4:descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
       const ang=Math.atan2(tmp.x,tmp.z);
       if(dist>reach){const steer=avoidAngle(p,ang);const dA=angDiff(G.root.rotation.y,steer);const turn=clamp(dA*Math.min(1,dt*5),-3.2*dt,3.2*dt);G.root.rotation.y+=turn;AI.turnAcc+=turn;
         let spd=(S.sick||S.warm<25?.6:1.35)*((ext&&ext.speed)||1)*(kind==='wander'?(outside?1.05:.7):kind==='bed'?.7:1)*Math.max(.1,Math.cos(Math.min(1.5,Math.abs(dA))))*(.6+.4*sc);
         if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:(outside?.6:0);}
         spd*=Math.max(.35,Math.min(1,(dist-reach)/.8+.35));AI.v+=(spd-AI.v)*Math.min(1,dt*(spd>AI.v?5:9));
         p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;moving=AI.v>.08||Math.abs(turn)>dt*.6;}
-      else if(descend||leaveCave){}
+      else if(descend||leaveCave||enterCave){}
       else if(kind==='cricket'){
         if(Math.abs(angDiff(G.root.rotation.y,ang))>=.55)G.root.rotation.y=lerpAngle(G.root.rotation.y,ang,Math.min(1,dt*6));
         else if(!hunt){hunt={kind:'cricket',c:AI.prey};startAct('stalk',rand(.45,.85));AI.crouch=1;
