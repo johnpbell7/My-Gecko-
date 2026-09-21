@@ -2403,15 +2403,19 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
      to climb into has to be built at that size - a toy he can only stand next to
      is just an ornament */
   else if(t==='tunnel'){
-    const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(3,2);
-    const R=1.95,L=5.2;
-    const arch=new THREE.Mesh(new THREE.CylinderGeometry(R,R,L,26,1,true,0,Math.PI),
-      M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.95,side:THREE.DoubleSide}));
-    arch.rotation.z=Math.PI/2;arch.castShadow=arch.receiveShadow=true;g.add(arch);
-    const inner=new THREE.Mesh(new THREE.CylinderGeometry(R-.2,R-.2,L-.04,26,1,true,0,Math.PI),
-      M(0x6B4A2E,{roughness:1,side:THREE.DoubleSide}));inner.rotation.z=Math.PI/2;g.add(inner);
-    for(const sd of[-1,1]){const rim=new THREE.Mesh(new THREE.TorusGeometry(R-.1,.13,8,26,Math.PI),M(0xC98F5D,{roughness:.8}));
-      rim.position.x=sd*L/2;rim.rotation.y=Math.PI/2;g.add(rim);}
+    /* slats rather than a solid shell - a closed half pipe just reads as a plank
+       from the front, and you want to see him in there */
+    const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(4,1);
+    const R=1.85,L=5.2,N=9;
+    const caneM=M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.92,color:0xF2D9A6});
+    const bandM=M(0xB07A46,{roughness:.85});
+    for(let i=0;i<N;i++){const th=(.075+ (i/(N-1))*.85)*Math.PI;
+      const bar=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,L,9),caneM);
+      bar.rotation.z=Math.PI/2;bar.position.set(0,Math.sin(th)*R,Math.cos(th)*R);
+      bar.castShadow=bar.receiveShadow=true;g.add(bar);}
+    for(const x0 of[-L/2+.2,-L/6,L/6,L/2-.2]){
+      const band=new THREE.Mesh(new THREE.TorusGeometry(R,.1,7,24,Math.PI*.93),bandM);
+      band.position.x=x0;band.rotation.y=Math.PI/2;band.rotation.z=Math.PI*.035;g.add(band);}
     g.userData.toy='tunnel';g.userData.mount='tunnel';g.userData.app={x:-(L/2+1.4),z:0};}
   else if(t==='digbox'){
     const W2=4.6,D2=3.6,H2=.95,wm=M(0xC98F5D,{roughness:.85});
