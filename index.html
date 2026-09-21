@@ -505,7 +505,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='14';
+const BUILD='15';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -561,7 +561,7 @@ function blob(mat,sx,sy,sz,x,y,z,parent){const m=new THREE.Mesh(SPH,mat);m.scale
 
 /* ---------- terrarium ---------- */
 const TL=peekMode?2:(S.tank||1),KX=TL>1?1.75:1,KZ=TL>1?1.5:1;
-const TANK={w:15*KX,d:8.6*KZ,h:5.4},BX=6.3*KX,Z0=-1.7*KZ,Z1=3.4*KZ;
+const TANK={w:17.2*KX,d:10*KZ,h:5.4},BX=7.2*KX,Z0=-2.0*KZ,Z1=3.9*KZ;
 /* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
 const KC=TL>1?1.55:1;   /* the cave grows with the tank, uniformly so it stays round */
 const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62*KC,rIn:1.2*KC,mouth:.82,h:1.15*KC};
@@ -605,12 +605,15 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
   const streakT=canvasTex(256,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.35,'rgba(255,255,255,.55)');g.addColorStop(.45,'rgba(255,255,255,.12)');g.addColorStop(.6,'rgba(255,255,255,.4)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,w,h);});
   [[-W*.3,1.4],[W*.22,.9]].forEach(([x0,wd])=>{const st=new THREE.Mesh(new THREE.PlaneGeometry(wd,H*1.2),new THREE.MeshBasicMaterial({map:streakT,transparent:true,opacity:.13,depthWrite:false}));st.rotation.z=-.5;st.position.set(x0,H/2,D/2+.01);scene.add(st);});
   const pc=[0xC9955A,0xB9824E,0xA89F94,0xD8B888,0x9A7C5E,0xE8D7C0];
-  for(let i=0;i<110;i++){const r=rand(.05,.17);blob(M(pick(pc),{roughness:.9}),r,r*.55,r*rand(.8,1.2),rand(-W/2+.3,W/2-.3),0,rand(-D/2+.3,D/2-.3),scene).castShadow=false;}
+  /* the ground cover is spread per square of sand, so the grown-up tank is not
+     just the same handful of pebbles stretched thinner */
+  const GC=TL>1?1.75:1;
+  for(let i=0;i<Math.round(110*GC);i++){const r=rand(.05,.17);blob(M(pick(pc),{roughness:.9}),r,r*.55,r*rand(.8,1.2),rand(-W/2+.3,W/2-.3),0,rand(-D/2+.3,D/2-.3),scene).castShadow=false;}
   // leaf litter
-  for(let i=0;i<26;i++){const l=blob(M(pick([0x9A6B3A,0xB8844A,0x7E8B3E,0xA7753D]),{roughness:.9,side:THREE.DoubleSide}),rand(.12,.2),.012,rand(.06,.09),rand(-W/2+.4,W/2-.4),.02,Math.random()<.7?rand(-D/2+.3,-1.8):rand(-D/2+.3,D/2-.3),scene);l.rotation.y=rand(0,6.3);l.castShadow=false;}
+  for(let i=0;i<Math.round(26*GC);i++){const l=blob(M(pick([0x9A6B3A,0xB8844A,0x7E8B3E,0xA7753D]),{roughness:.9,side:THREE.DoubleSide}),rand(.12,.2),.012,rand(.06,.09),rand(-W/2+.4,W/2-.4),.02,Math.random()<.7?rand(-D/2+.3,-1.8):rand(-D/2+.3,D/2-.3),scene);l.rotation.y=rand(0,6.3);l.castShadow=false;}
   // grass tufts
   const grassM=[M(0x6DBE5A,{flatShading:true}),M(0x4FA24A,{flatShading:true}),M(0x8CCB5E,{flatShading:true})];
-  for(let i=0;i<16;i++){const t=new THREE.Group();const edge=Math.random();t.position.set(edge<.5?rand(-W/2+.3,W/2-.3):(Math.random()<.5?-1:1)*rand(W/2-1,W/2-.3),0,edge<.5?rand(-D/2+.3,-2.4):rand(-D/2+.4,D/2-.4));
+  for(let i=0;i<Math.round(16*GC);i++){const t=new THREE.Group();const edge=Math.random();t.position.set(edge<.5?rand(-W/2+.3,W/2-.3):(Math.random()<.5?-1:1)*rand(W/2-1,W/2-.3),0,edge<.5?rand(-D/2+.3,-2.4):rand(-D/2+.4,D/2-.4));
     for(let k=0;k<6;k++){const h=rand(.35,.75);const cg=new THREE.ConeGeometry(.035,h,4);cg.translate(0,h/2,0);const c=new THREE.Mesh(cg,pick(grassM));c.rotation.set(rand(-.45,.45),rand(0,6),rand(-.45,.45));c.position.set(rand(-.1,.1),0,rand(-.1,.1));c.userData.rz=c.rotation.z;t.add(c);}scene.add(t);plants.push(t);}
   const absStart=scene.children.length;
   // backdrop rocks
@@ -630,6 +633,16 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
   const succ=new THREE.Group();succ.name='succ';succ.position.set(3.2,0,-3.1);scene.add(succ);
   [[0,0,1],[.55,.25,.75],[-.5,.2,.7]].forEach(([x,z,sc])=>{const ro=new THREE.Group();ro.position.set(x,0,z);ro.scale.setScalar(sc);succ.add(ro);const sm=MP(pick([0x7FC8A9,0x8FD19E,0x6FB9A0]),{clearcoat:.5});
     for(let k=0;k<3;k++)for(let q=0;q<7;q++){const a=q/7*Math.PI*2+k*.45;const lf=blob(sm,.1,.06,.3-k*.06,Math.cos(a)*(.26-k*.08),.12+k*.1,Math.sin(a)*(.26-k*.08),ro);lf.rotation.y=-a+Math.PI/2;lf.rotation.x=-.5-k*.25;}});
+  /* the grown-up tank has nearly three times the floor. Left as it was it just
+     reads as a lot of empty sand, so it gets more scenery - all of it behind the
+     part he walks on, so nothing new is in his way */
+  if(TL>1){
+    [[-8.2,-4.2,1.5],[-1.9,-4.5,1.1],[8.0,-4.25,1.45],[4.6,-3.85,.8]].forEach(([x,z,sc])=>{
+      const m=new THREE.Mesh(rockGeo(sc,Math.round(x*10+90)),rockMat);m.position.set(x,sc*.45,z);
+      m.scale.y=rand(.9,1.5);m.rotation.y=rand(0,3);m.castShadow=m.receiveShadow=true;scene.add(m);});
+    const plant3=plant.clone();plant3.position.set(-2.9,0,-3.4);plant3.name='plant3';
+    plant3.scale.setScalar(.85);scene.add(plant3);plants.push(plant3);
+    const succ2=succ.clone();succ2.position.set(-6.4,0,-3.2);succ2.scale.setScalar(.9);scene.add(succ2);}
   // water dish
   const dish=new THREE.Mesh(new THREE.CylinderGeometry(.72,.6,.26,30),MP(0xF4F1FF,{roughness:.3}));dish.position.set(4.9,.13,2.1);dish.castShadow=dish.receiveShadow=true;dish.name='bowl';dish.userData.kind='bowl';scene.add(dish);
   const water=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.02,30),MP(0x5EC8F2,{roughness:.05,clearcoat:1,transparent:true,opacity:.9}));water.position.set(4.9,.25,2.1);water.name='water';water.userData.kind='bowl';scene.add(water);
@@ -754,7 +767,7 @@ const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-1.0,z1:-.34*KZ};
 /* the strip of the shelf he actually walks on - the rest is scenery */
 const WALK={x0:-2.45*KX+.32,x1:1.95*KX+.06,z0:Z0+.08,z1:-.34*KZ-.3};
 const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
-const DOOR={x:TANK.w/2,z:1.15,w:2.3,h:1.8};
+const DOOR={x:TANK.w/2,z:1.15,w:4.0*KZ,h:2.6};
 const TABLE={x0:TANK.w/2+1.0,x1:TANK.w/2+7.2,z0:-2.9*KZ,z1:3.4*KZ,y:-0.95};
 const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
 let outside=false,trip=null,doorOpen=0,doorG=null;
@@ -770,7 +783,52 @@ function groundY(x,z){
   if(inRect(RAMP,x,z))return LEDGE_H*clamp(1-(x-RAMP.x0)/(RAMP.x1-RAMP.x0),0,1);
   return 0;}
 function onHigh(p){return p.y>LEDGE_H*.5;}
-function toyList(){const out=[];for(const g of decorGroups)if(g.userData&&g.userData.toy)out.push(g);return out;}
+function toyTarget(){const list=toyList();
+  if(!list.length){want=null;return null;}
+  if(!toyPick||list.indexOf(toyPick)<0)toyPick=pick(list);
+  /* each toy says where you get on it - the mouth of the tunnel, the low side of
+     the hammock - so he walks to a spot he can actually climb in from */
+  const tp=toyPick.position,k=growth(),ry=toyPick.userData.r||0;
+  const a=toyPick.userData.app||{x:0,z:.8},ca=Math.cos(ry),sa=Math.sin(ry);
+  const q=new THREE.Vector3(tp.x+(a.x*ca+a.z*sa)*k,0,tp.z+(-a.x*sa+a.z*ca)*k);
+  const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;q.y=groundY(q.x,q.z);
+  return{pos:q,kind:'toy',reach:.45*k+.2,speed:1.05,
+    arrive(){want=null;toyT=rand(13,22);toyUse=toyPick;rideT=0;bumpCount('toy');award('toy');
+      S.fun=clamp(S.fun+10,0,100);SFX.chirp();startAct('happy',.8);
+      say(pick(['My favourite!','This is fun!','Wheee!','Watch this!']),2.6);}};}
+let rideT=0,digT=0;
+/* riding a toy: while he is on one the toy owns where he is, so he really is
+   inside the tunnel or lying in the hammock instead of standing beside it */
+function rideToy(dt){
+  if(!toyUse||toyT<=0)return null;
+  const m=toyUse.userData.mount;if(!m)return null;
+  rideT+=dt;AI.v=0;AI.vy=0;
+  const k=growth(),g=toyUse,ry=g.userData.r||0,ca=Math.cos(ry),sa=Math.sin(ry);
+  const put=(lx,ly,lz,face)=>{
+    const q=G.root.position;
+    q.set(g.position.x+(lx*ca+lz*sa)*k,g.position.y+ly*k,g.position.z+(-lx*sa+lz*ca)*k);
+    /* a long toy turned side-on can point its far end through the glass, so he
+       still stops where the tank stops. Only the walls - the rest of keepIn would
+       read him as up on the shelf the moment a toy lifts him off the sand. */
+    if(outside){q.x=clamp(q.x,TABLE.x0,TABLE.x1);q.z=clamp(q.z,TABLE.z0,TABLE.z1);}
+    else{q.x=clamp(q.x,-BX,BX);q.z=clamp(q.z,Z0,Z1);}
+    G.root.rotation.y=ry+face;};
+  if(m==='tunnel'){const span=4.4,per=8.4,u=(rideT%per)/per,fwd=u<.5,t2=fwd?u*2:1-(u-.5)*2;
+    put(-span+t2*span*2,0,0,fwd?Math.PI/2:-Math.PI/2);G.root.rotation.z=0;return 'walk';}
+  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.2+Math.sin(rideT*1.5)*.13,0,Math.PI/2);
+    G.root.rotation.z=Math.sin(rideT*1.5)*.16;return 'rest';}
+  if(m==='digbox'){const s2=Math.min(1,rideT/2.4);
+    put(Math.sin(rideT*.8)*.55,.62-s2*.66,Math.cos(rideT*.55)*.45,Math.sin(rideT*.4)*1.3);
+    G.root.rotation.z=0;
+    digT-=dt;if(digT<=0){digT=rand(.45,1.0);
+      burst('💨',tmp.copy(G.root.position).setY(g.position.y+.75*k),3,{size:.3*k,speed:.8,life:.6});}
+    return 'walk';}
+  if(m==='mirror'){put(0,0,1.5,Math.PI);G.root.rotation.z=0;
+    if(!AI.act&&Math.random()<dt*.35)startAct(pick(['wave','happy','spin']),.9);
+    return 'rest';}
+  return null;}
+function toyList(){const out=[];for(const g of decorGroups)
+  if(g.userData&&g.userData.toy&&onTable(g.position.x)===!!outside)out.push(g);return out;}
 /* a wheel sized for a hatchling is a joke by day 21, so his toys grow with him */
 function sizeToys(){const k=growth();for(const g of toyList())g.scale.setScalar(k);}
 function ledgeSpot(){return new THREE.Vector3(rand(WALK.x0+.4,WALK.x1-.5),LEDGE_H,rand(WALK.z0+.14,WALK.z1-.12));}
@@ -1019,11 +1077,33 @@ function launch(vx,vz){const h=Math.hypot(vx,vz),cap=11;if(h>cap){vx*=cap/h;vz*=
   tone(300,.25,'sine',.05,3);setTimeout(()=>{if(ball&&ball.state==='flying')say(pick(['Wheee!',"I'll get it!",'Here I come!']),1.4);},250);}
 function autoThrow(){const a=rand(-.7,.7)+Math.PI;launch(Math.sin(a)*rand(6,8)+(Math.random()-.5)*2,Math.cos(a)*rand(5,7));}
 /* decorations go on open sand - never half inside a rock, the shelf or the cave */
-function decorSpot(x,z){const q=new THREE.Vector3(clamp(x,-BX+.5,BX-.5),0,clamp(z,Z0+.45,Z1-.4));
+function onTable(x){return x>TANK.w/2;}
+/* half the footprint of the big toys, in toy units. They grow with him, so a
+   tunnel that fits the sand on day 7 would be hanging through the glass on day
+   25 unless the room it needs is worked out fresh each time. */
+const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.4,z:1.45},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
+function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.5,z:.4};
+  const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
+  return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
+/* a long toy turned side-on may be longer than the tank is deep - there is then
+   no spot at all for it, so that turn is simply not offered */
+function decorFits(t,r,tbl){const P=decorPad(t,r);
+  return tbl?(TABLE.x1-TABLE.x0>2*P.x+.3&&TABLE.z1-TABLE.z0>2*P.z+.3)
+            :(2*BX>2*P.x+.3&&Z1-Z0>2*P.z+.3);}
+/* when a toy is simply too big for the space, centre it rather than clamping to
+   a backwards range */
+function fit(v,lo,hi){return lo>hi?(lo+hi)/2:clamp(v,lo,hi);}
+function decorSpot(x,z,t,r){const P=decorPad(t,r);
+  /* past the glass means the table: the table is a second place to put things */
+  if(onTable(x)){const q=new THREE.Vector3(fit(x,TABLE.x0+P.x,TABLE.x1-P.x),TABLE.y,fit(z,TABLE.z0+P.z,TABLE.z1-P.z));
+    for(const o of TABLE_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
+      if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
+    q.x=fit(q.x,TABLE.x0+P.x,TABLE.x1-P.x);q.z=fit(q.z,TABLE.z0+P.z,TABLE.z1-P.z);return q;}
+  const q=new THREE.Vector3(fit(x,-BX+P.x,BX-P.x),0,fit(z,Z0+P.z,Z1-P.z));
   const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;
-  for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r=o.r+.5;
-    if(d<r&&d>1e-4){q.x=o.x+dx/d*r;q.z=o.z+dz/d*r;}}
-  q.x=clamp(q.x,-BX+.5,BX-.5);q.z=clamp(q.z,Z0+.45,Z1-.4);return q;}
+  for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
+    if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
+  q.x=fit(q.x,-BX+P.x,BX-P.x);q.z=fit(q.z,Z0+P.z,Z1-P.z);return q;}
 function safeHome(){const free=v=>obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7);
   const first=new THREE.Vector3(clamp(look.x,-BX+1,BX-1),0,Z1-.6);if(free(first))return first;
   for(let i=0;i<16;i++){const v=new THREE.Vector3(rand(-BX+.7,BX-.7),0,rand(Z1-1.8,Z1-.4));if(free(v))return v;}
@@ -1268,7 +1348,11 @@ function updateGecko(dt){
   }
   if(AI.act==='pounce'&&AI.actT<AI.actD*.65){p.x+=Math.sin(G.root.rotation.y)*3.2*dt;p.z+=Math.cos(G.root.rotation.y)*3.2*dt;}
   if(!moving&&AI.act!=='pounce'){if(AI.v>.02){p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;}AI.v*=Math.max(0,1-dt*10);}
-  {keepIn(p);
+  const ride=rideToy(dt);
+  if(ride){moving=(ride==='walk');
+    G.root.rotation.x+=(0-G.root.rotation.x)*Math.min(1,dt*6);}
+  else{G.root.rotation.z+=(0-G.root.rotation.z)*Math.min(1,dt*6);
+    keepIn(p);
     /* curled up in the cave: hold the spot, so he does not drift out of the mouth */
     if(caveT>0&&!game&&!callPt){p.x=caveSpot.x;p.z=caveSpot.z;AI.v=0;}
     const gy=groundY(p.x,p.z);
@@ -1368,15 +1452,14 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   if(hunt){hunt.t=(hunt.t||0)+dt;if(hunt.t>7)hunt=null;}
   ballT-=dt;if(ballT<=0){ballT=1;if(ball&&ball.state!=='carried'&&ball.state!=='held')ballSettle();}
   itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
-  if(toyT>0){toyT-=dt;
-    if(toyUse){const id=toyUse.userData.toy;
-      if(id==='wheel'){toyUse.children.forEach(c=>{if(c.geometry&&c.geometry.type==='CylinderGeometry'&&c.position.y>.2)c.position.set(c.position.x,.66+Math.sin(T*6+c.id)*.58,Math.cos(T*6+c.id)*.58);});
-        toyUse.rotation.y=toyUse.userData.r||0;}
-      else if(id==='hammock')toyUse.rotation.z=Math.sin(T*2.2)*.09;
-      else if(id==='mirror')toyUse.rotation.y=(toyUse.userData.r||0)+Math.sin(T*1.6)*.12;}
-    if(toyT<=0){if(toyUse){if(toyUse.userData.toy==='hammock')toyUse.rotation.z=0;
-        toyUse.rotation.y=toyUse.userData.r||0;}
-      toyUse=null;toyPick=null;want=null;wantT=rand(10,18);
+  if(toyT>0){
+    /* while he is riding a toy the toy owns him, so anything else that needs him -
+       a game, a cuddle, a thrown ball, the walk back to his cage - has to end the
+       ride, or he just sits in the hammock while you call him */
+    if(trip||game||S.asleep||callPt||treat||cine||scaleObj||crickets.length
+       ||(ball&&ball.state!=='ready'))toyT=0;
+    else toyT-=dt;
+    if(toyT<=0){toyUse=null;toyPick=null;want=null;wantT=rand(10,18);
       say(pick(['That was fun!','Again later!','Phew!']),2.2);}}
   if(caveT>0){caveT-=dt;AI.v=0;
     if(caveT<=0){want=null;wantT=rand(12,20);if(AI.inCave){AI.route=[CAVE_PORCH.clone()];AI.target=AI.route[0];}
@@ -1404,7 +1487,9 @@ window.addEventListener('resize',resize);resize();
 function updateCam(dt){if(cine){cineCam();return;}
   camA+=(camT-camA)*Math.min(1,dt*6);const portrait=camera.aspect<1;const wide=typeof game!=='undefined'&&game&&game.kind==='hide';
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
-  const dist=((portrait?8.6:10.5)+(growth()-.85)*2.6+(wide?(portrait?7:3.5):0))*camZoom;
+  /* the grown-up tank is nearly three times the floor, so stand back a little
+   further in it - otherwise all that new room is off the side of the screen */
+  const dist=((portrait?8.6:10.5)+(growth()-.85)*2.6+(TL>1?2.1:0)+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
   if(outside){const tcx=(TABLE.x0+TABLE.x1)/2,tcz=(TABLE.z0+TABLE.z1)/2;
     look.x+=((gx*.85+tcx*.15)-look.x)*Math.min(1,dt*2);
@@ -1687,7 +1772,14 @@ document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
 function askMove(){$('#cExtra').innerHTML='<button class="again" id="moveBtn">🏠 Move to a big tank!</button>';
   openCard('🏠',S.name+' is growing up!',S.name+" is getting too big for this starter tank. Move to a big tank with lots more room to explore?",true);$('#cOk').textContent='Not yet';
   $('#moveBtn').onclick=()=>{$('#card').hidden=true;$('#cOk').textContent='OK';doMove();};}
-function doMove(){S.tank=2;(S.decor||[]).forEach(d=>{d.x*=1.75;d.z*=1.5;});S.justMoved=true;save();SFX.yay();
+function doMove(){const hw=TANK.w/2,oT=TABLE,nW=17.2*1.75,
+    nT={x0:nW/2+1.0,x1:nW/2+7.2,z0:-2.9*1.5,z1:3.4*1.5};
+  S.tank=2;(S.decor||[]).forEach(d=>{
+    if(d.x>hw){/* out on the table: keep his spot on it rather than flinging it off the edge */
+      const fx=clamp((d.x-oT.x0)/(oT.x1-oT.x0),0,1),fz=clamp((d.z-oT.z0)/(oT.z1-oT.z0),0,1);
+      d.x=nT.x0+fx*(nT.x1-nT.x0);d.z=nT.z0+fz*(nT.z1-nT.z0);}
+    else{d.x*=1.75;d.z*=1.5;}});
+  S.justMoved=true;save();SFX.yay();
   const f=document.createElement('div');f.className='moving';f.innerHTML='<div>🚚</div><b>Moving day!</b><span>Packing up '+S.name+"'s things...</span>";document.body.appendChild(f);setTimeout(()=>location.reload(),1800);}
 $('#snd').onclick=()=>{S.sound=!S.sound;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 $('#snd').textContent=S.sound?'🔊':'🔇';
@@ -1776,7 +1868,15 @@ const todayKey=()=>new Date().toDateString();
 const MONTH=new Date().getMonth();
 function schoolFactor(d){if(!S.school)return 1;const day=d.getDay();if(day===0||day===6)return 1;const h=d.getHours()+d.getMinutes()/60;return (h>=8.5&&h<15.5)?.25:1;}
 const GROUND=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+const TABLE_PLANE=new THREE.Plane(new THREE.Vector3(0,1,0),-TABLE.y);
 function groundPoint(e){ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const v=new THREE.Vector3();return ray.ray.intersectPlane(GROUND,v);}
+/* the table sits lower than the sand, so out past the glass we aim the drag at
+   the table top instead of the floor plane - otherwise it lands short of her finger */
+function dragPoint(e){const p=groundPoint(e);
+  if(!p||p.x<=TANK.w/2)return p;
+  const v=new THREE.Vector3();
+  const q=ray.ray.intersectPlane(TABLE_PLANE,v);
+  return (q&&q.x>TANK.w/2)?q:p;}
 function dotTex(){return canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});}
 function textSprite(t){const tex=canvasTex(256,96,(x)=>{x.fillStyle='#ffffff';x.beginPath();if(x.roundRect)x.roundRect(4,4,248,88,40);else x.rect(4,4,248,88);x.fill();x.fillStyle='#2B1D3A';x.font='400 56px "Lilita One","Nunito",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,52);});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));s.scale.set(1.2,.45,1);s.raycast=function(){};return s;}
@@ -2063,9 +2163,12 @@ function extTarget(){
   if(trip&&trip.phase==='backToDoor')return{pos:DOOR_OUT,kind:'door',reach:.45,speed:1.25,arrive(){trip={phase:'throughIn',t:0};}};
   /* out on the table: the basking slate, the water bowl and an itch all live in
      the tank, and chasing one pins him against the wall. Only a tap counts. */
-  if(outside){want=null;
+  if(outside){
+    if(toyT>0&&!callPt)return STAY;
     if(callPt)return{pos:callPt,kind:'call',reach:.35,speed:1.2,
       arrive(){callPt=null;startAct('happy',.5);SFX.chirp();}};
+    if(want==='toy'){const t=toyTarget();if(t)return t;}
+    want=null;
     return null;}
   if(caveT>0&&!game&&!crickets.length&&!callPt&&!treat)return STAY;
   if(cine&&cine.drive)return{pos:cine.tgt,kind:'cine',reach:.3,speed:1.55,arrive(){}};
@@ -2077,14 +2180,7 @@ function extTarget(){
   if(crickets.length||ball)return null;
   if(itch&&!S.asleep)return STAY;
   if(toyT>0&&!game&&!crickets.length&&!callPt&&!treat)return STAY;
-  if(want==='toy'){const list=toyList();
-    if(!list.length){want=null;return null;}
-    if(!toyPick||list.indexOf(toyPick)<0)toyPick=pick(list);
-    const tp=toyPick.position;
-    return{pos:new THREE.Vector3(tp.x,0,tp.z+.8),kind:'toy',reach:.5,speed:1.05,
-      arrive(){want=null;toyT=rand(9,16);toyUse=toyPick;bumpCount('toy');award('toy');
-        S.fun=clamp(S.fun+10,0,100);SFX.chirp();startAct('happy',.8);
-        say(pick(['My favourite!','This is fun!','Wheee!','Watch this!']),2.6);}};}
+  if(want==='toy'){const t=toyTarget();if(t)return t;}
   if(want==='cave'){const q=G.root.position;
     const lined=AI.inCave||(q.z>CAVE.z+CAVE.rOut*.25&&Math.abs(q.x-CAVE.x)<CAVE.rOut*.85);
     const to=lined?CAVE_MID:CAVE_PORCH;
@@ -2123,7 +2219,7 @@ function openPresent(){if(!present)return;S.presentDay=todayKey();
       else{wearHat(g.it.id);award('hat');showOff(pick(['Brand new!','Look at me!','I love it!']));}
       drawShop();save();};
   }else if(g.kind==='decor'){
-    {const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4));S.decor.push({t:g.it.id,x:q.x,z:q.z,r:0});}
+    {const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),g.it.id,0);S.decor.push({t:g.it.id,x:q.x,z:q.z,r:0});}
     buildDecor();award('decor');
     $('#cExtra').innerHTML='<button class="again" id="giftMove">\uD83C\uDFE1 Put it somewhere</button>';
     openCard(g.it.ic,'A present for you!','It\u2019s '+g.it.name.toLowerCase()+' for the tank!'+streak,true);
@@ -2284,11 +2380,11 @@ function bgTex(t){if(bgCache[t])return bgCache[t];return bgCache[t]=canvasTex(10
     x.fillStyle='#F2B96A';x.beginPath();x.arc(w*.72,h*.35,70,0,7);x.fill();x.strokeStyle='#FFE0A8';x.lineWidth=10;x.beginPath();x.ellipse(w*.72,h*.35,130,26,-.3,0,7);x.stroke();
     x.fillStyle='#7B6CF0';x.beginPath();x.arc(w*.2,h*.25,40,0,7);x.fill();x.fillStyle='#5FC8FF';x.beginPath();x.arc(w*.45,h*.7,26,0,7);x.fill();
     x.fillStyle='#E9E6DD';x.beginPath();x.arc(w*.9,h*.75,30,0,7);x.fill();}});}
-const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(15,5.4),new THREE.MeshBasicMaterial({color:0xffffff}));backdrop.position.set(0,2.7,-4.27*KZ);backdrop.scale.x=KX;backdrop.visible=false;scene.add(backdrop);
+const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(17.2,5.4),new THREE.MeshBasicMaterial({color:0xffffff}));backdrop.position.set(0,2.7,-(TANK.d/2-.05));backdrop.scale.x=KX;backdrop.visible=false;scene.add(backdrop);
 function setBg(t){S.bg=t;backdrop.material.map=bgTex(t||'desert');backdrop.material.needsUpdate=true;backdrop.visible=true;document.body.dataset.bg=t||'desert';}
 
 /* ---------- decorations & shop ---------- */
-function makeDecor(t){const g=new THREE.Group();
+function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
   if(t==='cactus'){const m=MP(0x4CB86A,{clearcoat:.2});const body=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,1.2,14),m);body.position.y=.6;g.add(body);blob(m,.22,.22,.22,0,1.2,0,g);
     [[-1,0],[1,.15]].forEach(([s,o])=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.11,.12,.45,10),m);a.position.set(s*.36,.78+o,0);g.add(a);blob(m,.11,.11,.11,s*.36,1.0+o,0,g);const c=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.3,8),m);c.rotation.z=Math.PI/2;c.position.set(s*.2,.56+o,0);g.add(c);});
     blob(MP(0xFF6FAE),.1,.07,.1,0,1.42,0,g);}
@@ -2303,31 +2399,52 @@ function makeDecor(t){const g=new THREE.Group();
     const door=new THREE.Mesh(new THREE.CircleGeometry(.14,16),new THREE.MeshBasicMaterial({color:0x3a2418}));door.position.set(0,.18,.36);g.add(door);}
   else if(t==='rainbow'){[0xFF5F5F,0xFF9F3D,0xFFE36E,0x6FDB7E,0x5FB6FF,0xA98BFF].forEach((c,i)=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.95-i*.09,.045,8,40,Math.PI),MP(c));r.position.y=0;g.add(r);});
     [-1,1].forEach(s=>{[[0,0,.18],[.13,.05,.14],[-.13,.04,.14],[0,.12,.13]].forEach(([x,y,r])=>blob(MP(0xffffff,{clearcoat:0,roughness:.8}),r,r*.8,r,s*.73+x,y+.08,0,g));});}
-  else if(t==='wheel'){const rimM=M(0xFF8A3D,{roughness:.5}),barM=M(0xF5EBDD,{roughness:.6});
-    for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.TorusGeometry(.78,.07,10,30),rimM);
-      r.position.set(sd*.42,.82,0);r.rotation.y=Math.PI/2;g.add(r);}
-    for(let i=0;i<16;i++){const a=i/16*6.28;const b2=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.84,7),barM);
-      b2.rotation.z=Math.PI/2;b2.position.set(0,.82+Math.sin(a)*.73,Math.cos(a)*.73);g.add(b2);}
-    const st=new THREE.Mesh(new THREE.BoxGeometry(1.2,.12,.66,1),M(0x8A5A33,{roughness:.8}));st.position.y=.06;g.add(st);
-    for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,.8,8),M(0x8A5A33));
-      po.position.set(sd*.46,.46,0);g.add(po);}
-    g.userData.toy='wheel';}
+  /* he is about 5.7 long and 2.4 across in these units, so anything he is meant
+     to climb into has to be built at that size - a toy he can only stand next to
+     is just an ornament */
+  else if(t==='tunnel'){
+    const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(3,2);
+    const R=1.95,L=5.2;
+    const arch=new THREE.Mesh(new THREE.CylinderGeometry(R,R,L,26,1,true,0,Math.PI),
+      M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.95,side:THREE.DoubleSide}));
+    arch.rotation.z=Math.PI/2;arch.castShadow=arch.receiveShadow=true;g.add(arch);
+    const inner=new THREE.Mesh(new THREE.CylinderGeometry(R-.2,R-.2,L-.04,26,1,true,0,Math.PI),
+      M(0x6B4A2E,{roughness:1,side:THREE.DoubleSide}));inner.rotation.z=Math.PI/2;g.add(inner);
+    for(const sd of[-1,1]){const rim=new THREE.Mesh(new THREE.TorusGeometry(R-.1,.13,8,26,Math.PI),M(0xC98F5D,{roughness:.8}));
+      rim.position.x=sd*L/2;rim.rotation.y=Math.PI/2;g.add(rim);}
+    g.userData.toy='tunnel';g.userData.mount='tunnel';g.userData.app={x:-(L/2+1.4),z:0};}
+  else if(t==='digbox'){
+    const W2=4.6,D2=3.6,H2=.95,wm=M(0xC98F5D,{roughness:.85});
+    for(const sd of[-1,1]){const s2=new THREE.Mesh(new THREE.BoxGeometry(W2,H2,.2),wm);
+      s2.position.set(0,H2/2,sd*D2/2);s2.castShadow=s2.receiveShadow=true;g.add(s2);
+      const s3=new THREE.Mesh(new THREE.BoxGeometry(.2,H2,D2),wm);
+      s3.position.set(sd*W2/2,H2/2,0);s3.castShadow=s3.receiveShadow=true;g.add(s3);}
+    const soil=new THREE.Mesh(new THREE.BoxGeometry(W2-.3,.55,D2-.3),M(0x6E4B33,{roughness:1}));
+    soil.position.y=.3;soil.receiveShadow=true;g.add(soil);
+    for(let i=0;i<24;i++)blob(M(pick([0x8A6242,0x7A553A,0x9C7350]),{roughness:1}),
+      rand(.09,.17),rand(.05,.1),rand(.09,.17),rand(-W2/2+.5,W2/2-.5),.58,rand(-D2/2+.5,D2/2-.5),g);
+    g.userData.toy='digbox';g.userData.mount='digbox';g.userData.app={x:0,z:D2/2+1.5};}
   else if(t==='hammock'){const rope=M(0xE8DCC2,{roughness:.9});
-    for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.05,.07,1.0,9),M(0x8A5A33,{roughness:.85}));
-      po.position.set(sd*1.0,.5,0);g.add(po);}
-    const bed=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,1.85,18,1,false,0,Math.PI),
+    const SP=3.2,TOP=2.6,LEN=5.4,BR=1.35;
+    for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.14,.2,TOP,10),M(0x8A5A33,{roughness:.85}));
+      po.position.set(sd*SP,TOP/2,0);po.castShadow=true;g.add(po);
+      const ft=new THREE.Mesh(new THREE.CylinderGeometry(.34,.4,.16,12),M(0x8A5A33,{roughness:.85}));
+      ft.position.set(sd*SP,.08,0);g.add(ft);}
+    /* a sling, not a tube: a deep cradle just hides him behind a wall of fabric */
+    const bed=new THREE.Mesh(new THREE.CylinderGeometry(BR,BR,LEN,22,1,true,Math.PI,Math.PI),
       M(0x5FC8FF,{roughness:.85,side:THREE.DoubleSide}));
-    bed.rotation.set(0,0,Math.PI/2);bed.position.y=.52;g.add(bed);
-    for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.5,6),rope);
-      r.position.set(sd*.95,.72,0);r.rotation.z=sd*.5;g.add(r);}
-    g.userData.toy='hammock';}
+    bed.rotation.set(0,0,Math.PI/2);bed.receiveShadow=true;
+    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.42;sling.position.y=1.62;g.add(sling);
+    for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,6),rope);
+      r.position.set(sd*2.9,2.1,0);r.rotation.z=sd*.52;g.add(r);}
+    g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.6};}
   else if(t==='mirror'){const fr=M(0xFF6FAE,{roughness:.5});
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(.4,.07,10,28),fr);ring.position.y=.62;g.add(ring);
-    const gl=new THREE.Mesh(new THREE.CircleGeometry(.38,28),
-      MP(0xDFF3FF,{roughness:.03,clearcoat:1,metalness:.35}));gl.position.set(0,.62,.02);g.add(gl);
-    const po=new THREE.Mesh(new THREE.CylinderGeometry(.05,.07,.42,9),fr);po.position.y=.2;g.add(po);
-    const ba=new THREE.Mesh(new THREE.CylinderGeometry(.26,.3,.08,16),fr);ba.position.y=.04;g.add(ba);
-    g.userData.toy='mirror';}
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
+    const gl=new THREE.Mesh(new THREE.CircleGeometry(1.1,30),
+      MP(0xDFF3FF,{roughness:.03,clearcoat:1,metalness:.35}));gl.position.set(0,1.95,.06);g.add(gl);
+    const po=new THREE.Mesh(new THREE.CylinderGeometry(.13,.18,1.3,10),fr);po.position.y=.65;g.add(po);
+    const ba=new THREE.Mesh(new THREE.CylinderGeometry(.68,.8,.2,16),fr);ba.position.y=.1;ba.receiveShadow=true;g.add(ba);
+    g.userData.toy='mirror';g.userData.mount='mirror';g.userData.app={x:0,z:1.9};}
   else if(t==='pond'){const rim=M(0x9C8B74,{roughness:.95});
     for(let i=0;i<14;i++){const a=i/14*6.28;blob(rim,.1,.07,.1,Math.cos(a)*.52,.05,Math.sin(a)*.42,g);}
     const wtr=new THREE.Mesh(new THREE.CircleGeometry(.48,28),MP(0x4FC3F7,{roughness:.03,clearcoat:1,transparent:true,opacity:.85}));
@@ -2377,7 +2494,7 @@ const SHOP=[
   {id:'pebbles',ic:'🪨',name:'Pebbles',price:6,type:'decor'},{id:'bones',ic:'🦴',name:'Dino bones',price:14,type:'decor'},
   {id:'ferns',ic:'🌿',name:'Ferns',price:16,type:'decor'},{id:'pond',ic:'💧',name:'Little pond',price:24,type:'decor'},
   {id:'lantern',ic:'🏮',name:'Lantern',price:26,type:'decor'},{id:'treasure',ic:'💎',name:'Treasure chest',price:40,type:'decor'},
-  {id:'wheel',ic:'🎡',name:'Running wheel',price:28,type:'decor'},{id:'hammock',ic:'🛏️',name:'Hammock',price:22,type:'decor'},{id:'mirror',ic:'🪞',name:'Mirror',price:18,type:'decor'},
+  {id:'tunnel',ic:'🕳️',name:'Crawl tunnel',price:30,type:'decor'},{id:'digbox',ic:'🪣',name:'Digging box',price:26,type:'decor'},{id:'hammock',ic:'🛏️',name:'Hammock',price:22,type:'decor'},{id:'mirror',ic:'🪞',name:'Mirror',price:18,type:'decor'},
   {id:'sunset',ic:'🌅',name:'Sunset',price:30,type:'bg'},{id:'snow',ic:'❄️',name:'Snowy',price:35,type:'bg'},{id:'candy',ic:'🍭',name:'Candy land',price:40,type:'bg'}];
 function drawShop(){$('#shopCoins').textContent=S.coins;const boxes={decor:$('#shopDecor'),bg:$('#shopBg'),hat:$('#shopHat')};Object.values(boxes).forEach(b=>b.innerHTML='');
   SHOP.forEach(it=>{const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);const using=(it.type==='bg'&&(S.bg||'desert')===it.id)||(it.type==='hat'&&S.hat===it.id);
@@ -2387,11 +2504,12 @@ function buy(it){const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);
   if(own){if(it.type==='bg')setBg(it.id);else{wearHat(S.hat===it.id?'none':it.id);if(S.hat!=='none'){award('hat');showOff(pick(['Do I look cool?','I love it!','So fancy!']));}}SFX.pop();drawShop();save();return;}
   if(S.coins<it.price){tone(220,.2,'square',.04);toast('You need '+(it.price-S.coins)+' more coins. Play games and care for '+S.name+' to earn some!');return;}
   S.coins-=it.price;updateCoins();SFX.yay();
-  if(it.type==='decor'){const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4));S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
+  if(it.type==='decor'){const q=outside?decorSpot((TABLE.x0+TABLE.x1)/2+rand(-1.2,1.2),rand(TABLE.z0+1,TABLE.z1-1),it.id,0)
+      :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),it.id,0);S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
   else{S.owned[it.id]=true;if(it.type==='bg')setBg(it.id);else{wearHat(it.id);award('hat');$('#shop').hidden=true;showOff(pick(['Brand new!','Look at me!','I love it!']));}drawShop();}save();}
 const decorGroups=[];let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
 function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;toyUse=null;toyPick=null;
-  S.decor.forEach(d=>{const q=decorSpot(d.x,d.z);d.x=q.x;d.z=q.z;});
+  S.decor.forEach(d=>{if(d.t==='wheel')d.t='tunnel';const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;});
   S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;g.userData.r=d.r||0;scene.add(g);decorGroups.push(g);});try{sizeToys();}catch(e){}}
 function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or tap to turn':'Tap to pick'):'Visit the Shop!';$('#dbRemove').hidden=sel<0;}
 function startDecorate(i){if(game)endGame(true);decorating=true;sel=(i===undefined)?-1:i;$('#decoBar').hidden=false;updDecoBar();}
@@ -2577,6 +2695,7 @@ $('#gbStop').onclick=()=>endGame();
 function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);
   if(doorG)a.push(doorG);
   const cv=scene.getObjectByName('hideRock');if(cv)a.push(cv);
+  if(decorating){const tb2=scene.getObjectByName('sideboardTop');if(tb2)a.push(tb2);}
   const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank'),tb=scene.getObjectByName('sideboardTop');
   if(lb)a.push(lb);if(rp)a.push(rp);if(outside&&tb)a.push(tb);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
@@ -2598,11 +2717,16 @@ function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
   if(decorating){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='decor'){const i=h.obj.userData.idx;wasSel=(sel===i);sel=i;dragging=true;dragMoved=false;updDecoBar();return true;}}return false;}
 function extMove(e){if(game&&game.def.move)return game.def.move(game,e);
   if(ball&&ball.state==='held'){const p=groundPoint(e);if(p){const b=ball.m.position;ball.moved+=Math.hypot(p.x-b.x,p.z-b.z);b.set(clamp(p.x,-BX,BX),.75,clamp(p.z,Z0-.3,Z1+.3));const now=performance.now();ball.samples.push({x:b.x,z:b.z,t:now});while(ball.samples.length>2&&now-ball.samples[0].t>110)ball.samples.shift();}return true;}
-  if(dragging&&sel>=0){const p=groundPoint(e);if(p){dragMoved=true;const d=S.decor[sel];const q=decorSpot(p.x,p.z);d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
+  if(dragging&&sel>=0){const p=dragPoint(e);if(p){dragMoved=true;const d=S.decor[sel];const q=decorSpot(p.x,p.z,d.t,d.r);d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
 function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
   if(ball&&ball.state==='held'){const a=ball.samples[0],z=ball.samples[ball.samples.length-1];const dt2=a&&z?Math.max(16,z.t-a.t)/1000:1;
     if(!a||ball.moved<.3||z.t-a.t<5){autoThrow();}else{const vx=(z.x-a.x)/dt2*.55,vz=(z.z-a.z)/dt2*.55;const hv=Math.hypot(vx,vz);if(hv<.05)autoThrow();else{const k=Math.max(hv,4.5)/hv;launch(vx*k,vz*k);}}return true;}
-  if(dragging){dragging=false;if(!dragMoved&&wasSel&&sel>=0){S.decor[sel].r=(S.decor[sel].r||0)+Math.PI/4;decorGroups[sel].rotation.y=S.decor[sel].r;tone(800,.06,'sine',.04);}save();return true;}return false;}
+  if(dragging){dragging=false;if(!dragMoved&&wasSel&&sel>=0){const d=S.decor[sel];
+    {let r=d.r||0;const tbl=onTable(d.x);for(let i=0;i<8;i++){r+=Math.PI/4;if(decorFits(d.t,r,tbl))break;}d.r=r;}
+    /* a long toy turned side-on needs different room, so re-seat it after the turn */
+    const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;
+    decorGroups[sel].rotation.y=d.r;decorGroups[sel].userData.r=d.r;
+    decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);tone(800,.06,'sine',.04);}save();return true;}return false;}
 
 /* ---------- More sheet actions, settings ---------- */
 function refreshMore(){}
@@ -2677,8 +2801,10 @@ function updateExtras(dt){updateMess();
   if(AI.act==='bask')S.warm=Math.min(100,S.warm+dt*4);
   if(AI.act==='drink')S.water=Math.max(0,S.water-dt*3);
   if(callPt){callT+=dt;if(callT>(outside?18:8))callPt=null;}
-  if(S.hatched&&!S.asleep&&!game){if(S.lamp&&S.warm<40&&!want)want='bask';
-    wantT-=dt;if(wantT<=0){wantT=rand(9,16);if(!want&&caveT<=0&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.4)want='bask';else if(S.water>10&&Math.random()<.28)want='drink';else if(toyList().length&&Math.random()<.45)want='toy';else if(Math.random()<.4)want='cave';}}}
+  if(S.hatched&&!S.asleep&&!game){if(S.lamp&&S.warm<40&&!want&&!outside)want='bask';
+    wantT-=dt;if(wantT<=0){wantT=rand(9,16);
+    if(!want&&caveT<=0&&toyT<=0&&outside&&!trip&&!AI.act&&!callPt&&toyList().length&&Math.random()<.55)want='toy';
+    else if(!want&&caveT<=0&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.4)want='bask';else if(S.water>10&&Math.random()<.28)want='drink';else if(toyList().length&&Math.random()<.45)want='toy';else if(Math.random()<.4)want='cave';}}}
   if(game){if(game.cd>0){game.cd-=dt;if(bubbleTimer>0){bubble.classList.remove('show');bubbleTimer=0;}if(game.cd<=0)say(game.def.intro,2.5);const n=Math.ceil(game.cd-.7);if(n>0){if(cdShown!==String(n))tone(660,.12,'triangle',.06);showCd(String(n));}else{if(cdShown!=='Go!')tone(990,.25,'triangle',.07);showCd('Go!');}if(game.cd<=0)showCd(null);}
     else{game.time-=dt;game.def.update(game,dt);if(game){$('#gbText').textContent=game.def.bar(game);
       if(!game.def.noCd){$('#gbFill').style.setProperty('--p',(100*Math.max(0,game.time)/game.def.dur)+'%');const hurry=game.time<5.5;$('#gameBar').classList.toggle('hurry',hurry);const sec=Math.ceil(game.time);if(hurry&&sec!==game.lastTick&&sec>0){game.lastTick=sec;tone(880,.06,'square',.03);}}
