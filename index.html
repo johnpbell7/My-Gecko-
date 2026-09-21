@@ -7,13 +7,13 @@
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#FFC24E">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="build" content="12">
+<meta name="build" content="13">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=12">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=12">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=12">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=12">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=12">
+<link rel="manifest" href="manifest.webmanifest?v=13">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=13">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=13">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=13">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=13">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -99,6 +99,19 @@ canvas{position:fixed;inset:0;display:block}
 .reset[hidden]{display:none}
 .build{margin:10px 0 0;text-align:center;font:600 12px var(--font);opacity:.45}
 .bk{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+#timeBar{position:fixed;inset:0;z-index:7;display:flex;align-items:flex-end;justify-content:center;
+  padding:0 16px calc(env(safe-area-inset-bottom) + 112px);pointer-events:none}
+#timeBar[hidden]{display:none}
+.tbInner{pointer-events:auto;width:100%;max-width:420px;background:var(--paper);border-radius:24px;
+  padding:14px 16px 16px;box-shadow:0 8px 0 var(--shade);text-align:center}
+#tbLabel{margin:0 0 10px;font:400 22px var(--display);color:var(--ink)}
+.tbTrack{position:relative;height:26px;border-radius:999px;background:#EDE9F5;overflow:hidden;margin-bottom:12px}
+.tbZone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#FFD94A,#FFB020);border-radius:999px}
+.tbMark{position:absolute;top:-3px;width:6px;height:32px;border-radius:3px;background:var(--ink);transform:translateX(-3px)}
+.tbGo{width:100%;border:0;border-radius:18px;background:#3FCB7A;color:#fff;font:400 24px var(--display);
+  letter-spacing:.5px;padding:14px 10px;cursor:pointer;box-shadow:0 4px 0 #2C9A59}
+.tbGo:active{transform:translateY(2px);box-shadow:0 2px 0 #2C9A59}
+.tbHint{margin:8px 0 0;font:600 12px var(--font);opacity:.55}
 .danger{margin-top:18px;padding:14px;border:2px solid #FFD2D4;background:#FFF5F5;border-radius:18px;text-align:center}
 .danger b{display:block;font:400 19px var(--display);color:#D63A40;letter-spacing:.3px}
 .danger small{display:block;margin:6px 0 12px;font:600 12.5px var(--font);color:#8A5A5C;line-height:1.45}
@@ -418,6 +431,9 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
 <div id="countdown" hidden></div>
 <div id="outBar" class="bar" hidden><span>🚪 Out on the table</span><button id="obHome">Home</button></div>
+<div id="timeBar" hidden><div class="tbInner"><p id="tbLabel"></p>
+  <div class="tbTrack"><i class="tbZone" id="tbZone"></i><i class="tbMark" id="tbMark"></i></div>
+  <button class="tbGo" id="tbGo">TAP!</button><p class="tbHint">Tap when the arrow is in the gold band</p></div></div>
 <div id="ballBar" class="bar" hidden><span>🎾 Playing fetch</span><button id="bbStop">✕ Put it away</button></div>
 <div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
 <div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
@@ -472,7 +488,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='12';
+const BUILD='13';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -818,7 +834,10 @@ function keepIn(p){
   if(onHigh(p))return;
   for(const o of obstacles()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+.2;if(d<r&&d>1e-4){p.x=o.x+dx/d*r;p.z=o.z+dz/d*r;}}}
 function avoidAngle(p,a){if(onHigh(p))return a;
-  for(const o of (outside?TABLE_OBS:obstacles())){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
+  /* the cave is a wall too, unless the cave is where he is going */
+  const goingIn=AI.inCave||caveT>0||want==='cave'||S.asleep;
+  const list=outside?TABLE_OBS:(goingIn?obstacles():obstacles().concat([{x:CAVE.x,z:CAVE.z,r:CAVE.rOut}]));
+  for(const o of list){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
   if(Math.abs(side)<r){const push=(1-Math.abs(side)/r)*1.2*Math.min(1,(r+1.8-d)/1.8);a+=side>0?-push:push;}}return a;}
 function tableSpot(){let v;
   for(let t=0;t<8;t++){v=new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5));
@@ -926,9 +945,11 @@ function spawnCrickets(n){const cx=G.root.position.x;for(let i=0;i<n;i++){const 
   crickets.push({g:g,t:new THREE.Vector3(clamp(cx+rand(-2.5,2.5),-BX,BX),0,rand(Z0,Z1-.3)),ph:rand(0,6)});}}
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3();
 function updateCrickets(dt){for(const c of crickets){const p=c.g.position;tmp.set(c.t.x-p.x,0,c.t.z-p.z);const d=tmp.length();
-  if(d<.12)c.t.set(clamp(G.root.position.x+rand(-2.6,2.6),-BX,BX),0,rand(Z0,Z1-.3));
+  if(d<.12){const q=sandSpot(G.root.position.x+rand(-2.8,2.8),rand(Z0,Z1-.3));c.t.set(q.x,0,q.z);}
   else{c.g.rotation.y=Math.atan2(tmp.x,tmp.z);p.x+=tmp.x/d*.85*dt;p.z+=tmp.z/d*.85*dt;}
-  c.ph+=dt*7;p.y=Math.abs(Math.sin(c.ph))*.2;}}
+  /* a cricket is not a ghost: keep it out of the rocks, the shelf and the cave */
+  const q=sandSpot(p.x,p.z);p.x=q.x;p.z=q.z;
+  c.ph+=dt*7;p.y=groundY(p.x,p.z)+Math.abs(Math.sin(c.ph))*.2;}}
 
 let ball=null;
 const ballTex=(function(){const c=document.createElement('canvas');c.width=128;c.height=64;const x=c.getContext('2d');const cols=['#FF5FA2','#FFFFFF','#FFC53D','#FFFFFF'];for(let i=0;i<8;i++){x.fillStyle=cols[i%4];x.fillRect(0,i*8,128,8);}const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;})();
@@ -938,6 +959,9 @@ function sandSpot(x,z){const q=new THREE.Vector3(x,0,z);
   for(let i=0;i<2;i++){
     if(groundY(q.x,q.z)>.05){q.z=clamp(q.z,LEDGE.z1+.6,Z1-.35);q.x=clamp(q.x,-BX+.4,BX-.4);}
     q.x=clamp(q.x,-BX+.3,BX-.3);q.z=clamp(q.z,Z0+.3,Z1-.3);q.y=0;
+    {const dx=q.x-CAVE.x,dz=q.z-CAVE.z,d=Math.hypot(dx,dz);
+     if(d<CAVE.rOut+.15){const k=(CAVE.rOut+.25)/(d||1e-4);
+       q.x=CAVE.x+(d?dx:0)*k+(d?0:CAVE.rOut+.25);q.z=CAVE.z+(d?dz:0)*k;}}
     const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;}
   q.x=clamp(q.x,-BX+.3,BX-.3);q.z=clamp(q.z,Z0+.3,Z1-.3);
   q.y=groundY(q.x,q.z)+BR;return q;}
@@ -1514,10 +1538,51 @@ const HAT_LIST=[['none','❌','None'],['party','🥳','Party hat'],['crown','�
 function drawHats(){const box=$('#hatTiles');box.innerHTML='';HAT_LIST.filter(h=>hatAvailable(h[0])).forEach(([k,ic,lab])=>{const b=document.createElement('button');b.className='tile';b.setAttribute('aria-pressed',S.hat===k);b.innerHTML='<i>'+ic+'</i>'+lab;
   b.onclick=()=>{wearHat(k);drawHats();SFX.pop();if(k!=='none')award('hat');
     if(k!=='none'&&!S.asleep)showOff(pick(['Do I look cool?','I love it!','So fancy!','How do I look?']));save();};box.appendChild(b);});}
-const TRICKS={spin:{d:1.3,say:['Wheee!','Round and round!']},wave:{d:1.6,say:['Hello!','Hi there!']},jump:{d:.9,say:['Boing!','Up I go!']}};
+const TRICKS={spin:{d:1.3,name:'Spin',say:['Wheee!','Round and round!']},wave:{d:1.6,name:'Wave',say:['Hello!','Hi there!']},jump:{d:.9,name:'Jump',say:['Boing!','Up I go!']}};
+/* she has to time a tap: returns 0..1 for how close she was to the gold band */
+let timing=null;
+function startTiming(label,zone,onDone){
+  if(timing)return;
+  const w=clamp(zone||.26,.12,.5);
+  const start=.5-w/2;
+  $('#tbLabel').textContent=label;
+  const zn=$('#tbZone');zn.style.left=(start*100)+'%';zn.style.width=(w*100)+'%';
+  timing={t:0,dir:1,pos:0,w:w,start:start,done:onDone,speed:rand(.85,1.15)};
+  $('#tbMark').style.left='0%';$('#timeBar').hidden=false;}
+function updateTiming(dt){if(!timing)return;
+  timing.pos+=timing.dir*dt*timing.speed;
+  if(timing.pos>1){timing.pos=1;timing.dir=-1;}else if(timing.pos<0){timing.pos=0;timing.dir=1;}
+  $('#tbMark').style.left=(timing.pos*100)+'%';
+  timing.t+=dt;if(timing.t>14)stopTiming(0);}
+function stopTiming(acc){const t=timing;timing=null;$('#timeBar').hidden=true;if(t&&t.done)t.done(acc);}
+$('#tbGo').onclick=()=>{if(!timing)return;
+  const mid=timing.start+timing.w/2;
+  const off=Math.abs(timing.pos-mid);
+  const acc=clamp(1-(off/(timing.w/2)),0,1);   /* 1 = dead centre of the band */
+  stopTiming(acc);};
 function doTrick(k){if(!S.hatched||asleepBlock())return;freeMouth();if(S.sick){say("I'm too poorly for tricks...");return;}if(S.energy<8){say('Too tired for tricks...');return;}
-  AI.target=null;startAct(k,TRICKS[k].d);bumpTask('trick');S.tricks[k]=(S.tricks[k]||0)+1;S.fun=clamp(S.fun+6,0,100);S.energy=clamp(S.energy-2,0,100);SFX.chirp();const n=S.tricks[k];earn(1);if(['spin','wave','jump'].every(t=>(S.tricks[t]||0)>=3))award('tricks');
-  setTimeout(()=>{G.head.getWorldPosition(tmp2);burst('⭐',tmp2,n===3?10:3,{size:.4});if(n===3){SFX.yay();say('I learned to '+k+'! ⭐⭐⭐',3.5);}else say(pick(TRICKS[k].say));},TRICKS[k].d*650);save();updateUI();}
+  const lvl=trickLevel(k);
+  startTiming('Ready... '+TRICKS[k].name+'!',.3-lvl*.045,acc=>performTrick(k,acc));}
+/* the better the timing, the better the trick and the bigger the payout */
+function trickLevel(k){const b=(S.trickBest&&S.trickBest[k])||0;return clamp(Math.floor(b/5),0,3);}
+function performTrick(k,acc){
+  if(!S.hatched||S.asleep)return;
+  const great=acc>=.75,good=acc>=.4;
+  AI.target=null;startAct(k,TRICKS[k].d*(great?1.25:1));bumpTask('trick');
+  S.tricks[k]=(S.tricks[k]||0)+1;
+  S.trickBest=S.trickBest||{};
+  if(great)S.trickBest[k]=(S.trickBest[k]||0)+1;
+  S.fun=clamp(S.fun+(great?11:good?6:3),0,100);
+  S.energy=clamp(S.energy-2,0,100);SFX.chirp();
+  const n=S.tricks[k],coins=great?5:good?3:1;earn(coins);
+  if(['spin','wave','jump'].every(t=>(S.tricks[t]||0)>=3))award('tricks');
+  G.head.getWorldPosition(tmp2);
+  popText(great?'PERFECT! +'+coins:good?'Good! +'+coins:'+'+coins,tmp2,great?'#FFD23F':good?'#7CF29A':'#FFFFFF');
+  if(great){SFX.yay();burst('⭐',tmp2,12,{size:.45,speed:1.2});burst('✨',tmp2,8,{size:.4});}
+  setTimeout(()=>{G.head.getWorldPosition(tmp2);burst('⭐',tmp2,n===3?10:3,{size:.4});
+    if(n===3){SFX.yay();say('I learned to '+k+'! ⭐⭐⭐',3.5);}
+    else say(great?pick(['That was my best one!','Did you see that?!','Nailed it!']):pick(TRICKS[k].say));},TRICKS[k].d*650);
+  save();updateUI();}
 function mist(){if(!S.hatched)return;const p=G.root.position;for(let i=0;i<16;i++)burst('💧',tmp.set(p.x+rand(-1.6,1.6),rand(3,4.2),p.z+rand(-1,1.3)),1,{g:-7,speed:.3,life:.9,size:.26});
   SFX.splash();AI.wet=1;S.clean=clamp(S.clean+3,0,100);S.fun=clamp(S.fun+4,0,100);
   if(!S.asleep)setTimeout(()=>{startAct('lick',.9);say(S.shed>0?'Ooh, that helps my itchy skin!':pick(['Ahh, refreshing!','Drip drop!','I love the rain!']));},600);updateUI();}
@@ -2539,7 +2604,7 @@ window.__geckoStart=function(){
   welcomeBack();};
 let last=performance.now(),booted=false;
 function loop(now){if(resetting)return;const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
-  tickStats(dt);updateHatch(dt);updateGrowth(dt);updateTrip(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
+  updateTiming(dt);tickStats(dt);updateHatch(dt);updateGrowth(dt);updateTrip(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
   renderer.render(scene,camera);
   if(!booted){booted=true;if(S.hatched)startCine();if(window.__geckoReady)window.__geckoReady();}
   requestAnimationFrame(loop);}
