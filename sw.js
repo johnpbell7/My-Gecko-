@@ -1,6 +1,6 @@
 /* My Gecko - offline support.
    Bump VERSION whenever index.html changes, so phones pick the new build up. */
-const VERSION = 'gecko-13';
+const VERSION = 'gecko-14';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icon.svg', './icon-192.png', './icon-512.png',
