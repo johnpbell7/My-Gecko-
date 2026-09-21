@@ -87,6 +87,10 @@ canvas{position:fixed;inset:0;display:block}
 .sheet h1{margin:0 0 4px;font-family:var(--display);font-size:32px;line-height:1.08;font-weight:400;letter-spacing:.3px}
 .sheet p{margin:0 0 14px;font-size:16px;opacity:.8}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mineGo{width:100%;border:0;border-radius:20px;padding:13px;margin-bottom:14px;cursor:pointer;
+  font:400 22px var(--display);letter-spacing:.3px;color:#fff;
+  background:linear-gradient(95deg,#FF6F91,#FFB020,#3FCB7A,#35A9F0,#8B6CF0);box-shadow:0 5px 0 rgba(0,0,0,.22)}
+.mineGo[aria-pressed="true"]{box-shadow:0 0 0 4px var(--ink),0 5px 0 rgba(0,0,0,.22)}
 .sw{border:0;background:none;font:700 14px var(--font);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px;border-radius:16px}
 .sw span{width:56px;height:56px;border-radius:50%;background:var(--c);position:relative;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12);
   background-image:radial-gradient(circle at 30% 35%,var(--d) 0 5px,transparent 6px),radial-gradient(circle at 68% 58%,var(--d) 0 6px,transparent 7px),radial-gradient(circle at 42% 75%,var(--d) 0 4px,transparent 5px)}
@@ -398,6 +402,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <div class="sheet">
     <h1 id="pTitle">Pick your gecko</h1>
     <p id="pSub">Choose a colour and a name, then hatch your egg!</p>
+    <button class="mineGo" id="mineGo">✏️ Make my own</button>
     <div class="swatches" id="swatches"></div>
     <div id="mine" hidden>
       <p class="mineRow"><b>His body</b><span class="dots" id="dotSkin"></span></p>
@@ -505,7 +510,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='15';
+const BUILD='16';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -1748,7 +1753,7 @@ function menuItems(tab){const nm=esc(S.name);return({
   play:[['fetch','🎾','Fetch','Throw the ball, '+nm+' brings it back','#FF5FA2',''],['catch','🦗','Cricket catch',bestTxt('catch'),'#FF8A3D',''],['hide','🙈','Hide and seek','Find where '+nm+' is hiding','#8B6CF0',''],
     ['feather','🪶','Feather',bestTxt('feather'),'#35A9F0',''],['bubbles','🫧','Bubbles',bestTxt('bubbles'),'#5EC8F2','']],
   tricks:[['spin','🌀','Spin',trickTxt('spin'),'#8B6CF0',''],['wave','👋','Wave',trickTxt('wave'),'#FF5FA2',''],['jump','🦘','Jump',trickTxt('jump'),'#3FCB7A','']],
-  style:[['hats','🎩','Hats','Dress '+nm+' up','#8B6CF0',''],['colours','🎨','Colour and name','Change the look','#FFB020',''],['photo','📸','Take a photo','Say cheese!','#FF5FA2',''],['album','🖼️','Photo album','All your photos','#35A9F0','']],
+  style:[['hats','🎩','Hats','Dress '+nm+' up','#8B6CF0',''],['colours','🎨','Design your gecko','Make your own colours and spots','#FFB020',''],['photo','📸','Take a photo','Say cheese!','#FF5FA2',''],['album','🖼️','Photo album','All your photos','#35A9F0','']],
   collect:[['journey','🏆',nm+"'s journey",'Stars, stickers and how big he is','#8B6CF0',''],
     ['shop','🛍️','Shop','You have '+(S.coins||0)+' coins','#FFB020',''],['decorate','🪴','Decorate','Move things around the tank','#3FCB7A',''],
     ['stickers','📒','Sticker book',Object.keys(S.stickers||{}).length+' of '+STICKERS.length+' stickers','#FF5FA2',''],['fact','🧠','Gecko fact','Learn something new','#35A9F0',''],['settings','⚙️','Grown-ups','School mode, bedtime, sound','#9A8FB0','']]
@@ -1786,8 +1791,8 @@ $('#snd').textContent=S.sound?'🔊':'🔇';
 
 /* ---------- picker ---------- */
 let chosen=S.morph;
-function openPicker(first){$('#picker').hidden=false;$('#pTitle').textContent=first?'Pick your gecko':'Change your gecko';
-  $('#pSub').textContent=first?'Choose a colour and a name, then hatch your egg!':'Pick a new colour or name.';
+function openPicker(first){$('#picker').hidden=false;$('#pTitle').textContent=first?'Pick your gecko':'Design your gecko';
+  $('#pSub').textContent=first?'Choose a colour and a name, then hatch your egg!':'Make your own colours and spots, or pick a ready-made one.';
   $('#pGo').textContent=first?'Hatch my egg!':'Done';$('#pReset').hidden=first;$('#pReset').classList.remove('sure');$('#pReset').textContent='Start again with a new egg';$('#nameIn').value=S.name;chosen=S.morph;drawSwatches();}
 const SKIN_COLS=[0xF7963B,0xF4C542,0xEFE6D2,0x8FD9A8,0x7B6CF0,0xF07AA8,0xFF6F4D,0x5FC8FF,0xB6E24A,0xD9A3FF,0xFFFFFF,0x6E5B4A];
 const BELLY_COLS=[0xFFE2B8,0xFFF3C4,0xFFFFFF,0xFFE0EC,0xE6F7FF,0xF2FFE0,0xEDE8FF,0xFFD9C2];
@@ -1811,8 +1816,12 @@ function drawSwatches(){const box=$('#swatches');box.innerHTML='';
     b.innerHTML='<span style="--c:'+m.css+';--d:'+m.dcss+'"></span>'+m.label;
     b.onclick=()=>{chosen=k;applyMorph(k);drawSwatches();drawMine();SFX.pop();};box.appendChild(b);};
   for(const k in MORPHS)add(k,MORPHS[k]);
-  add('custom',customM());
+  /* "my own" used to be a seventh swatch that looked like the six ready-made ones,
+     so nobody found it. It is its own button now, above them. */
+  $('#mineGo').setAttribute('aria-pressed',chosen==='custom');
   drawMine();}
+$('#mineGo').onclick=()=>{chosen='custom';applyMorph('custom');drawSwatches();drawMine();SFX.pop();
+  $('#mine').scrollIntoView({behavior:'smooth',block:'nearest'});};
 $('#pGo').onclick=()=>{S.name=($('#nameIn').value.trim()||'Ziggy').slice(0,12);S.morph=chosen;applyMorph(chosen);$('#picker').hidden=true;
   if(!S.hatched)startHatch();else{say('I love my new look!');startAct('happy',.8);SFX.chirp();}save();updateUI();};
 $('#pReset').onclick=()=>{const b=$('#pReset');if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
