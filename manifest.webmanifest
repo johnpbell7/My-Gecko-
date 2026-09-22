@@ -3,12 +3,12 @@
   "short_name": "My Gecko",
   "description": "Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.",
   "id": "/my-gecko/",
-  "start_url": "./?v=14",
+  "start_url": "./?v=18",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#FFC24E",
-  "theme_color": "#FFC24E",
+  "background_color": "#2B1D3A",
+  "theme_color": "#2B1D3A",
   "categories": [
     "games",
     "kids",
@@ -16,28 +16,28 @@
   ],
   "icons": [
     {
-      "src": "icon.svg?v=14",
+      "src": "icon.svg?v=18",
       "sizes": "any",
       "type": "image/svg+xml"
     },
     {
-      "src": "icon-192.png?v=14",
+      "src": "icon-192.png?v=18",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png?v=14",
+      "src": "icon-512.png?v=18",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "icon-maskable-512.png?v=14",
+      "src": "icon-maskable-512.png?v=18",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon-maskable-192.png?v=14",
+      "src": "icon-maskable-192.png?v=18",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"

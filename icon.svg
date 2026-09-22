@@ -1,75 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="My Gecko">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgA" x1="0" y1="0" x2=".3" y2="1">
-      <stop offset="0" stop-color="#FFE68A"/><stop offset=".5" stop-color="#FFC24E"/><stop offset="1" stop-color="#FF8F33"/>
+    <linearGradient id="bg" x1=".15" y1="0" x2=".85" y2="1">
+      <stop offset="0" stop-color="#6A5394"/><stop offset=".5" stop-color="#3D2D62"/><stop offset="1" stop-color="#221735"/>
     </linearGradient>
-    <linearGradient id="skin" x1=".2" y1="0" x2=".8" y2="1">
-      <stop offset="0" stop-color="#FFB45E"/><stop offset=".55" stop-color="#F7963B"/><stop offset="1" stop-color="#E07C28"/>
+    <radialGradient id="glow" cx=".5" cy=".38" r=".66">
+      <stop offset="0" stop-color="#FFC24E" stop-opacity=".26"/><stop offset="1" stop-color="#FFC24E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skin" x1=".25" y1="0" x2=".75" y2="1">
+      <stop offset="0" stop-color="#FFDB7C"/><stop offset=".42" stop-color="#FDAE45"/><stop offset="1" stop-color="#DC7418"/>
     </linearGradient>
-    <clipPath id="headClip">
-      <path d="M256 104c-96 0-160 62-160 150 0 92 70 154 160 154s160-62 160-154c0-88-64-150-160-150z"/>
-    </clipPath>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="22"/></filter>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bgA)"/>
-  <circle cx="256" cy="256" r="208" fill="none" stroke="#FFF6E0" stroke-width="16" opacity=".75"/>
-
-  <!-- tail: a tapering curl sweeping out from behind the head -->
-  <g fill="none" stroke="#D9761F" stroke-linecap="round">
-    <path d="M196 404c-46 18-92 10-108-22" stroke-width="52"/>
-    <path d="M88 382c-14-30 2-56 30-58" stroke-width="36"/>
-    <path d="M118 324c22-2 34 14 28 32" stroke-width="22"/>
-    <path d="M146 356c-4 12-14 18-24 16" stroke-width="11"/>
-  </g>
-
-  <!-- head -->
-  <g transform="translate(256 256) scale(1.08) translate(-256 -256)">
-    <path d="M256 104c-96 0-160 62-160 150 0 92 70 154 160 154s160-62 160-154c0-88-64-150-160-150z" fill="url(#skin)"/>
-    <g clip-path="url(#headClip)">
-      <!-- muzzle / chin highlight -->
-      <ellipse cx="256" cy="352" rx="112" ry="76" fill="#FFE2B8" opacity=".85"/>
-      <ellipse cx="256" cy="300" rx="150" ry="60" fill="#FFCE92" opacity=".35"/>
-      <!-- spots -->
-      <g fill="#4A2C23" opacity=".9">
-        <ellipse cx="150" cy="188" rx="26" ry="20" transform="rotate(-18 150 188)"/>
-        <ellipse cx="220" cy="148" rx="23" ry="17" transform="rotate(12 220 148)"/>
-        <ellipse cx="296" cy="146" rx="20" ry="16" transform="rotate(-8 296 146)"/>
-        <ellipse cx="366" cy="192" rx="25" ry="19" transform="rotate(20 366 192)"/>
-        <ellipse cx="118" cy="266" rx="19" ry="15"/>
-        <ellipse cx="398" cy="270" rx="19" ry="15"/>
-        <ellipse cx="258" cy="128" rx="14" ry="11"/>
-      </g>
-      <!-- cheeks -->
-      <ellipse cx="146" cy="318" rx="44" ry="30" fill="#FF7FA8" opacity=".38"/>
-      <ellipse cx="366" cy="318" rx="44" ry="30" fill="#FF7FA8" opacity=".38"/>
-    </g>
-
-    <!-- eyes -->
-    <g>
-      <ellipse cx="176" cy="252" rx="62" ry="64" fill="#FFF6E6"/>
-      <ellipse cx="336" cy="252" rx="62" ry="64" fill="#FFF6E6"/>
-      <ellipse cx="184" cy="258" rx="34" ry="40" fill="#1B1420"/>
-      <ellipse cx="328" cy="258" rx="34" ry="40" fill="#1B1420"/>
-      <circle cx="171" cy="240" r="13" fill="#FFFFFF"/>
-      <circle cx="315" cy="240" r="13" fill="#FFFFFF"/>
-      <circle cx="194" cy="278" r="6" fill="#FFFFFF" opacity=".8"/>
-      <circle cx="338" cy="278" r="6" fill="#FFFFFF" opacity=".8"/>
-      <!-- lids -->
-      <path d="M114 240c16-34 46-52 78-50" fill="none" stroke="#D9761F" stroke-width="20" stroke-linecap="round"/>
-      <path d="M398 240c-16-34-46-52-78-50" fill="none" stroke="#D9761F" stroke-width="20" stroke-linecap="round"/>
-    </g>
-
-    <!-- nose + smile -->
-    <g fill="#5A2A3A">
-      <ellipse cx="232" cy="336" rx="8" ry="6"/>
-      <ellipse cx="280" cy="336" rx="8" ry="6"/>
-    </g>
-    <path d="M198 356c14 34 42 52 58 52s44-18 58-52" fill="none" stroke="#5A2A3A" stroke-width="15" stroke-linecap="round"/>
-  </g>
-
-  <!-- sparkles -->
-  <g fill="#FFD86B">
-    <path d="M432 128l9 24 24 9-24 9-9 24-9-24-24-9 24-9z"/>
-    <path d="M74 150l6 17 17 6-17 6-6 17-6-17-17-6 17-6z" opacity=".85"/>
-    <path d="M414 404l5 14 14 5-14 5-5 14-5-14-14-5 14-5z" opacity=".7"/>
-  </g>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  
+  <ellipse cx="256" cy="320.36" rx="191.58" ry="139.5" fill="#120B22" opacity=".45" filter="url(#soft)"/>
+  <path d="M256,125.06
+           C349,125.06 430.84,173.42 447.58,245.96
+           C458.74,296.18 428.98,355.7 371.32,387.32
+           C330.4,410.57 294.13,418.94 256,418.94
+           C217.87,418.94 181.6,410.57 140.68,387.32
+           C83.02,355.7 53.26,296.18 64.42,245.96
+           C81.16,173.42 163,125.06 256,125.06 Z"
+        fill="url(#skin)"/>
+  <path d="M256,125.06
+           C349,125.06 430.84,173.42 447.58,245.96
+           C452.23,266.42 451.3,288.74 444.79,309.2
+           C423.4,242.24 356.44,195.74 256,195.74
+           C155.56,195.74 88.6,242.24 67.21,309.2
+           C60.7,288.74 59.77,266.42 64.42,245.96
+           C81.16,173.42 163,125.06 256,125.06 Z"
+        fill="#FFFFFF" opacity=".20"/>
+  <ellipse cx="181.6" cy="165.98" rx="29.76" ry="19.53"
+      fill="#7C3E0F" opacity=".82" transform="rotate(-13 181.6 165.98)"/><ellipse cx="256" cy="145.52" rx="32.55" ry="20.46"
+      fill="#7C3E0F" opacity=".82" transform="rotate(3 256 145.52)"/><ellipse cx="330.4" cy="165.98" rx="29.76" ry="19.53"
+      fill="#7C3E0F" opacity=".82" transform="rotate(13 330.4 165.98)"/>
+  
+   <g>
+     <ellipse cx="163" cy="266.42" rx="63.24" ry="59.52" fill="#FFF8EA"/>
+     <ellipse cx="163" cy="268.28" rx="15.81" ry="44.64" fill="#1E1430"/>
+     <ellipse cx="142.54" cy="244.1" rx="15.81" ry="13.95" fill="#FFFFFF"/>
+     <ellipse cx="181.6" cy="292.46" rx="7.44" ry="6.51" fill="#FFFFFF" opacity=".7"/>
+     <path d="M97.9,253.4
+              C109.06,190.16 216.94,190.16 228.1,253.4
+              C205.78,214.34 120.22,214.34 97.9,253.4 Z"
+           fill="#C56A1C"/>
+     <ellipse cx="163" cy="266.42" rx="63.24" ry="59.52" fill="none"
+              stroke="#96500F" stroke-width="5.58" opacity=".5"/>
+   </g>
+   <g>
+     <ellipse cx="349" cy="266.42" rx="63.24" ry="59.52" fill="#FFF8EA"/>
+     <ellipse cx="349" cy="268.28" rx="15.81" ry="44.64" fill="#1E1430"/>
+     <ellipse cx="328.54" cy="244.1" rx="15.81" ry="13.95" fill="#FFFFFF"/>
+     <ellipse cx="367.6" cy="292.46" rx="7.44" ry="6.51" fill="#FFFFFF" opacity=".7"/>
+     <path d="M283.9,253.4
+              C295.06,190.16 402.94,190.16 414.1,253.4
+              C391.78,214.34 306.22,214.34 283.9,253.4 Z"
+           fill="#C56A1C"/>
+     <ellipse cx="349" cy="266.42" rx="63.24" ry="59.52" fill="none"
+              stroke="#96500F" stroke-width="5.58" opacity=".5"/>
+   </g>
+  <circle cx="235.54" cy="344.54" r="7.44" fill="#96500F" opacity=".75"/>
+  <circle cx="276.46" cy="344.54" r="7.44" fill="#96500F" opacity=".75"/>
+  <path d="M157.42,357.56 C194.62,402.2 317.38,402.2 354.58,357.56"
+        fill="none" stroke="#7C3E0F" stroke-width="13.95" stroke-linecap="round" opacity=".9"/>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="3"/>
 </svg>

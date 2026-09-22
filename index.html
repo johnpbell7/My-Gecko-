@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>My Gecko</title>
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
-<meta name="theme-color" content="#FFC24E">
+<meta name="theme-color" content="#2B1D3A">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="build" content="14">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="manifest.webmanifest?v=14">
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=14">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=14">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=14">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=14">
+<link rel="manifest" href="manifest.webmanifest?v=18">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=18">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=18">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=18">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=18">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -27,11 +27,28 @@
   --good:#3FCB7A; --mid:#FFB020; --low:#FF5A5F;
   --font:"Nunito", ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --display:"Lilita One", "Nunito", ui-rounded, "Arial Rounded MT Bold", sans-serif;
+  /* One family of corners and shadows for the whole game. A flat offset block
+     under everything is what makes a thing look thrown together; a small offset
+     for the press, plus a real soft shadow, is what makes it look made. */
+  --r-s:14px; --r-m:20px; --r-l:26px; --r-xl:32px;
+  --sh-1:0 1px 2px rgba(24,14,48,.10), 0 5px 14px rgba(24,14,48,.11);
+  --sh-2:0 2px 5px rgba(24,14,48,.13), 0 12px 30px rgba(24,14,48,.17);
+  --sh-up:0 -2px 10px rgba(24,14,48,.10), 0 -16px 46px rgba(24,14,48,.20);
+  --gloss:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,0) 52%,rgba(0,0,0,.10));
+  --scrim:rgba(22,13,44,.5);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --ink:#F5EFFF; --paper:#2A2248; --card:rgba(42,34,72,.92); --shade:rgba(255,255,255,.14); }
+  :root:not([data-theme="light"]){ --ink:#F5EFFF; --paper:#2A2248; --card:rgba(42,34,72,.92); --shade:rgba(255,255,255,.14);
+    --sh-1:0 1px 2px rgba(0,0,0,.30), 0 6px 18px rgba(0,0,0,.34);
+    --sh-2:0 2px 6px rgba(0,0,0,.34), 0 14px 36px rgba(0,0,0,.44);
+    --sh-up:0 -2px 12px rgba(0,0,0,.30), 0 -18px 52px rgba(0,0,0,.46);
+    --scrim:rgba(8,4,20,.58); }
 }
-:root[data-theme="dark"]{ --ink:#F5EFFF; --paper:#2A2248; --card:rgba(42,34,72,.92); --shade:rgba(255,255,255,.14); }
+:root[data-theme="dark"]{ --ink:#F5EFFF; --paper:#2A2248; --card:rgba(42,34,72,.92); --shade:rgba(255,255,255,.14);
+  --sh-1:0 1px 2px rgba(0,0,0,.30), 0 6px 18px rgba(0,0,0,.34);
+  --sh-2:0 2px 6px rgba(0,0,0,.34), 0 14px 36px rgba(0,0,0,.44);
+  --sh-up:0 -2px 12px rgba(0,0,0,.30), 0 -18px 52px rgba(0,0,0,.46);
+  --scrim:rgba(8,4,20,.58); }
 
 html,body{margin:0;height:100%;overflow:hidden;background:#8FD8FF;font-family:var(--font);color:var(--ink);
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
@@ -47,7 +64,7 @@ canvas{position:fixed;inset:0;display:block}
    floating blobs read as clutter over the tank; one frosted card reads as the
    game's frame, and takes less of the screen doing it. */
 .hudCard{width:min(560px,100%);box-sizing:border-box;display:flex;flex-direction:column;gap:5px;
-  background:var(--card);border-radius:24px;padding:7px 13px 9px;box-shadow:0 5px 0 var(--shade);
+  background:var(--card);border-radius:var(--r-l);padding:7px 13px 9px;box-shadow:var(--sh-1);
   backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2)}
 .toprow{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pill{pointer-events:auto;background:none;border-radius:999px;padding:0;display:flex;align-items:center;gap:9px;min-width:0}
@@ -56,7 +73,10 @@ canvas{position:fixed;inset:0;display:block}
 .pill small{font-size:12px;font-weight:500;opacity:.7;display:block;line-height:1.2;white-space:nowrap}
 .round{pointer-events:auto;width:36px;height:36px;border-radius:50%;border:0;background:var(--shade);color:var(--ink);font-size:17px;cursor:pointer}
 .stats{background:none;border-radius:0;padding:2px 0 0;display:flex;gap:4px;box-shadow:none;justify-content:space-between}
-.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;
+  pointer-events:auto;border:0;background:none;color:inherit;font:inherit;padding:2px 0 0;cursor:pointer;
+  border-radius:var(--r-s);-webkit-tap-highlight-color:transparent}
+.stat:active{transform:scale(.94)}
 .ring{--v:100;--c:var(--good);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--c) calc(var(--v)*1%), var(--shade) 0);transition:--v .4s}
 .ring span{width:29px;height:29px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:17px;
@@ -73,10 +93,11 @@ canvas{position:fixed;inset:0;display:block}
 
 #tray{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);box-sizing:border-box;
   padding:8px 9px calc(env(safe-area-inset-bottom) + 10px);display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
-.act{position:relative;--b:#FF8A3D;--s:#C2561A;--t:#fff;border:0;border-radius:20px;background:var(--b);color:var(--t);font:800 14px/1 var(--font);
-  padding:7px 0 8px;box-shadow:0 5px 0 var(--s);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:transform .08s,box-shadow .08s}
+.act{position:relative;--b:#FF8A3D;--s:#C2561A;--t:#fff;border:0;border-radius:var(--r-m);
+  background-color:var(--b);background-image:var(--gloss);color:var(--t);font:800 12.5px/1 var(--font);letter-spacing:.2px;
+  padding:7px 0 8px;box-shadow:0 4px 0 var(--s),var(--sh-1);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:transform .09s,box-shadow .09s}
 .act i{font-style:normal;font-size:26px;line-height:1.15}
-.act:active{transform:translateY(5px);box-shadow:0 1px 0 var(--s)}
+.act:active{transform:translateY(4px);box-shadow:0 0 0 var(--s),var(--sh-1)}
 .act:focus-visible,.round:focus-visible,.go:focus-visible,.sw:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .act.dim{filter:saturate(.3);opacity:.7}
 .act.glow{animation:glow 1s ease-in-out infinite}
@@ -85,10 +106,13 @@ canvas{position:fixed;inset:0;display:block}
 .act .n[hidden]{display:none}
 @keyframes nPop{from{transform:scale(0)}}
 @keyframes glow{50%{transform:translateY(-4px) scale(1.06)}}
+/* a flick on the button she just reached through, so she learns where it is */
+.act.ping{animation:ping .42s cubic-bezier(.3,1.5,.5,1)}
+@keyframes ping{40%{transform:translateY(-6px) scale(1.09)}}
 
 #bubble{position:fixed;left:0;top:0;transform:translate(-50%,-100%) scale(.6);opacity:0;pointer-events:none;
   background:var(--paper);color:var(--ink);font-weight:600;font-size:18.5px;line-height:1.2;padding:8px 16px;border-radius:20px;
-  box-shadow:0 5px 0 var(--shade);white-space:nowrap;transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
+  box-shadow:var(--sh-1);white-space:nowrap;transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
 #bubble::after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-9px;border:9px solid transparent;border-bottom:0;border-top-color:var(--paper)}
 #bubble.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
 
@@ -102,18 +126,18 @@ canvas{position:fixed;inset:0;display:block}
   background:rgba(30,20,60,.55);color:#fff;border-radius:16px;padding:5px 14px;
   font:600 13px var(--font);letter-spacing:.2px}
 #picker[hidden]{display:none}
-.sheet{background:var(--paper);border-radius:30px;padding:22px 20px 20px;width:min(400px,100%);box-sizing:border-box;box-shadow:0 10px 0 rgba(0,0,0,.15);text-align:center}
-#picker .sheet{width:min(440px,100%);margin:0 auto;border-radius:30px 30px 0 0;
+.sheet{background:var(--paper);border-radius:var(--r-xl);padding:22px 20px 20px;width:min(400px,100%);box-sizing:border-box;box-shadow:var(--sh-2);text-align:center}
+#picker .sheet{width:min(440px,100%);margin:0 auto;border-radius:var(--r-xl) var(--r-xl) 0 0;
   max-height:66vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:18px 20px calc(env(safe-area-inset-bottom) + 18px);box-shadow:0 -8px 30px rgba(20,12,40,.28)}
+  padding:18px 20px calc(env(safe-area-inset-bottom) + 18px);box-shadow:var(--sh-up)}
 #picker .sheet h1{font-size:27px}
 #picker .sheet p#pSub{margin-bottom:12px;font-size:14.5px}
 .sheet h1{margin:0 0 4px;font-family:var(--display);font-size:32px;line-height:1.08;font-weight:400;letter-spacing:.3px}
 .sheet p{margin:0 0 14px;font-size:16px;opacity:.8}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.mineGo{width:100%;border:0;border-radius:20px;padding:13px;margin-bottom:14px;cursor:pointer;
+.mineGo{width:100%;border:0;border-radius:var(--r-m);padding:13px;margin-bottom:14px;cursor:pointer;
   font:400 22px var(--display);letter-spacing:.3px;color:#fff;
-  background:linear-gradient(95deg,#FF6F91,#FFB020,#3FCB7A,#35A9F0,#8B6CF0);box-shadow:0 5px 0 rgba(0,0,0,.22)}
+  background:linear-gradient(95deg,#FF6F91,#FFB020,#3FCB7A,#35A9F0,#8B6CF0);box-shadow:var(--sh-1);text-shadow:0 1px 2px rgba(0,0,0,.25)}
 .mineGo[aria-pressed="true"]{box-shadow:0 0 0 4px var(--ink),0 5px 0 rgba(0,0,0,.22)}
 .sw{border:0;background:none;font:700 14px var(--font);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px;border-radius:16px}
 .sw span{width:56px;height:56px;border-radius:50%;background:var(--c);position:relative;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12);
@@ -122,7 +146,10 @@ canvas{position:fixed;inset:0;display:block}
 .sw[aria-pressed="true"] span{outline:4px solid var(--ink);outline-offset:3px}
 .sheet label{display:block;font-weight:700;font-size:16px;margin-bottom:6px}
 .sheet input{width:100%;box-sizing:border-box;font:800 24px var(--font);text-align:center;border:3px solid var(--shade);border-radius:18px;padding:6px 10px;background:transparent;color:var(--ink);margin-bottom:16px}
-.go{width:100%;border:0;border-radius:22px;background:#3FCB7A;color:#fff;font:400 24px var(--display);letter-spacing:.3px;padding:12px;box-shadow:0 6px 0 #25915A;cursor:pointer}
+.go{width:100%;border:0;border-radius:var(--r-m);background-color:#3FCB7A;background-image:var(--gloss);color:#fff;
+  font:400 24px var(--display);letter-spacing:.3px;padding:12px;box-shadow:0 4px 0 #25915A,var(--sh-1);cursor:pointer;
+  transition:transform .09s,box-shadow .09s}
+.go:active{transform:translateY(4px);box-shadow:0 0 0 #25915A,var(--sh-1)}
 .reset{margin-top:14px;border:0;background:none;color:var(--ink);opacity:.7;font:700 15px var(--font);text-decoration:underline;cursor:pointer;padding:6px}
 .reset[hidden]{display:none}
 .build{margin:10px 0 0;text-align:center;font:600 12px var(--font);opacity:.45}
@@ -162,10 +189,10 @@ canvas{position:fixed;inset:0;display:block}
 .wipe:active{transform:translateY(2px);box-shadow:0 1px 0 #C8383D}
 .wipe.sure{background:#C8383D;box-shadow:0 3px 0 #8E2226}
 .reset.sure{opacity:1;color:#fff;background:#FF5A5F;text-decoration:none;border-radius:14px;padding:8px 14px}
-.overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(30,20,60,.35);padding:16px;z-index:6}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:var(--scrim);padding:16px;z-index:6}
 .overlay[hidden]{display:none}
 #more{place-items:end center;padding:0}
-.menu{width:min(560px,100%);max-height:82vh;display:flex;flex-direction:column;background:var(--paper);border-radius:30px 30px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom) + 14px);box-sizing:border-box;box-shadow:0 -8px 0 rgba(0,0,0,.08);animation:sheetUp .28s cubic-bezier(.2,1.2,.4,1)}
+.menu{width:min(560px,100%);max-height:82vh;display:flex;flex-direction:column;background:var(--paper);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:14px 14px calc(env(safe-area-inset-bottom) + 14px);box-sizing:border-box;box-shadow:var(--sh-up);animation:sheetUp .28s cubic-bezier(.2,1.2,.4,1)}
 @keyframes sheetUp{from{transform:translateY(60%);opacity:.4}to{transform:none;opacity:1}}
 .menuHead{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px}
 .menuHead h1{margin:0;font-family:var(--display);font-weight:400;font-size:28px;line-height:1.12;letter-spacing:.3px}
@@ -178,11 +205,11 @@ canvas{position:fixed;inset:0;display:block}
 .closeBig{margin-top:10px;flex:none}
 .menu .x{width:46px;height:46px;border-radius:50%;border:0;background:#FF5A5F;color:#fff;box-shadow:0 4px 0 #B83236;font:800 20px var(--font);cursor:pointer}
 .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
-.tabs button{border:0;border-radius:18px;background:var(--shade);color:var(--ink);font:800 13px/1.1 var(--font);padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.tabs button{border:0;border-radius:var(--r-s);background:var(--shade);color:var(--ink);font:800 13px/1.1 var(--font);padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 .tabs button b{font-size:24px;line-height:1.1}
 .tabs button[aria-selected="true"]{background:var(--tc);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.18)}
 .cards{overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;padding:2px 2px 6px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-.card{position:relative;border:0;border-radius:22px;background:var(--shade);color:var(--ink);text-align:left;padding:12px 12px 12px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;font-family:var(--font);min-height:76px}
+.card{position:relative;border:0;border-radius:var(--r-m);background:var(--shade);color:var(--ink);text-align:left;padding:12px 12px 12px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;font-family:var(--font);min-height:76px}
 .card:active{transform:scale(.96)}
 .card .ic{flex:none;width:52px;height:52px;border-radius:16px;background:var(--c);display:grid;place-items:center;font-size:30px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
 .card b{display:block;font-size:17px;line-height:1.1}
@@ -192,7 +219,7 @@ canvas{position:fixed;inset:0;display:block}
 .card.wide{grid-column:1 / -1}
 @media (max-width:360px){.card .ic{width:44px;height:44px;font-size:26px}.card b{font-size:15px}}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 16px}
-.tile{border:0;border-radius:18px;background:var(--shade);color:var(--ink);font:800 14px var(--font);padding:10px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-height:84px}
+.tile{border:0;border-radius:var(--r-s);background:var(--shade);color:var(--ink);font:800 14px var(--font);padding:10px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-height:84px}
 .tile i{font-style:normal;font-size:30px;line-height:1.15}
 .tile small{font-size:11px;min-height:14px}
 .tile[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:-3px}
@@ -242,9 +269,12 @@ canvas{position:fixed;inset:0;display:block}
 .starsRow{font-size:40px;letter-spacing:4px;margin:-4px 0 6px}
 .starsRow .off{filter:grayscale(1);opacity:.3}
 .again.half{width:calc(50% - 6px);display:inline-block;vertical-align:top;margin:0 3px 12px;font-size:19px}
-.again{width:100%;border:0;border-radius:22px;background:#FF5FA2;color:#fff;font:400 22px var(--display);letter-spacing:.3px;padding:11px;box-shadow:0 6px 0 #C23270;cursor:pointer;margin-bottom:12px}
+.again{width:100%;border:0;border-radius:var(--r-m);background-color:#FF5FA2;background-image:var(--gloss);color:#fff;
+  font:400 22px var(--display);letter-spacing:.3px;padding:11px;box-shadow:0 4px 0 #C23270,var(--sh-1);cursor:pointer;margin-bottom:12px;
+  transition:transform .09s,box-shadow .09s}
+.again:active{transform:translateY(4px);box-shadow:0 0 0 #C23270,var(--sh-1)}
 .again:active{transform:translateY(5px);box-shadow:0 1px 0 #C23270}
-.bar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translateX(-50%);background:var(--paper);border-radius:999px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:8px;font:400 18px var(--display);box-shadow:0 5px 0 var(--shade);z-index:4;white-space:nowrap}
+.bar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 136px);transform:translateX(-50%);background:var(--paper);border-radius:999px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:8px;font:400 18px var(--display);box-shadow:var(--sh-1);z-index:4;white-space:nowrap}
 .bar[hidden],.bar button[hidden]{display:none}
 .bar button{border:0;border-radius:999px;background:#FF5A5F;color:#fff;font:800 15px var(--font);padding:8px 14px;cursor:pointer}
 #gbStop{padding:9px 17px;font-size:16px;box-shadow:0 3px 0 #B83236}
@@ -273,10 +303,10 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 /* a close-up of him using a toy: the tank UI gets out of the way for it */
 body.watching #hud,body.watching #tray,body.watching #watchChip,
 body.designing #hud,body.designing #tray{opacity:0;pointer-events:none}
-#watchChip{position:fixed;left:50%;transform:translateX(-50%);z-index:6;cursor:pointer;
+#watchChip{position:fixed;left:50%;transform:translateX(-50%);z-index:5;cursor:pointer;
   bottom:calc(env(safe-area-inset-bottom) + 104px);border:0;border-radius:22px;padding:10px 18px;
   background:var(--paper);color:var(--ink);font:400 20px var(--display);letter-spacing:.3px;
-  box-shadow:0 5px 0 rgba(0,0,0,.18);transition:opacity .35s ease}
+  box-shadow:var(--sh-1);transition:opacity .35s ease}
 #watchChip[hidden]{display:none}
 #watchOut{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 26px);z-index:6;
   text-align:center;font:600 15px var(--font);color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);
@@ -421,10 +451,10 @@ body.watching #watchOut{opacity:.85}
     <div class="right"><div class="coin" id="coinPill">🪙 <b id="coins">0</b></div><button class="round" id="snd" aria-label="Sound on or off">🔊</button></div>
   </div>
   <div class="stats">
-    <div class="stat" id="st-hunger"><div class="ring"><span>🦗</span></div><b>Tummy</b></div>
-    <div class="stat" id="st-fun"><div class="ring"><span>🎾</span></div><b>Fun</b></div>
-    <div class="stat" id="st-clean"><div class="ring"><span>🧽</span></div><b>Clean</b></div>
-    <div class="stat" id="st-energy"><div class="ring"><span>⚡</span></div><b>Energy</b></div>
+    <button class="stat" id="st-hunger" type="button"><div class="ring"><span>🦗</span></div><b>Tummy</b></button>
+    <button class="stat" id="st-fun" type="button"><div class="ring"><span>🎾</span></div><b>Fun</b></button>
+    <button class="stat" id="st-clean" type="button"><div class="ring"><span>🧽</span></div><b>Clean</b></button>
+    <button class="stat" id="st-energy" type="button"><div class="ring"><span>⚡</span></div><b>Energy</b></button>
   </div>
  </div>
 </div>
@@ -556,7 +586,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='17';
+const BUILD='18';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -617,6 +647,9 @@ const TANK={w:17.2*KX,d:10*KZ,h:5.4};
    which threw away most of the tank. Leave only enough for his body. */
 const BX=8.0*KX,Z0=-4.3*KZ,Z1=4.3*KZ;
 /* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
+/* the sideboard the tank stands on. Declared up here because the room is built
+   long before the table is worked out, and it needs these. */
+const SB_W=TANK.w+17,SB_D=TANK.d+7,SB_Z=2.6;
 const KC=TL>1?1.55:1;   /* the cave grows with the tank, uniformly so it stays round */
 const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62*KC,rIn:1.2*KC,mouth:.82,h:1.15*KC};
 const plants=[];
@@ -748,17 +781,19 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
     x.strokeStyle='rgba(90,55,30,.18)';x.lineWidth=1.2;for(let i=0;i<120;i++){const y=rand(0,h);x.beginPath();x.moveTo(0,y);for(let X=0;X<=w;X+=32)x.lineTo(X,y+Math.sin(X*.02+i)*3);x.stroke();}});
   // sideboard the tank sits on
   const sbT=wood('#c98f5d','rgba(80,45,20,.5)',6);const sbM=M(0xffffff,{map:sbT,roughness:.6});
-  const sbW=W+17,sbD=D+1.6,sbH=topY-floorY;const sb=new THREE.Mesh(new THREE.BoxGeometry(sbW,sbH,sbD),sbM);sb.position.set(0,floorY+sbH/2,0);sb.receiveShadow=true;sb.castShadow=true;scene.add(sb);
-  const top=new THREE.Mesh(new THREE.BoxGeometry(sbW+.3,.25,sbD+.3),M(0xffffff,{map:sbT,roughness:.45}));top.position.set(0,topY-.12,0);top.receiveShadow=true;top.name='sideboardTop';top.userData.kind='table';scene.add(top);
+  /* deep enough that the tank is not flush with the front edge, and pushed
+     forward so the room it gains is all in front, where she can see him */
+  const sbW=SB_W,sbD=SB_D,sbZ=SB_Z,sbH=topY-floorY;const sb=new THREE.Mesh(new THREE.BoxGeometry(sbW,sbH,sbD),sbM);sb.position.set(0,floorY+sbH/2,sbZ);sb.receiveShadow=true;sb.castShadow=true;scene.add(sb);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(sbW+.3,.25,sbD+.3),M(0xffffff,{map:sbT,roughness:.45}));top.position.set(0,topY-.12,sbZ);top.receiveShadow=true;top.name='sideboardTop';top.userData.kind='table';scene.add(top);
   const doorM=M(0xF5EBDD,{roughness:.5});const kn=M(0xD9A441,{metalness:.8,roughness:.3});
-  for(let i=0;i<4;i++){const dw=sbW/4-.3;const d=new THREE.Mesh(new THREE.BoxGeometry(dw,sbH-.8,.12),doorM);d.position.set(-sbW/2+sbW/8+i*sbW/4,floorY+sbH/2-.1,sbD/2+.06);d.receiveShadow=true;scene.add(d);
-    const k=new THREE.Mesh(new THREE.SphereGeometry(.14,16,12),kn);k.position.set(d.position.x+(i%2?-1:1)*(dw/2-.45),d.position.y+.5,sbD/2+.18);scene.add(k);}
+  for(let i=0;i<4;i++){const dw=sbW/4-.3;const d=new THREE.Mesh(new THREE.BoxGeometry(dw,sbH-.8,.12),doorM);d.position.set(-sbW/2+sbW/8+i*sbW/4,floorY+sbH/2-.1,sbZ+sbD/2+.06);d.receiveShadow=true;scene.add(d);
+    const k=new THREE.Mesh(new THREE.SphereGeometry(.14,16,12),kn);k.position.set(d.position.x+(i%2?-1:1)*(dw/2-.45),d.position.y+.5,sbZ+sbD/2+.18);scene.add(k);}
   // floor and rug
   const flT=wood('#b98556','rgba(70,40,20,.45)',8);flT.wrapS=flT.wrapT=THREE.RepeatWrapping;flT.repeat.set(8,6);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(120,80),M(0xffffff,{map:flT,roughness:.7}));floor.rotation.x=-Math.PI/2;floor.position.set(0,floorY,10);floor.receiveShadow=true;scene.add(floor);
   const rugT=canvasTex(512,512,(x,w,h)=>{const cols=['#FFB3C7','#FFE08A','#9FE0C9','#B9A7FF','#FFB3C7'];for(let i=0;i<cols.length;i++){x.fillStyle=cols[i];x.beginPath();x.arc(256,256,250-i*48,0,7);x.fill();}
     for(let i=0;i<60;i++){const a=i/60*Math.PI*2;x.fillStyle='#fff';x.beginPath();x.arc(256+Math.cos(a)*228,256+Math.sin(a)*228,5,0,7);x.fill();}});
-  const rug=new THREE.Mesh(new THREE.CircleGeometry(9,64),M(0xffffff,{map:rugT,roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.set(0,floorY+.02,D/2+8);rug.receiveShadow=true;scene.add(rug);
+  const rug=new THREE.Mesh(new THREE.CircleGeometry(9,64),M(0xffffff,{map:rugT,roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.set(0,floorY+.02,sbZ+sbD/2+7);rug.receiveShadow=true;scene.add(rug);
   // wallpaper wall with skirting
   const wpT=canvasTex(256,256,(x,w,h)=>{x.fillStyle='#CFEFE3';x.fillRect(0,0,w,h);x.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<5;i++)for(let j=0;j<5;j++){const X=i*52+(j%2)*26+10,Y=j*52+10;x.beginPath();for(let k=0;k<10;k++){const a=k/10*Math.PI*2-Math.PI/2,r=k%2?4:9;x.lineTo(X+Math.cos(a)*r,Y+Math.sin(a)*r);}x.fill();}
     x.fillStyle='rgba(120,190,165,.35)';for(let i=0;i<5;i++)for(let j=0;j<5;j++){x.beginPath();x.ellipse(i*52+36+(j%2)*26,j*52+36,7,3.5,.7,0,7);x.fill();}});
@@ -805,10 +840,10 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
   const frame=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.6,.12),M(0x8B6CF0));frame.position.set(W/2+3.6,topY+.8,-1.2);frame.rotation.set(-.15,-.35,0);scene.add(frame);
   const ph=new THREE.Mesh(new THREE.PlaneGeometry(1,1.3),M(0xffffff,{map:canvasTex(128,160,(x,w,h)=>{x.fillStyle='#9BE3FF';x.fillRect(0,0,w,h);x.fillStyle='#F7963B';x.beginPath();x.ellipse(64,100,30,22,0,0,7);x.fill();x.beginPath();x.arc(64,70,22,0,7);x.fill();x.fillStyle='#1B1420';x.beginPath();x.arc(55,66,5,0,7);x.arc(73,66,5,0,7);x.fill();})}));ph.position.set(0,0,.07);frame.add(ph);
   // big floor plant and a toy box
-  const fpot=new THREE.Mesh(new THREE.CylinderGeometry(1.1,.8,1.8,24),M(0xF4F1FF,{roughness:.4}));fpot.position.set(sbW/2+2.5,floorY+.9,1.5);fpot.castShadow=true;scene.add(fpot);
+  const fpot=new THREE.Mesh(new THREE.CylinderGeometry(1.1,.8,1.8,24),M(0xF4F1FF,{roughness:.4}));fpot.position.set(sbW/2+2.5,floorY+.9,sbZ+1.5);fpot.castShadow=true;scene.add(fpot);
   for(let i=0;i<9;i++){const l=new THREE.Mesh(snakeLeaf(rand(3,4.6),rand(.4,1.2)),snakeMat);l.scale.set(2.2,1,2.2);l.position.set(fpot.position.x,floorY+1.7,fpot.position.z);l.rotation.set(rand(-.35,.2),i/9*6.28,rand(-.3,.3));l.castShadow=true;scene.add(l);}
-  const tb=new THREE.Mesh(new THREE.BoxGeometry(3,1.8,2),M(0x35A9F0,{roughness:.5}));tb.position.set(-sbW/2-2.6,floorY+.9,2.5);tb.castShadow=true;scene.add(tb);
-  [[0xFF5F7A,-.8],[0xFFC53D,0],[0x7CE08A,.8]].forEach(([c,x0])=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.7),M(c,{roughness:.5}));bl.position.set(tb.position.x+x0,floorY+2.15,2.5+rand(-.3,.3));bl.rotation.y=rand(0,1);scene.add(bl);});
+  const tb=new THREE.Mesh(new THREE.BoxGeometry(3,1.8,2),M(0x35A9F0,{roughness:.5}));tb.position.set(-sbW/2-2.6,floorY+.9,sbZ+2.5);tb.castShadow=true;scene.add(tb);
+  [[0xFF5F7A,-.8],[0xFFC53D,0],[0x7CE08A,.8]].forEach(([c,x0])=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.7),M(c,{roughness:.5}));bl.position.set(tb.position.x+x0,floorY+2.15,sbZ+2.5+rand(-.3,.3));bl.rotation.y=rand(0,1);scene.add(bl);});
   // fairy lights along the wall
   const cols=[0xFF6F91,0xFFD23F,0x7CF29A,0x7BE0FF,0xB28DFF];const L=W+10,n=26;const wireP=[];
   for(let i=0;i<n;i++){const t=i/(n-1),x=-L/2+t*L,y=topY+9.4-Math.sin(t*Math.PI*3)*.35-Math.sin(t*Math.PI)*.8;wireP.push(new THREE.Vector3(x,y+.12,wallZ+.3));
@@ -825,8 +860,21 @@ const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:-2.35*KZ,z1:-.2*KZ};
 const WALK={x0:LEDGE.x0+.32,x1:LEDGE.x1+.06,z0:LEDGE.z0+.08,z1:LEDGE.z1-.3};
 const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:LEDGE.z0,z1:LEDGE.z1};
 const DOOR={x:TANK.w/2,z:1.15,w:4.0*KZ,h:2.6};
-const TABLE={x0:TANK.w/2+1.0,x1:TANK.w/2+7.2,z0:-2.9*KZ,z1:3.4*KZ,y:-0.95};
-const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
+/* Out of the cage he used to get one narrow strip beside the tank. The whole
+   sideboard top is his now: both sides and a wide apron across the front. The
+   tank itself stands on it, so that footprint is the one place he cannot go. */
+const TABLE={x0:-SB_W/2+.8,x1:SB_W/2-.8,z0:SB_Z-SB_D/2+.8,z1:SB_Z+SB_D/2-.8,y:-0.95};
+const TANKF={x0:-TANK.w/2-.45,x1:TANK.w/2+.45,z0:-TANK.d/2-.9,z1:TANK.d/2+.45};
+const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8},
+  {x:-TANK.w/2-2,z:.4,r:.8}];
+/* the front apron, which is where he goes round */
+const FRONT_Z=(TANKF.z1+TABLE.z1)/2;
+function inTank(x,z){return x>TANKF.x0&&x<TANKF.x1&&z>TANKF.z0&&z<TANKF.z1;}
+/* nearest way out of the tank's footprint - never backwards, there is no table
+   behind it */
+function offTank(p){if(!inTank(p.x,p.z))return;
+  const dL=p.x-TANKF.x0,dR=TANKF.x1-p.x,dF=TANKF.z1-p.z;
+  if(dF<=dL&&dF<=dR)p.z=TANKF.z1;else if(dL<dR)p.x=TANKF.x0;else p.x=TANKF.x1;}
 let outside=false,trip=null,doorOpen=0,doorG=null;
 const RAMP_FOOT=new THREE.Vector3(RAMP.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
 const RAMP_TOP =new THREE.Vector3(LEDGE.x1-.45,0,(RAMP.z0+RAMP.z1)/2);
@@ -835,7 +883,9 @@ const RAMP_ENTRY=new THREE.Vector3(RAMP.x0+.6,0,(RAMP.z0+RAMP.z1)/2);
 const RAMP_EXIT =new THREE.Vector3(RAMP.x1+.5,0,(RAMP.z0+RAMP.z1)/2);
 function inRect(r,x,z){return x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1;}
 function groundY(x,z){
-  if(inRect(TABLE,x,z))return TABLE.y;
+  /* the table wraps round the tank, so being inside its rect is not enough -
+     where the tank stands, the ground is the sand, not the sideboard top */
+  if(inRect(TABLE,x,z)&&!inTank(x,z))return TABLE.y;
   if(inRect(LEDGE,x,z))return LEDGE_H;
   if(inRect(RAMP,x,z))return LEDGE_H*clamp(1-(x-RAMP.x0)/(RAMP.x1-RAMP.x0),0,1);
   return 0;}
@@ -885,7 +935,7 @@ function rideToy(dt){
     return 'rest';}
   return null;}
 function toyList(){const out=[];for(const g of decorGroups)
-  if(g.userData&&g.userData.toy&&onTable(g.position.x)===!!outside)out.push(g);return out;}
+  if(g.userData&&g.userData.toy&&onTable(g.position.x,g.position.z)===!!outside)out.push(g);return out;}
 /* a wheel sized for a hatchling is a joke by day 21, so his toys grow with him */
 function sizeToys(){const k=growth();for(const g of toyList())g.scale.setScalar(k);}
 function ledgeSpot(){return new THREE.Vector3(rand(WALK.x0+.4,WALK.x1-.5),LEDGE_H,rand(WALK.z0+.14,WALK.z1-.12));}
@@ -946,8 +996,10 @@ function keepIn(p){
   /* mid-doorway the tween owns his position - clamping here would wall him out */
   if(trip&&(trip.phase==='through'||trip.phase==='throughIn'))return;
   if(outside){p.x=clamp(p.x,TABLE.x0,TABLE.x1);p.z=clamp(p.z,TABLE.z0,TABLE.z1);
+    offTank(p);
     for(const o of TABLE_OBS){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
       if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
+    offTank(p);
     return;}
   p.x=clamp(p.x,-BX,BX);
   /* the cave: he may pass through the mouth, but not through the walls, and once
@@ -978,10 +1030,23 @@ function avoidAngle(p,a){if(onHigh(p))return a;
   const list=outside?TABLE_OBS:(goingIn?obstacles():obstacles().concat([{x:CAVE.x,z:CAVE.z,r:CAVE.rOut}]));
   for(const o of list){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
   if(Math.abs(side)<r){const push=(1-Math.abs(side)/r)*1.2*Math.min(1,(r+1.8-d)/1.8);a+=side>0?-push:push;}}return a;}
-function tableSpot(){let v;
-  for(let t=0;t<8;t++){v=new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5));
-    if(TABLE_OBS.every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.5))break;}
-  return v;}
+function tableSpot(){let v=null;
+  for(let t=0;t<16;t++){const q=new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5));
+    if(inTank(q.x,q.z))continue;
+    if(TABLE_OBS.every(o=>Math.hypot(q.x-o.x,q.z-o.z)>o.r+.6)){v=q;break;}
+    if(!v)v=q;}
+  return v||new THREE.Vector3(TANKF.x1+1.5,TABLE.y,FRONT_Z);}
+/* Going from one side of the tank to the other means round the front of it, not
+   through the glass. One corner at a time, so he never sets off into a wall. */
+function crossesTank(a,b){for(let i=1;i<=14;i++){const u=i/15;
+    if(inTank(a.x+(b.x-a.x)*u,a.z+(b.z-a.z)*u))return true;}return false;}
+function tableAim(p,t){
+  if(!inTank(p.x,p.z)&&!crossesTank(p,t))return t;
+  const corner=x=>new THREE.Vector3(x<0?TANKF.x0-.9:TANKF.x1+.9,TABLE.y,FRONT_Z);
+  if(p.z<FRONT_Z-.4)return corner(p.x);
+  if(t.z<TANKF.z1&&Math.sign(t.x||1)!==Math.sign(p.x||1))return corner(t.x);
+  if(t.z<TANKF.z1)return corner(t.x);
+  return t;}
 function freeSpot(p){for(let t=0;t<10;t++){const v=new THREE.Vector3(clamp(p.x+rand(-BX,BX),-BX+.4,BX-.4),0,rand(Z0+.2,Z1-.2));if(obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7))return v;}return null;}
 
 /* ---------- the gecko ---------- */
@@ -1137,7 +1202,7 @@ function launch(vx,vz){const h=Math.hypot(vx,vz),cap=11;if(h>cap){vx*=cap/h;vz*=
   tone(300,.25,'sine',.05,3);setTimeout(()=>{if(ball&&ball.state==='flying')say(pick(['Wheee!',"I'll get it!",'Here I come!']),1.4);},250);}
 function autoThrow(){const a=rand(-.7,.7)+Math.PI;launch(Math.sin(a)*rand(6,8)+(Math.random()-.5)*2,Math.cos(a)*rand(5,7));}
 /* decorations go on open sand - never half inside a rock, the shelf or the cave */
-function onTable(x){return x>TANK.w/2;}
+function onTable(x,z){return !inTank(x,z===undefined?0:z);}
 /* half the footprint of the big toys, in toy units. They grow with him, so a
    tunnel that fits the sand on day 7 would be hanging through the glass on day
    25 unless the room it needs is worked out fresh each time. */
@@ -1148,16 +1213,19 @@ function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
 /* a long toy turned side-on may be longer than the tank is deep - there is then
    no spot at all for it, so that turn is simply not offered */
 function decorFits(t,r,tbl){const P=decorPad(t,r);
-  return tbl?(TABLE.x1-TABLE.x0>2*P.x+.3&&TABLE.z1-TABLE.z0>2*P.z+.3)
+  return tbl?(TABLE.x1-TANKF.x1>2*P.x+.3||TABLE.z1-TANKF.z1>2*P.z+.3)
             :(2*BX>2*P.x+.3&&Z1-Z0>2*P.z+.3);}
 /* when a toy is simply too big for the space, centre it rather than clamping to
    a backwards range */
 function fit(v,lo,hi){return lo>hi?(lo+hi)/2:clamp(v,lo,hi);}
 function decorSpot(x,z,t,r){const P=decorPad(t,r);
   /* past the glass means the table: the table is a second place to put things */
-  if(onTable(x)){const q=new THREE.Vector3(fit(x,TABLE.x0+P.x,TABLE.x1-P.x),TABLE.y,fit(z,TABLE.z0+P.z,TABLE.z1-P.z));
+  if(onTable(x,z)){const q=new THREE.Vector3(fit(x,TABLE.x0+P.x,TABLE.x1-P.x),TABLE.y,fit(z,TABLE.z0+P.z,TABLE.z1-P.z));
     for(const o of TABLE_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
       if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
+    /* nothing gets parked where the tank stands */
+    if(inTank(q.x,q.z)){const dL=q.x-(TANKF.x0-P.x),dR=(TANKF.x1+P.x)-q.x,dF=(TANKF.z1+P.z)-q.z;
+      if(dF<=dL&&dF<=dR)q.z=TANKF.z1+P.z;else if(dL<dR)q.x=TANKF.x0-P.x;else q.x=TANKF.x1+P.x;}
     q.x=fit(q.x,TABLE.x0+P.x,TABLE.x1-P.x);q.z=fit(q.z,TABLE.z0+P.z,TABLE.z1-P.z);return q;}
   /* something he plays with has to stay where he can reach it, but an ornament
      may sit right against the glass, or up on the shelf */
@@ -1393,7 +1461,10 @@ function updateGecko(dt){
       const linedUp=p.z>CAVE.z+CAVE.rOut*.25&&Math.abs(p.x-CAVE.x)<CAVE.rOut*.85;
       const leaveCave=AI.inCave&&!tgtInCave;
       const enterCave=!AI.inCave&&tgtInCave&&!linedUp;
-      const aim=(leaveCave||enterCave)?CAVE_PORCH:descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
+      const aim=outside?tableAim(p,tgt)
+        :(leaveCave||enterCave)?CAVE_PORCH:descend?(inRect(RAMP,p.x,p.z)?RAMP_EXIT:RAMP_ENTRY):tgt;
+      /* heading for a corner on the way round is not arriving */
+      const detour=outside&&aim!==tgt;
       tmp.set(aim.x-p.x,0,aim.z-p.z);const dist=tmp.length();const reach=(leaveCave||enterCave)?.4:descend?.3:ext?ext.reach:kind==='cricket'?2.25*sc:kind==='ball'?1.3*sc+.15:kind==='home'?.5:(AI.route&&AI.route.length>1?.5:.25);
       const ang=Math.atan2(tmp.x,tmp.z);
       if(dist>reach){const steer=avoidAngle(p,ang);const dA=angDiff(G.root.rotation.y,steer);const turn=clamp(dA*Math.min(1,dt*5),-3.2*dt,3.2*dt);G.root.rotation.y+=turn;AI.turnAcc+=turn;
@@ -1401,7 +1472,7 @@ function updateGecko(dt){
         if(kind==='wander'){AI.dartT-=dt;if(AI.dartT<=0){AI.darting=!AI.darting;AI.dartT=AI.darting?rand(.7,1.7):rand(.3,.9);}spd*=AI.darting?1.35:(outside?.6:0);}
         spd*=Math.max(.35,Math.min(1,(dist-reach)/.8+.35));AI.v+=(spd-AI.v)*Math.min(1,dt*(spd>AI.v?5:9));
         p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;moving=AI.v>.08||Math.abs(turn)>dt*.6;}
-      else if(descend||leaveCave||enterCave){}
+      else if(descend||leaveCave||enterCave||detour){}
       else if(kind==='cricket'){
         if(Math.abs(angDiff(G.root.rotation.y,ang))>=.55)G.root.rotation.y=lerpAngle(G.root.rotation.y,ang,Math.min(1,dt*6));
         else if(!hunt){hunt={kind:'cricket',c:AI.prey};startAct('stalk',rand(.45,.85));AI.crouch=1;
@@ -1569,9 +1640,11 @@ function updateCam(dt){
    further in it - otherwise all that new room is off the side of the screen */
   const dist=((portrait?8.6:10.5)+(growth()-.85)*2.6+(TL>1?2.1:0)+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
-  if(outside){const tcx=(TABLE.x0+TABLE.x1)/2,tcz=(TABLE.z0+TABLE.z1)/2;
-    look.x+=((gx*.85+tcx*.15)-look.x)*Math.min(1,dt*2);
-    look.z+=((gz*.8+tcz*.2)-look.z)*Math.min(1,dt*1.5);
+  if(outside){
+    /* the table wraps right round the tank now, so follow him rather than a
+       fixed middle that may be on the far side of the glass from him */
+    look.x+=(gx-look.x)*Math.min(1,dt*2);
+    look.z+=((gz+.6)-look.z)*Math.min(1,dt*1.6);
     const d2=dist*.95;
     camera.position.set(look.x+Math.sin(camA)*d2,look.y+d2*1.35,look.z+Math.cos(camA)*d2);camera.lookAt(look);return;}
   const fx=wide?0:clamp(gx*(portrait?.92:.6),-lim,lim),
@@ -1852,15 +1925,23 @@ document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
 function askMove(){$('#cExtra').innerHTML='<button class="again" id="moveBtn">🏠 Move to a big tank!</button>';
   openCard('🏠',S.name+' is growing up!',S.name+" is getting too big for this starter tank. Move to a big tank with lots more room to explore?",true);$('#cOk').textContent='Not yet';
   $('#moveBtn').onclick=()=>{$('#card').hidden=true;$('#cOk').textContent='OK';doMove();};}
-function doMove(){const hw=TANK.w/2,oT=TABLE,nW=17.2*1.75,
-    nT={x0:nW/2+1.0,x1:nW/2+7.2,z0:-2.9*1.5,z1:3.4*1.5};
+function doMove(){const oW=TANK.w,oD=TANK.d,dW=(17.2*1.75-oW)/2,dD=(10*1.5-oD)/2;
   S.tank=2;(S.decor||[]).forEach(d=>{
-    if(d.x>hw){/* out on the table: keep his spot on it rather than flinging it off the edge */
-      const fx=clamp((d.x-oT.x0)/(oT.x1-oT.x0),0,1),fz=clamp((d.z-oT.z0)/(oT.z1-oT.z0),0,1);
-      d.x=nT.x0+fx*(nT.x1-nT.x0);d.z=nT.z0+fz*(nT.z1-nT.z0);}
+    if(onTable(d.x,d.z)){
+      /* out on the table: keep the gap it had from the glass, so it does not end
+         up inside the bigger tank's footprint */
+      if(Math.abs(d.x)>oW/2)d.x+=Math.sign(d.x)*dW;
+      if(d.z>oD/2)d.z+=dD;else if(d.z<-oD/2)d.z-=dD;}
     else{d.x*=1.75;d.z*=1.5;}});
   S.justMoved=true;save();SFX.yay();
   const f=document.createElement('div');f.className='moving';f.innerHTML='<div>🚚</div><b>Moving day!</b><span>Packing up '+S.name+"'s things...</span>";document.body.appendChild(f);setTimeout(()=>location.reload(),1800);}
+/* the face is the most tappable looking thing on the screen, so let it answer
+   the question it is already asking */
+$('#mood').parentElement.onclick=()=>{
+  if(!S.hatched){say('Nearly ready to hatch!',2.4);return;}
+  const n=need();
+  say(n&&n[1]?n[1]:pick(["I'm having a lovely day!",'Everything is great!','I feel brilliant!']),3.2);
+  SFX.chirp();};
 $('#snd').onclick=()=>{S.sound=!S.sound;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
 $('#snd').textContent=S.sound?'🔊':'🔇';
 
@@ -1967,6 +2048,12 @@ function updateUI(){checkAwards();sizeToys();for(const k of['hunger','fun','clea
   $('#gname').textContent=S.name;$('#gday').textContent=S.hatched?stageName()+', day '+(Math.floor(ageDays())+1):'Waiting to hatch';
   const n=need();$('#mood').textContent=!S.hatched?'🥚':n?n[0]:(S.fun>80&&S.hunger>70?'😍':'😊');
   $('#bMed').classList.toggle('glow',S.sick);$('#bMed').classList.toggle('dim',!S.sick);
+  /* when something is wrong, say so in both places she might look: the chip in
+     the card and the button that puts it right */
+  const awake=S.hatched&&!S.asleep;
+  $('#bFeed').classList.toggle('glow',awake&&S.hunger<=28);
+  $('#bPlay').classList.toggle('glow',awake&&S.fun<=28);
+  $('#bSleep').classList.toggle('glow',awake&&S.energy<=22);
   const mess=poops.length+wees.length,nb=$('#cleanN');
   nb.textContent=mess;nb.hidden=!mess||!S.hatched;
   $('#bClean').classList.toggle('glow',mess>=3&&S.hatched);
@@ -1974,6 +2061,12 @@ function updateUI(){checkAwards();sizeToys();for(const k of['hunger','fun','clea
   $('#bMore').classList.toggle('glow',!!rdy);
   $('#bSleep').querySelector('i').textContent=S.asleep?'☀️':'🌙';$('#bSleep').querySelector('span').textContent=S.asleep?'Wake':'Sleep';
   $('#bFeed').classList.toggle('dim',S.asleep);$('#bPlay').classList.toggle('dim',S.asleep);}
+/* If a ring says his tummy is empty, tapping that ring should feed him. Making
+   her read the ring, work out which coloured button it means, and then find it,
+   is a puzzle she did not ask for. */
+[['st-hunger','bFeed'],['st-fun','bPlay'],['st-clean','bClean'],['st-energy','bSleep']]
+  .forEach(([st,btn])=>{$('#'+st).onclick=()=>{const b=$('#'+btn);
+    b.classList.add('ping');setTimeout(()=>b.classList.remove('ping'),420);b.click();};});
 setInterval(updateUI,700);setInterval(()=>{if(S.hatched)save();},5000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.hatched)save();});
 window.addEventListener('pagehide',()=>{if(S.hatched)save();});
@@ -2021,7 +2114,7 @@ function groundPoint(e){ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight
 /* the table sits lower than the sand, so out past the glass we aim the drag at
    the table top instead of the floor plane - otherwise it lands short of her finger */
 function dragPoint(e){const p=groundPoint(e);
-  if(!p||p.x<=TANK.w/2)return p;
+  if(!p||inTank(p.x,p.z))return p;
   const v=new THREE.Vector3();
   const q=ray.ray.intersectPlane(TABLE_PLANE,v);
   return (q&&q.x>TANK.w/2)?q:p;}
@@ -2271,7 +2364,7 @@ function cineCam(){
    it once the grown-up door got wider. */
 const DOOR_MID=DOOR.z;
 const DOOR_IN =new THREE.Vector3(BX-.35,0,DOOR_MID);
-const DOOR_OUT=new THREE.Vector3(TABLE.x0+.7,TABLE.y,DOOR_MID);
+const DOOR_OUT=new THREE.Vector3(TANK.w/2+1.75,TABLE.y,DOOR_MID);
 (function buildDoor(){
   doorG=new THREE.Group();doorG.position.set(DOOR.x,0,DOOR.z+DOOR.w/2);scene.add(doorG);
   const glass=MP(0xBFE9FA,{transparent:true,opacity:.34,roughness:.04,clearcoat:1,side:THREE.DoubleSide});
@@ -2286,7 +2379,7 @@ const DOOR_OUT=new THREE.Vector3(TABLE.x0+.7,TABLE.y,DOOR_MID);
   doorG.traverse(o=>{if(o.isMesh)o.userData.kind='door';});
   /* a ramp that meets both ends: the sand at the sill and the table top, lined
      up on the middle of the opening and as wide as it */
-  const ax=TANK.w/2-.2,ay=.03,bx=TABLE.x0+.95,by=TABLE.y+.12;
+  const ax=TANK.w/2-.2,ay=.03,bx=TANK.w/2+2.1,by=TABLE.y+.12;
   const rdx=bx-ax,rdy=by-ay,RL=Math.hypot(rdx,rdy),RA=Math.atan2(rdy,rdx),RW=DOOR.w-.5;
   const st=new THREE.Mesh(new THREE.BoxGeometry(RL,.16,RW),M(0xC98F5D,{roughness:.7}));
   st.position.set((ax+bx)/2,(ay+by)/2,DOOR_MID);st.rotation.z=RA;
@@ -2696,7 +2789,8 @@ function buy(it){const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);
   if(own){if(it.type==='bg')setBg(it.id);else{wearHat(S.hat===it.id?'none':it.id);if(S.hat!=='none'){award('hat');showOff(pick(['Do I look cool?','I love it!','So fancy!']));}}SFX.pop();drawShop();save();return;}
   if(S.coins<it.price){tone(220,.2,'square',.04);toast('You need '+(it.price-S.coins)+' more coins. Play games and care for '+S.name+' to earn some!');return;}
   S.coins-=it.price;updateCoins();SFX.yay();
-  if(it.type==='decor'){const q=outside?decorSpot((TABLE.x0+TABLE.x1)/2+rand(-1.2,1.2),rand(TABLE.z0+1,TABLE.z1-1),it.id,0)
+  if(it.type==='decor'){const gp=G.root.position;
+    const q=outside?decorSpot(gp.x+rand(-1.6,1.6),gp.z+rand(-1.6,1.6),it.id,0)
       :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),it.id,0);S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
   else{S.owned[it.id]=true;if(it.type==='bg')setBg(it.id);else{wearHat(it.id);award('hat');$('#shop').hidden=true;showOff(pick(['Brand new!','Look at me!','I love it!']));}drawShop();}save();}
 const decorGroups=[];let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
@@ -2722,7 +2816,8 @@ function putAway(i){const d=S.decor[i];if(!d)return;
   toast((it?it.name:'It')+' is in your box \uD83D\uDCE6 — take it out whenever you like.');}
 function takeOut(i){const box=S.box||[];const id=box[i];if(!id)return;
   box.splice(i,1);
-  const q=outside?decorSpot((TABLE.x0+TABLE.x1)/2+rand(-1.2,1.2),rand(TABLE.z0+1,TABLE.z1-1),id,0)
+  const gp=G.root.position;
+  const q=outside?decorSpot(gp.x+rand(-1.6,1.6),gp.z+rand(-1.6,1.6),id,0)
                  :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),id,0);
   S.decor.push({t:id,x:q.x,z:q.z,r:0});buildDecor();SFX.yay();save();
   startDecorate(S.decor.length-1);
@@ -2953,7 +3048,7 @@ function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
   if(ball&&ball.state==='held'){const a=ball.samples[0],z=ball.samples[ball.samples.length-1];const dt2=a&&z?Math.max(16,z.t-a.t)/1000:1;
     if(!a||ball.moved<.3||z.t-a.t<5){autoThrow();}else{const vx=(z.x-a.x)/dt2*.55,vz=(z.z-a.z)/dt2*.55;const hv=Math.hypot(vx,vz);if(hv<.05)autoThrow();else{const k=Math.max(hv,4.5)/hv;launch(vx*k,vz*k);}}return true;}
   if(dragging){dragging=false;if(!dragMoved&&wasSel&&sel>=0){const d=S.decor[sel];
-    {let r=d.r||0;const tbl=onTable(d.x);for(let i=0;i<8;i++){r+=Math.PI/4;if(decorFits(d.t,r,tbl))break;}d.r=r;}
+    {let r=d.r||0;const tbl=onTable(d.x,d.z);for(let i=0;i<8;i++){r+=Math.PI/4;if(decorFits(d.t,r,tbl))break;}d.r=r;}
     /* a long toy turned side-on needs different room, so re-seat it after the turn */
     const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;
     decorGroups[sel].rotation.y=d.r;decorGroups[sel].userData.r=d.r;
