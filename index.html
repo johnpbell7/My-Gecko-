@@ -268,6 +268,8 @@ canvas{position:fixed;inset:0;display:block}
 .job .tick{font:700 14px var(--font);flex:none;min-width:34px;text-align:right}
 .starsRow{font-size:40px;letter-spacing:4px;margin:-4px 0 6px}
 .starsRow .off{filter:grayscale(1);opacity:.3}
+/* the line that says you moved up */
+.lvUp{font-weight:800;color:#3FCB7A}
 .again.half{width:calc(50% - 6px);display:inline-block;vertical-align:top;margin:0 3px 12px;font-size:19px}
 .again{width:100%;border:0;border-radius:var(--r-m);background-color:#FF5FA2;background-image:var(--gloss);color:#fff;
   font:400 22px var(--display);letter-spacing:.3px;padding:11px;box-shadow:0 4px 0 #C23270,var(--sh-1);cursor:pointer;margin-bottom:12px;
@@ -586,7 +588,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='19';
+const BUILD='20';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -922,7 +924,7 @@ function rideToy(dt){
     G.root.rotation.y=ry+face;};
   if(m==='tunnel'){const span=4.4,per=8.4,u=(rideT%per)/per,fwd=u<.5,t2=fwd?u*2:1-(u-.5)*2;
     put(-span+t2*span*2,0,0,fwd?Math.PI/2:-Math.PI/2);G.root.rotation.z=0;return 'walk';}
-  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.2+Math.sin(rideT*1.5)*.13,0,Math.PI/2);
+  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.1+Math.sin(rideT*1.5)*.12,0,Math.PI/2);
     G.root.rotation.z=Math.sin(rideT*1.5)*.16;return 'rest';}
   if(m==='digbox'){const s2=Math.min(1,rideT/2.4);
     put(Math.sin(rideT*.8)*.55,.62-s2*.66,Math.cos(rideT*.55)*.45,Math.sin(rideT*.4)*1.3);
@@ -1232,7 +1234,13 @@ function decorSpot(x,z,t,r){const P=decorPad(t,r);
   const toy=!!TOY_HALF[t];
   const XL=toy?BX:TANK.w/2-.15,ZA=toy?Z0:-TANK.d/2+.15,ZB=toy?Z1:TANK.d/2-.15;
   const q=new THREE.Vector3(fit(x,-XL+P.x,XL-P.x),0,fit(z,ZA+P.z,ZB-P.z));
-  if(toy){const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;}
+  if(toy){const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;
+    /* and not on the shelf, nor in the narrow slot behind it - a big toy put
+       there cannot be reached round, cannot be seen, and buries the close-up */
+    const L={x0:LEDGE.x0-P.x,x1:LEDGE.x1+P.x,z0:Z0,z1:LEDGE.z1+P.z};
+    if(q.x>L.x0&&q.x<L.x1&&q.z>L.z0&&q.z<L.z1){
+      const dF=L.z1-q.z,dL=q.x-L.x0,dR=L.x1-q.x;
+      if(dF<=dL&&dF<=dR)q.z=L.z1;else if(dL<dR)q.x=L.x0;else q.x=L.x1;}}
   else{const dx=q.x-CAVE.x,dz=q.z-CAVE.z,d=Math.hypot(dx,dz)||1e-4,rr=CAVE.rOut+.3;
     if(d<rr){q.x=CAVE.x+dx/d*rr;q.z=CAVE.z+dz/d*rr;}}
   for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
@@ -1392,6 +1400,8 @@ function angDiff(a,b){return ((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-M
 let T=0;
 function eatCricket(c){scene.remove(c.g);crickets.splice(crickets.indexOf(c),1);startAct('eat',.55);bumpTask('eat');S.hunger=clamp(S.hunger+15,0,100);earn(1);award('feed');S.fun=clamp(S.fun+2,0,100);SFX.crunch();
   G.head.getWorldPosition(tmp2);burst('✨',tmp2,3,{size:.35});
+  S.ateRun=(S.ateRun||0)+1;
+  if(S.ateRun>=3&&!hic&&Math.random()<.55){S.ateRun=0;setTimeout(()=>startHic(),rand(1800,3600));}
   if(!crickets.length){say(pick(['Yum yum!','Crunchy! Thank you!','My tummy is happy!']));
     if(Math.random()<.85)setTimeout(()=>{if(!S.asleep&&!game)goLoo();},rand(6000,14000));}}
 const SP={th:new Float32Array(NR),x:new Float32Array(NR),z:new Float32Array(NR)},SICKC=new THREE.Color(0x2f5a00);
@@ -1415,7 +1425,10 @@ function updateGecko(dt){
   if(popT<10)popT+=dt;const pop=popT<.7?Math.max(.001,easeOutBack(popT/.7)):1;
   const sc=(growOverride||growth())*pop;G.root.scale.setScalar(sc);
   const p=G.root.position;let moving=false;
-  AI.curl+=((S.asleep&&AI.inBed?1:0)-AI.curl)*Math.min(1,dt*2);
+  /* curled asleep, and half-curled lounging in the hammock - a flat gecko in a
+     sling looks like a plank, and his tail goes straight through the fabric */
+  const curlT=(S.asleep&&AI.inBed)?1:((toyT>0&&toyUse&&toyUse.userData.mount==='hammock')?.42:0);
+  AI.curl+=(curlT-AI.curl)*Math.min(1,dt*2);
   if(AI.act){AI.actT+=dt;
     if(AI.act==='stalk'&&hunt){AI.crouch=1;
       const hp=hunt.kind==='ball'?(ball&&ball.m.position):(hunt.c&&hunt.c.g.position);
@@ -1516,6 +1529,11 @@ function updateGecko(dt){
   {const L0=G.legs[0].p;if(AI.act==='wave'){const k=AI.actT/AI.actD,up=Math.sin(Math.min(1,k*1.25)*Math.PI);L0.rotation.z=-1.4*up+Math.sin(AI.actT*14)*.35*up;L0.rotation.x=-.5*up;G.bodyP.rotation.x=-.15*up;}else{L0.rotation.z=0;G.bodyP.rotation.x=0;}}
   G.bodyP.scale.set(1+.28*S.chubby,1+Math.sin(T*(S.asleep?1.3:2.4))*.025+.08*S.chubby,1+.05*S.chubby);
   let bob=0,hx=.32*AI.curl,hy=Math.sin(T*.6)*.28*(1-AI.curl)*(1-w),hz=0,tongue=0;
+  /* a hiccup is a whole-body hitch: the chest kicks, the head snaps back and
+     the whole of him lifts for an instant */
+  if(hic&&hic.jolt>0){const j=hic.jolt*hic.jolt;
+    G.bodyP.position.y=j*.16;bob+=j*.10;hx-=j*.10;hy+=j*.16;}
+  else if(G.bodyP.position.y)G.bodyP.position.y=0;
   if(AI.act==='happy'){const k=AI.actT/AI.actD;bob=Math.abs(Math.sin(AI.actT*14))*.14*(1-k);hz=Math.sin(AI.actT*18)*.2*(1-k);hy=0;}
   if(AI.act==='eat'){const k=AI.actT/AI.actD;tongue=Math.sin(Math.min(1,k*2.2)*Math.PI);hx=.12*Math.sin(k*Math.PI);hy=0;}
   if(AI.act==='jump'){const k=AI.actT/AI.actD;bob=Math.sin(k*Math.PI)*1.1;hx=-.2*Math.sin(k*Math.PI);hy=0;}
@@ -1591,6 +1609,8 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   if(hunt){hunt.t=(hunt.t||0)+dt;if(hunt.t>7)hunt=null;}
   ballT-=dt;if(ballT<=0){ballT=1;if(ball&&ball.state!=='carried'&&ball.state!=='held')ballSettle();}
   itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
+  tickHic(dt);
+  hicT-=dt;if(hicT<=0){hicT=rand(150,320);if(!hic&&Math.random()<.5)startHic();}
   {const on=!!(toyUse&&toyT>0&&!game&&!closeUp&&!S.asleep);
    const c=$('#watchChip');if(c.hidden===on){c.hidden=!on;if(on)c.textContent='\uD83D\uDC40 Watch '+S.name;}}
   if(toyT>0){
@@ -1678,6 +1698,24 @@ const itchTex=canvasTex(128,128,(x)=>{x.strokeStyle='#FF5A5F';x.lineWidth=10;x.s
 const itchMark=new THREE.Sprite(new THREE.SpriteMaterial({map:itchTex,transparent:true,depthWrite:false,depthTest:false}));
 itchMark.visible=false;itchMark.renderOrder=9;itchMark.raycast=function(){};scene.add(itchMark);
 let itch=null,itchT=rand(40,80);
+/* Hiccups. A gecko that only ever walks and eats is a puppet; one that gets the
+   hiccups after a big dinner, and stops when you give him a drink, is a pet. */
+let hic=null,hicT=rand(120,260);
+function startHic(n){if(hic||!S.hatched||S.asleep||game||hatch.active||!G.root.visible)return;
+  hic={left:n||Math.round(rand(5,9)),t:.8,jolt:0};
+  say(pick(['*hic!*','Oops — hic!','I have the hiccups!']),2.6);}
+function stopHic(quiet){if(!hic)return;hic=null;
+  if(!quiet&&!S.asleep)setTimeout(()=>say(pick(['Phew, they stopped!','All better!','No more hiccups!']),2.4),400);}
+function tickHic(dt){
+  if(!hic)return;
+  if(S.asleep||hatch.active||!G.root.visible){hic=null;return;}
+  hic.jolt=Math.max(0,hic.jolt-dt*3.4);
+  hic.t-=dt;
+  if(hic.t<=0){hic.left--;
+    if(hic.left<=0){stopHic();return;}
+    hic.t=rand(1.5,2.6);hic.jolt=1;
+    tone(rand(680,860),.07,'sine',.05,2.2);
+    G.head.getWorldPosition(tmp2);popText('hic!',tmp2,'#B9A7FF');}}
 function startItch(){if(itch||!S.hatched||S.asleep||S.shed>0||game||hatch.active||outside||trip||!G.root.visible)return;
   const sp=pick(ITCH_SPOTS);itch={u:sp[0],name:sp[1],amt:1,t:0,said:false};SFX.chirp();
   say(pick(['Ooh! My '+sp[1]+' is itchy!',"I've got an itch on my "+sp[1]+'!','Scratch my '+sp[1]+', please!']),4);
@@ -1854,11 +1892,18 @@ $('#tbGo').onclick=()=>{if(!timing)return;
   stopTiming(acc);};
 function doTrick(k){if(!S.hatched||asleepBlock())return;freeMouth();if(S.sick){say("I'm too poorly for tricks...");return;}if(S.energy<8){say('Too tired for tricks...');return;}
   const lvl=trickLevel(k);
-  startTiming('Ready... '+TRICKS[k].name+'!',.3-lvl*.045,acc=>performTrick(k,acc));}
-/* the better the timing, the better the trick and the bigger the payout */
-function trickLevel(k){const b=(S.trickBest&&S.trickBest[k])||0;return clamp(Math.floor(b/5),0,3);}
+  startTiming('Ready... '+TRICKS[k].name+'!',.34-lvl*.05,acc=>performTrick(k,acc));}
+/* A trick used to say "learned" after three goes and then had nothing left to
+   offer. It is five levels now, and only a perfectly timed tap counts towards
+   the next one - so getting better is an actual skill, and the gold band gets
+   narrower as she climbs. */
+const TRICK_STEPS=[2,6,13,24,40],TRICK_MAX=5;
+function trickDone(k){return (S.trickBest&&S.trickBest[k])||0;}
+function trickLevel(k){const b=trickDone(k);let l=0;for(const t of TRICK_STEPS)if(b>=t)l++;return l;}
+function trickNext(k){const l=trickLevel(k);return l>=TRICK_MAX?0:TRICK_STEPS[l]-trickDone(k);}
 function performTrick(k,acc){
   if(!S.hatched||S.asleep)return;
+  const lv0=trickLevel(k);   /* where he was before this one counted */
   const great=acc>=.75,good=acc>=.4;
   AI.target=null;startAct(k,TRICKS[k].d*(great?1.25:1));bumpTask('trick');
   S.tricks[k]=(S.tricks[k]||0)+1;
@@ -1866,17 +1911,23 @@ function performTrick(k,acc){
   if(great)S.trickBest[k]=(S.trickBest[k]||0)+1;
   S.fun=clamp(S.fun+(great?11:good?6:3),0,100);
   S.energy=clamp(S.energy-2,0,100);SFX.chirp();
-  const n=S.tricks[k],coins=great?5:good?3:1;earn(coins);
-  if(['spin','wave','jump'].every(t=>(S.tricks[t]||0)>=3))award('tricks');
+  const lv1=trickLevel(k),up=lv1>lv0;
+  const n=S.tricks[k],coins=(great?4+lv1:good?2+Math.floor(lv1/2):1);earn(coins);
+  if(up){SFX.yay();G.head.getWorldPosition(tmp2);burst('⬆️',tmp2,10,{size:.5,speed:1.2});
+    toast(TRICKS[k].name+' is now Level '+lv1+' of '+TRICK_MAX+'!');
+    if(lv1>=TRICK_MAX)award('trickmax');}
+  if(['spin','wave','jump'].every(t=>trickLevel(t)>=1))award('tricks');
   G.head.getWorldPosition(tmp2);
   popText(great?'PERFECT! +'+coins:good?'Good! +'+coins:'+'+coins,tmp2,great?'#FFD23F':good?'#7CF29A':'#FFFFFF');
   if(great){SFX.yay();burst('⭐',tmp2,12,{size:.45,speed:1.2});burst('✨',tmp2,8,{size:.4});}
-  setTimeout(()=>{G.head.getWorldPosition(tmp2);burst('⭐',tmp2,n===3?10:3,{size:.4});
-    if(n===3){SFX.yay();say('I learned to '+k+'! ⭐⭐⭐',3.5);}
+  setTimeout(()=>{G.head.getWorldPosition(tmp2);burst('⭐',tmp2,up?10:3,{size:.4});
+    if(up&&lv1>=TRICK_MAX)say('I have mastered the '+TRICKS[k].name.toLowerCase()+'! 🎓',3.5);
+    else if(up)say('I got better at the '+TRICKS[k].name.toLowerCase()+'!',3);
     else say(great?pick(['That was my best one!','Did you see that?!','Nailed it!']):pick(TRICKS[k].say));},TRICKS[k].d*650);
   save();updateUI();}
 function mist(){if(!S.hatched)return;const p=G.root.position;for(let i=0;i<16;i++)burst('💧',tmp.set(p.x+rand(-1.6,1.6),rand(3,4.2),p.z+rand(-1,1.3)),1,{g:-7,speed:.3,life:.9,size:.26});
   SFX.splash();AI.wet=1;S.clean=clamp(S.clean+3,0,100);S.fun=clamp(S.fun+4,0,100);
+  if(hic){stopHic(true);setTimeout(()=>say('Ooh, that fixed my hiccups!',2.8),700);earn(2);}
   if(!S.asleep)setTimeout(()=>{startAct('lick',.9);say(S.shed>0?'Ooh, that helps my itchy skin!':pick(['Ahh, refreshing!','Drip drop!','I love the rain!']));},600);updateUI();}
 function photo(){if(!S.hatched)return;bubble.classList.remove('show');bubbleTimer=0;renderer.render(scene,camera);
   const src=renderer.domElement,W=src.width,H=src.height,sz=Math.min(W,H)*.85;G.head.getWorldPosition(tmp2);tmp2.project(camera);
@@ -1889,8 +1940,13 @@ function photo(){if(!S.hatched)return;bubble.classList.remove('show');bubbleTime
 let menuTab='care';
 const TABS=[['care','🍽️','Care','#35A9F0'],['play','🎮','Games','#FF5FA2'],['tricks','⭐','Tricks','#8B6CF0'],['style','🎨','Style','#FF8A3D'],['collect','🏆','Collect','#3FCB7A']];
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function bestTxt(k){const b=(S.best||{})[k];return b?'Best score: '+b:'Tap to play!';}
-function trickTxt(k){const n=Math.min(3,(S.tricks||{})[k]||0);return n>=3?'⭐⭐⭐ Learned!':n?'⭐'.repeat(n)+' Keep practising':'Practise 3 times to learn';}
+function bestTxt(k){const lv=gameLvl(k),g=goalOf(k,lv),b=(S.best||{})[k]||0;
+  if(lv>=GAME_MAX)return '👑 Level 10 — mastered. Best '+b;
+  return 'Level '+lv+' — score '+g+' to reach Level '+(lv+1);}
+function trickTxt(k){const l=trickLevel(k);
+  if(l>=TRICK_MAX)return '🎓 Mastered — all 5 levels!';
+  const need=trickNext(k);
+  return '⭐'.repeat(l)+(l?' ':'')+'Level '+l+' of '+TRICK_MAX+' — '+need+' more perfect '+(need===1?'one':'ones');}
 function menuItems(tab){const nm=esc(S.name);return({
   care:[['jobs','📋',"Today's jobs",(3-tasksLeft())+' of 3 done'+(tasksReady()?' — star ready!':''),'#3FCB7A',tasksReady()?'⭐':(tasksLeft()?'':'✅')],
     ...(tankSmall()?[['tank','🏠','Bigger tank',nm+' needs more room!','#FF8A3D','Needed']]:[]),['water','🚰','Fill water',S.water<25?'Bowl is nearly empty!':'Bowl '+Math.round(S.water)+'% full','#35A9F0',S.water<25?'Needed':''],
@@ -2129,7 +2185,7 @@ function openCard(icon,title,text,keepExtra,onClose){$('#cOk').textContent='OK';
 $('#cOk').addEventListener('click',()=>{$('#cOk').textContent='OK';if(cardClose){const f=cardClose;cardClose=null;f();}});
 function updateCoins(){$('#coins').textContent=S.coins;}
 function earn(n){if(!n)return;S.coins+=n;updateCoins();const el=$('#coinPill');el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');tone(1320,.08,'triangle',.05,1.5);if(S.coins>=50)award('rich');}
-const STICKERS=[['feed','🦗','First dinner'],['clean','🧽','Squeaky clean'],['shed','✨','First shed'],['tricks','⭐','Trick master'],['photo','📸','Say cheese'],['hat','🎩','Dressed up'],['treat','🐛','Yummy treat'],['game','🎮','Game time'],['streak','🔥','7 days in a row'],['rich','🪙','50 coins'],['vet','🏅','Gold star check-up'],['bday','🎂','Week birthday'],['decor','🏡','Home decorator'],['present','🎁','Daily present'],['warm','☀️','Toasty basking'],['water','💧','Fresh water'],['bigtank','🏠','Big new home'],['sevenstars','🌟','Seven stars'],['itch','🫰','Itch scratcher'],['boop','👆','Nose booper'],['toy','🎡','Toy time'],['toy10','🎪','Ten play sessions'],['day3','🐣','Three days old'],['day7','🎈','One week old'],['day14','🌱','Two weeks old'],['grown','🦎','All grown up'],['eat10','🦗','Ten crickets'],['eat40','🍽️','Forty crickets'],['eat100','👑','A hundred crickets'],['tidy10','🧹','Ten messes cleaned'],['tidy40','🪣','Forty messes cleaned'],['tidy100','✨','Spotless keeper'],['fetch10','🎾','Ten fetches'],['fetch30','🏆','Fetch champion'],['photo5','📷','Five photos'],['photo15','🖼️','Fifteen photos'],['treat10','🐛','Ten treats'],['water10','🚰','Ten refills'],['itch10','🫰','Ten itches scratched'],['bask10','🔆','Ten sunbathes'],['trick10','🎪','Ten tricks done'],['trick3','🎓','Three tricks learned'],['vet5','🩺','Five check-ups'],['shed3','🐍','Three sheds'],['bed5','🌙','Tucked in five times'],['cave5','🕳️','Cave dweller'],['trip3','🚪','Three table trips'],['game10','🎮','Ten games played'],['game30','🕹️','Thirty games played'],['jobs5','📋','Five days of jobs'],['pet25','🤗','Twenty-five cuddles'],['coin100','💰','A hundred coins'],['coin250','🏦','Rich as a king'],['hat3','🎩','Three hats'],['hat6','👒','Six hats'],['hatall','🎀','Every hat'],['bgall','🌄','Every background'],['decor5','🏡','Five decorations'],['decor10','🏘️','Ten decorations'],['star3','⭐','Three stars'],['star15','🌠','Fifteen stars'],['streak3','🔥','Three days in a row'],['streak14','🗓️','Two weeks in a row']];
+const STICKERS=[['feed','🦗','First dinner'],['clean','🧽','Squeaky clean'],['shed','✨','First shed'],['tricks','⭐','Trick master'],['photo','📸','Say cheese'],['hat','🎩','Dressed up'],['treat','🐛','Yummy treat'],['game','🎮','Game time'],['streak','🔥','7 days in a row'],['rich','🪙','50 coins'],['vet','🏅','Gold star check-up'],['bday','🎂','Week birthday'],['decor','🏡','Home decorator'],['present','🎁','Daily present'],['warm','☀️','Toasty basking'],['water','💧','Fresh water'],['bigtank','🏠','Big new home'],['sevenstars','🌟','Seven stars'],['itch','🫰','Itch scratcher'],['boop','👆','Nose booper'],['toy','🎡','Toy time'],['toy10','🎪','Ten play sessions'],['day3','🐣','Three days old'],['day7','🎈','One week old'],['day14','🌱','Two weeks old'],['grown','🦎','All grown up'],['eat10','🦗','Ten crickets'],['eat40','🍽️','Forty crickets'],['eat100','👑','A hundred crickets'],['tidy10','🧹','Ten messes cleaned'],['tidy40','🪣','Forty messes cleaned'],['tidy100','✨','Spotless keeper'],['fetch10','🎾','Ten fetches'],['fetch30','🏆','Fetch champion'],['photo5','📷','Five photos'],['photo15','🖼️','Fifteen photos'],['treat10','🐛','Ten treats'],['water10','🚰','Ten refills'],['itch10','🫰','Ten itches scratched'],['bask10','🔆','Ten sunbathes'],['trick10','🎪','Ten tricks done'],['trick3','🎓','Three tricks learned'],['vet5','🩺','Five check-ups'],['shed3','🐍','Three sheds'],['bed5','🌙','Tucked in five times'],['cave5','🕳️','Cave dweller'],['trip3','🚪','Three table trips'],['game10','🎮','Ten games played'],['game30','🕹️','Thirty games played'],['jobs5','📋','Five days of jobs'],['pet25','🤗','Twenty-five cuddles'],['coin100','💰','A hundred coins'],['coin250','🏦','Rich as a king'],['hat3','🎩','Three hats'],['hat6','👒','Six hats'],['hatall','🎀','Every hat'],['bgall','🌄','Every background'],['decor5','🏡','Five decorations'],['decor10','🏘️','Ten decorations'],['star3','⭐','Three stars'],['star15','🌠','Fifteen stars'],['streak3','🔥','Three days in a row'],['streak14','🗓️','Two weeks in a row'],['lvl5','🎯','Level 5 at a game'],['lvlmax','👑','Mastered a game'],['trickmax','🎓','Mastered a trick']];
 /* how many times she has done each thing, and the badges that hang off them */
 const COUNT_AWARDS=[['eat',10,'eat10'],['eat',40,'eat40'],['eat',100,'eat100'],
  ['tidy',10,'tidy10'],['tidy',40,'tidy40'],['tidy',100,'tidy100'],
@@ -2293,6 +2349,30 @@ function startWatch(){if(!toyUse||toyT<=0||game||closeUp)return;
   closeUp={t:0,dur:11,ang:clamp(a,-1.15,1.15)};document.body.classList.add('watching');
   $('#watchChip').hidden=true;SFX.pop();}
 function stopWatch(){if(!closeUp)return;closeUp=null;document.body.classList.remove('watching');}
+/* What the camera must not sit inside or peer through. The obstacle list the
+   gecko uses is about where he can WALK - it has no log in it, no shelf, and
+   those are exactly the things the close-up ended up buried in. */
+function camBlockers(){
+  const a=[{x:CAVE.x,z:CAVE.z,r:CAVE.rOut+.4}];
+  if(!closeUp||!closeUp.log){const l=scene.getObjectByName('log');
+    if(closeUp)closeUp.log=l||1;if(l)a.push({x:l.position.x,z:l.position.z,r:1.8});}
+  else if(closeUp.log!==1)a.push({x:closeUp.log.position.x,z:closeUp.log.position.z,r:1.8});
+  for(const o of STATIC_OBS)a.push({x:o.x,z:o.z,r:o.r+.4});
+  for(const g of decorGroups)if(g!==toyUse)a.push({x:g.position.x,z:g.position.z,r:.8*growth()+.3});
+  if(outside)for(const o of TABLE_OBS)a.push({x:o.x,z:o.z,r:o.r+.4});
+  return a;}
+/* how much of the line from here to him is inside something */
+function camBlocked(cx,cz,p){
+  const bl=camBlockers();let bad=0;
+  /* the shelf and its ramp are solid to look through too - unless he is up on
+     them, in which case they are the floor he is standing on */
+  const up=p.y>LEDGE_H*.5;
+  for(let i=0;i<=8;i++){const u=i/8,x=cx+(p.x-cx)*u,z=cz+(p.z-cz)*u;
+    if(!outside&&!up&&(inRect(LEDGE,x,z)||inRect(RAMP,x,z)))bad+=2;
+    for(const o of bl)if((x-o.x)*(x-o.x)+(z-o.z)*(z-o.z)<o.r*o.r){bad+=(i>6?1:2);break;}}
+  /* and the camera itself must not be buried, nor out through the glass */
+  if(!outside&&(Math.abs(cx)>TANK.w/2+9||cz>TANK.d/2+11||cz<-TANK.d/2-1))bad+=6;
+  return bad;}
 function closeUpCam(dt){
   const p=G.root.position,k=growth(),e=Math.min(1,closeUp.t/2.2);
   closeUp.ang+=dt*.2;
@@ -2302,8 +2382,23 @@ function closeUpCam(dt){
   /* framed on how wide he is, not how long. A phone held upright is narrow, so
      a shot that fits his whole length is further away than the ordinary view -
      the close angle has to look ALONG the tunnel, down its length. */
-  const dist=distFor(2.37*k*(1.95-.45*e)), hi=p.y+(.75+.45*(1-e))*k;
-  camera.position.set(p.x+Math.sin(closeUp.ang)*dist,hi,p.z+Math.cos(closeUp.ang)*dist);
+  const dist=distFor(2.37*k*(1.95-.45*e));
+  /* high enough to look over the log and the shelf, still low enough to feel
+     like you are down there with him */
+  const hi=p.y+(.75+.45*(1-e))*k+.55;
+  /* try the angle we wanted, then fan out either side and settle for the
+     clearest view rather than burying the camera in the furniture */
+  let bx=p.x,bz=p.z+dist,bs=1e9;
+  for(let pass=0;pass<3&&bs>0;pass++){
+    const d=dist*(1+pass*.75);
+    for(let i=0;i<11;i++){
+      const off=i?((i%2?1:-1)*Math.ceil(i/2)*.34):0,a=closeUp.ang+off;
+      const cx=p.x+Math.sin(a)*d,cz=p.z+Math.cos(a)*d;
+      const sc=camBlocked(cx,cz,p)+Math.abs(off)*.55+pass*.4;
+      if(sc<bs){bs=sc;bx=cx;bz=cz;}
+      if(sc<=0)break;}}
+  /* still something in the way: rise above it rather than film through it */
+  camera.position.set(bx,hi+Math.min(2.2,bs*.55),bz);
   aimAt(tmp.set(p.x,p.y+.45*k,p.z),.44);}
 $('#watchChip').onclick=startWatch;
 /* ---------- 3D opening cinematic ---------- */
@@ -2724,9 +2819,9 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
     const bed=new THREE.Mesh(new THREE.CylinderGeometry(BR,BR,LEN,22,1,true,Math.PI,Math.PI),
       M(0x5FC8FF,{roughness:.85,side:THREE.DoubleSide}));
     bed.rotation.set(0,0,Math.PI/2);bed.receiveShadow=true;
-    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.55;sling.position.y=1.88;g.add(sling);
+    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.46;sling.position.y=1.70;g.add(sling);
     for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,6),rope);
-      r.position.set(sd*2.92,2.28,0);r.rotation.z=sd*.52;g.add(r);}
+      r.position.set(sd*2.92,2.18,0);r.rotation.z=sd*.52;g.add(r);}
     g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.6};}
   else if(t==='mirror'){const fr=M(0xFF6FAE,{roughness:.5});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
@@ -2923,10 +3018,19 @@ function popFx(pos,rainbow){
   parts.push({s:ring,v:new THREE.Vector3(0,.25,0),life:0,max:.32,g:0,grow:5.5});
   burst('💧',pos,rainbow?5:3,{size:.26,speed:.9,life:.8});}
 function setF(g,p){g.f.position.x=clamp(p.x,-BX,BX);g.f.position.z=clamp(p.z,Z0-.2,Z1);}
+/* Every game is ten levels deep. Three stars means you beat the level's goal,
+   and that is what moves you up - one rule, and a child can see it on the card
+   before she starts. The games themselves get harder as the level climbs, so
+   "get better" means something rather than replaying the same 25 seconds. */
+const GAME_MAX=10;
+const GOALS={catch:[6,2],feather:[5,1.5],bubbles:[12,4],hide:[6,1.6]};
+function gameLvl(k){return clamp(Math.round((S.lvl&&S.lvl[k])||1),1,GAME_MAX);}
+function goalOf(k,lv){const g=GOALS[k]||[10,3];return Math.round(g[0]+g[1]*((lv||gameLvl(k))-1));}
+function hideRounds(lv){return 3+Math.floor((lv-1)/3);}
 const GAMES={
   catch:{dur:25,intro:'Catch the crickets before they escape!',start(g){g.spawn=0;},
-    update(g,dt){const el=1-g.time/g.def.dur;g.spawn-=dt;if(g.spawn<=0){g.spawn=rand(.55,.9)*(1-.45*el);const c=makeCricket();c.userData.kind='gcricket';const gold=Math.random()<.12;if(gold){goldify(c);c.scale.setScalar(1.25);}c.position.set(clamp(look.x+rand(-1.5,1.5),-4,4),0,rand(.2,2));scene.add(c);const side=Math.random()<.5?-1:1;
-        g.objs.push({g:c,gold:gold,sp:(gold?1.6:.95)*(1+.6*el),t:new THREE.Vector3(clamp(c.position.x+side*rand(2.5,4),-BX-1,BX+1),0,rand(Z0-.6,Z1+.5)),ph:rand(0,6)});}
+    update(g,dt){const el=1-g.time/g.def.dur;g.spawn-=dt;if(g.spawn<=0){g.spawn=rand(.55,.9)*(1-.45*el)*(1-.035*(g.lv-1));const c=makeCricket();c.userData.kind='gcricket';const gold=Math.random()<.12;if(gold){goldify(c);c.scale.setScalar(1.25);}c.position.set(clamp(look.x+rand(-1.5,1.5),-4,4),0,rand(.2,2));scene.add(c);const side=Math.random()<.5?-1:1;
+        g.objs.push({g:c,gold:gold,sp:(gold?1.6:.95)*(1+.6*el)*(1+.055*(g.lv-1)),t:new THREE.Vector3(clamp(c.position.x+side*rand(2.5,4),-BX-1,BX+1),0,rand(Z0-.6,Z1+.5)),ph:rand(0,6)});}
       for(let i=g.objs.length-1;i>=0;i--){const o=g.objs[i],p=o.g.position;tmp.set(o.t.x-p.x,0,o.t.z-p.z);const d=tmp.length();if(d<.15){burst('💨',p,2,{size:.3});scene.remove(o.g);g.objs.splice(i,1);g.combo=0;continue;}
         o.g.rotation.y=Math.atan2(tmp.x,tmp.z);p.x+=tmp.x/d*o.sp*dt;p.z+=tmp.z/d*o.sp*dt;o.ph+=dt*8;p.y=Math.abs(Math.sin(o.ph))*.25;}},
     hits(g){return g.objs.map(o=>o.g);},
@@ -2936,13 +3040,13 @@ const GAMES={
     stop(g){g.objs.forEach(o=>{scene.remove(o.g);if(o.gold)o.g.traverse(m=>{if(m.material)m.material.dispose();});});},bar(g){return '🦗 '+g.score+'   ⏱ '+Math.max(0,Math.ceil(g.time));},
     stars:[8,16,26],result(s){return 'You and '+S.name+' scored '+s+' points catching crickets! Golden ones are worth 3.';}},
   hide:{dur:1e9,rate:2,intro:"Close your eyes... I'm hiding!",
-    start(g){g.round=0;g.wait=3;g.spot=null;g.wrong=0;g.hints=0;
+    start(g){g.round=0;g.wait=3;g.spot=null;g.wrong=0;g.hints=0;g.rounds=hideRounds(g.lv);
       if(!HIDE_SPOTS)HIDE_SPOTS=[['hideRock',1.7,2.6],['log',-.5,2.5],['plant',-2.3,2.4],['plant2',2.6,.2],['ledgeLog',0,-.55],['perchRock',-.1,.5]]
         .map(([n,x,z])=>{const o=scene.getObjectByName(n);if(!o)return null;const ox=o.position.x+x,oz=o.position.z+z;
           return{obj:o,out:new THREE.Vector3(ox,groundY(ox,oz),oz)};}).filter(Boolean);
       HIDE_SPOTS.forEach(s=>{s.rz=s.obj.rotation.z;s.prevKind=s.obj.userData.kind;s.obj.userData.kind='hidespot';});},
-    update(g,dt){if(!g.spot){g.wait-=dt;if(g.round<3&&g.wait<3&&g.wait>0){showCd('🙈 '+Math.ceil(g.wait),true);}if(g.wait<=0){showCd(null);if(g.round>=3){endGame();return;}g.round++;g.spot=pick(HIDE_SPOTS.filter(s=>s!==g.last));g.last=g.spot;
-        G.head.getWorldPosition(tmp2);burst('💨',tmp2,5,{size:.4});G.root.visible=false;tone(500,.15,'sine',.05,.5);say('Ready or not... find me!',2.2);g.wig=.8;g.hint=2.5;g.hint2=6;
+    update(g,dt){if(!g.spot){g.wait-=dt;if(g.round<g.rounds&&g.wait<3&&g.wait>0){showCd('🙈 '+Math.ceil(g.wait),true);}if(g.wait<=0){showCd(null);if(g.round>=g.rounds){endGame();return;}g.round++;g.spot=pick(HIDE_SPOTS.filter(s=>s!==g.last));g.last=g.spot;
+        G.head.getWorldPosition(tmp2);burst('💨',tmp2,5,{size:.4});G.root.visible=false;tone(500,.15,'sine',.05,.5);say('Ready or not... find me!',2.2);g.wig=.8;g.hint=2.5+(g.lv-1)*.4;g.hint2=6+(g.lv-1)*.9;
         if(!g.tip){const tg=new THREE.ConeGeometry(.2,1.5,12);tg.rotateZ(Math.PI/2);g.tip=new THREE.Mesh(tg,G.mats.skin);g.tip.castShadow=true;scene.add(g.tip);}
         const o2=g.spot.obj.getWorldPosition(new THREE.Vector3());const side=o2.x<g.spot.out.x?1:-1;g.tip.position.set(g.spot.out.x+side*.8,.2,(o2.z+g.spot.out.z)/2);g.tip.rotation.y=side>0?Math.PI:0;g.tip.visible=false;}return;}
       g.hint-=dt;if(g.hint<=0&&g.tip&&!g.tip.visible){g.tip.visible=true;g.hints++;say('Hmm... can you see my tail?',2.2);}
@@ -2959,8 +3063,7 @@ const GAMES={
         const far=h.point.distanceTo(g.spot.out);
         say(far<2.6?pick(['Ooh, so close!','Warmer! Very warm!','Nearly!']):pick(['Not in there!','Cold! Try over there.','Nope, miles away!']),1.4);}return true;},
     target(g){return STAY;},
-    stop(g){showCd(null);if(g.tip){scene.remove(g.tip);g.tip=null;}if(HIDE_SPOTS)HIDE_SPOTS.forEach(s=>{s.obj.rotation.z=s.rz;if(s.prevKind)s.obj.userData.kind=s.prevKind;else delete s.obj.userData.kind;});G.root.visible=true;},noCd:true,coins(g){return g.pts||0;},starsFn(g){return g.score<3?1:Math.max(1,3-Math.floor((g.wrong+g.hints)/2));},
-    bar(g){return '🙈 Found '+g.score+' of 3';},result(s){return 'You found '+S.name+' '+s+' time'+(s===1?'':'s')+'!';}},
+    stop(g){showCd(null);if(g.tip){scene.remove(g.tip);g.tip=null;}if(HIDE_SPOTS)HIDE_SPOTS.forEach(s=>{s.obj.rotation.z=s.rz;if(s.prevKind)s.obj.userData.kind=s.prevKind;else delete s.obj.userData.kind;});G.root.visible=true;},noCd:true,coins(g){return g.pts||0;},scoreFn(g){return g.pts||0;},    bar(g){return '🙈 Found '+g.score+' of '+g.rounds;},result(s){return 'You found '+S.name+' '+s+' time'+(s===1?'':'s')+'!';}},
   feather:{dur:25,intro:'Drag the feather and I\'ll chase it!',
     start(g){g.f=makeFeather();g.f.position.set(clamp(G.root.position.x+2,-4,4),.15,1.8);scene.add(g.f);g.cool=0;g.held=false;},
     update(g,dt){g.cool-=dt;GAMES.feather.tick(g,dt);g.f.rotation.z=Math.sin(T*6)*.3;g.f.position.y=.15+Math.abs(Math.sin(T*4))*.06;},
@@ -2969,15 +3072,15 @@ const GAMES={
     tick(g,dt){if(g.stalking){AI.crouch=1;tmp.set(g.f.position.x-G.root.position.x,0,g.f.position.z-G.root.position.z);G.root.rotation.y=lerpAngle(G.root.rotation.y,Math.atan2(tmp.x,tmp.z),Math.min(1,dt*8));
         G.bodyP.rotation.z=Math.sin(T*22)*.06;if(AI.act!=='stalk'){g.stalking=false;G.bodyP.rotation.z=0;startAct('pounce',.62);g.pouncing=true;tone(300,.2,'sawtooth',.04,2.5);}}
       else if(g.pouncing&&AI.act!=='pounce'){g.pouncing=false;g.cool=.7;G.head.getWorldPosition(tmp2);const d=Math.hypot(tmp2.x-g.f.position.x,tmp2.z-g.f.position.z);
-        if(d<1.05){g.score++;popText('+1',g.f.position,'#7CF29A');SFX.pop();burst('⭐',g.f.position,3,{size:.3});startAct('happy',.5);if(!g.held)setF(g,tmp.set(clamp(g.f.position.x+rand(-3,3),-BX,BX),0,rand(Z0,Z1-.3)));}
+        if(d<Math.max(.72,1.05-.035*(g.lv-1))){g.score++;popText('+1',g.f.position,'#7CF29A');SFX.pop();burst('⭐',g.f.position,3,{size:.3});startAct('happy',.5);if(!g.held)setF(g,tmp.set(clamp(g.f.position.x+rand(-3,3),-BX,BX),0,rand(Z0,Z1-.3)));}
         else{say(pick(['So close!','Missed it!','Next time!']),1);}}},
     stop(g){scene.remove(g.f);G.bodyP.rotation.z=0;},bar(g){return '🪶 Caught '+g.score+'   ⏱ '+Math.max(0,Math.ceil(g.time));},stars:[4,8,12],result(s){return S.name+' caught the feather '+s+' time'+(s===1?'':'s')+'!';}},
   bubbles:{dur:25,intro:'Tap the bubbles! I\'ll pop them too!',start(g){g.spawn=0;},
-    update(g,dt){g.spawn-=dt;if(g.spawn<=0){g.spawn=rand(.42,.72);const rb=Math.random()<.14;
-      const b=makeBubble(rb,rb?1.35:rand(.62,1.05));
+    update(g,dt){g.spawn-=dt;if(g.spawn<=0){g.spawn=rand(.42,.72)*(1-.03*(g.lv-1));const rb=Math.random()<.14;
+      const b=makeBubble(rb,(rb?1.35:rand(.62,1.05))*(1-.026*(g.lv-1)));
       b.position.set(clamp(look.x+rand(-2.2,2.2),-BX,BX),.3,rand(Z0,Z1-.3));scene.add(b);g.objs.push(b);}
       for(let i=g.objs.length-1;i>=0;i--){const b=g.objs[i],u=b.userData;
-        b.position.y+=dt*(u.rainbow?.42:.58);b.position.x+=Math.sin(T*2+u.ph)*dt*.28;
+        b.position.y+=dt*(u.rainbow?.42:.58)*(1+.05*(g.lv-1));b.position.x+=Math.sin(T*2+u.ph)*dt*.28;
         const wob=1+.055*Math.sin(T*4.5+u.ph);b.scale.set(u.r*wob,u.r/wob,1);
         b.material.rotation=Math.sin(T*.8+u.ph)*.35;
         if(u.rainbow)b.material.color.setHSL((T*.35+u.ph)%1,.45,1);
@@ -2994,7 +3097,7 @@ const GAMES={
 };
 function startGame(kind){if(!S.hatched||asleepBlock())return;if(outside||trip){sendHome();say('Let me get home first!',2);return;}if(S.sick){say("I'm too poorly to play...");return;}if(S.energy<10){say('Too tired to play...');return;}
   if(game)endGame(true);if(decorating)stopDecorate();crickets.forEach(c=>scene.remove(c.g));crickets.length=0;removeBall();callPt=null;want=null;if(treat){scene.remove(treat.g);treat=null;}AI.act=null;
-  game={kind:kind,def:GAMES[kind],score:0,objs:[]};game.time=game.def.dur;game.cd=game.def.noCd?0:3.7;game.lastTick=99;game.def.start(game);$('#gameBar').hidden=false;$('#gameBar').classList.remove('hurry');$('#gbText').textContent=game.def.bar(game);$('#gbFill').style.display=game.def.noCd?'none':'block';$('#gbFill').style.setProperty('--p','100%');if(game.def.noCd)say(game.def.intro,3);}
+  game={kind:kind,def:GAMES[kind],score:0,objs:[],lv:gameLvl(kind),goal:goalOf(kind)};game.time=game.def.dur;game.cd=game.def.noCd?0:3.7;game.lastTick=99;game.def.start(game);$('#gameBar').hidden=false;$('#gameBar').classList.remove('hurry');$('#gbText').textContent=game.def.bar(game);$('#gbFill').style.display=game.def.noCd?'none':'block';$('#gbFill').style.setProperty('--p','100%');if(game.def.noCd)say(game.def.intro,3);}
 function endGame(quiet){if(!game)return;const g=game;game=null;g.def.stop(g);showCd(null);$('#gameBar').hidden=true;G.root.visible=true;if(quiet)return;
   const base=g.def.coins?g.def.coins(g):g.score*(g.def.rate||1);
   /* one last tap decides how much it was worth */
@@ -3005,15 +3108,27 @@ function finishGame(g,base,acc){
   const coins=base+bonus;
   S.fun=clamp(S.fun+15+(acc>=.75?6:0),0,100);S.energy=clamp(S.energy-5,0,100);earn(coins);award('game');bumpTask('game');save();updateUI();
   if(acc>=.75){SFX.yay();G.head.getWorldPosition(tmp2);burst('\u2B50',tmp2,10,{size:.45,speed:1.1});}
-  const th=g.def.stars||[1,2,3];const st=g.def.starsFn?g.def.starsFn(g):(g.score>=th[2]?3:g.score>=th[1]?2:g.score>=th[0]?1:0);
-  S.best=S.best||{};const prev=S.best[g.kind]||0;const nb=g.kind!=='hide'&&g.score>prev;if(g.score>prev)S.best[g.kind]=g.score;save();
+  /* stars are measured against this level's goal, so three of them always means
+     the same thing: you beat the level, and up you go */
+  const sc=g.def.scoreFn?g.def.scoreFn(g):g.score, goal=g.goal||goalOf(g.kind,g.lv);
+  const st=sc>=goal?3:sc>=Math.ceil(goal*.7)?2:sc>=Math.ceil(goal*.4)?1:0;
+  S.best=S.best||{};const prev=S.best[g.kind]||0;const nb=sc>prev;if(nb)S.best[g.kind]=sc;
+  S.lvl=S.lvl||{};
+  const lvUp=st===3&&g.lv<GAME_MAX, mastered=st===3&&g.lv===GAME_MAX;
+  if(lvUp){S.lvl[g.kind]=g.lv+1;const lb=8+4*g.lv;earn(lb);
+    if(g.lv+1>=5)award('lvl5');if(g.lv+1>=GAME_MAX)award('lvlmax');}
+  save();
   let html='<div class="starsRow">'+[0,1,2].map(i=>'<span class="'+(i<st?'':'off')+'">⭐</span>').join('')+'</div>';
-  if(g.kind!=='hide')html+='<p>'+(nb?'🏆 New best score!':'Best score: '+(S.best[g.kind]||0))+'</p>';
+  if(lvUp)html+='<p class="lvUp">⬆️ Level '+(g.lv+1)+'! You earned '+(8+4*g.lv)+' bonus coins.</p>';
+  else if(mastered)html+='<p class="lvUp">👑 Level 10 — you have mastered this game!</p>';
+  else html+='<p>Level '+g.lv+' — score '+goal+' for ⭐⭐⭐ and Level '+(g.lv+1)+'</p>';
+  html+='<p>'+(nb?'🏆 New best: '+sc:'Your best: '+(S.best[g.kind]||0))+'</p>';
   html+='<button class="again" id="againBtn">Play again</button>';$('#cExtra').innerHTML=html;
   const bonusLine=bonus?(acc>=.75?' Perfect bonus shot \u2014 double coins!':' Nice bonus shot!'):'';
-  openCard(st===3?'🏆':st?'🎉':'🙂',st===3?'Amazing!':st===2?'Great game!':st===1?'Good job!':'Nice try!',
-    g.def.result(g.score)+(coins?' You earned '+coins+' coin'+(coins>1?'s':'')+'!':'')+bonusLine,true);
-  if(st===3){SFX.yay();burst('🎉',tmp.set(look.x,2,1),10,{size:.5,speed:1.4});}
+  openCard(st===3?'🏆':st?'🎉':'🙂',
+    lvUp?'Level up!':st===3?'Amazing!':st===2?'So close!':st===1?'Good job!':'Nice try!',
+    g.def.result(sc)+(coins?' You earned '+coins+' coin'+(coins>1?'s':'')+'!':'')+bonusLine,true);
+  if(st===3){SFX.yay();burst(lvUp?'⬆️':'🎉',tmp.set(look.x,2,1),12,{size:.5,speed:1.4});}
   const k=g.kind;$('#againBtn').onclick=()=>{$('#card').hidden=true;cardClose=null;startGame(k);};}
 $('#gbStop').onclick=()=>endGame();
 
