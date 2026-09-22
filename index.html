@@ -42,27 +42,40 @@ canvas{touch-action:none}
 #night .moon{position:absolute;top:14%;right:12%;width:54px;height:54px;border-radius:50%;background:#FFF6C9;box-shadow:0 0 40px 10px rgba(255,246,201,.35)}
 canvas{position:fixed;inset:0;display:block}
 
-#hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) 12px 0;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
-.toprow{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center}
-.pill{pointer-events:auto;background:var(--card);border-radius:999px;padding:4px 16px 4px 6px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--shade)}
-.pill .mood{width:38px;height:38px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:24px}
-.pill b{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.05;display:block}
-.pill small{font-size:13px;font-weight:500;opacity:.75;display:block;line-height:1.2}
-.round{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:0;background:var(--card);font-size:20px;box-shadow:0 4px 0 var(--shade);cursor:pointer}
-.stats{background:var(--card);border-radius:22px;padding:8px 14px 4px;display:flex;gap:14px;box-shadow:0 4px 0 var(--shade)}
-.stat{display:flex;flex-direction:column;align-items:center;gap:1px}
-.ring{--v:100;--c:var(--good);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+#hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 8px) 8px 0;display:flex;justify-content:center;pointer-events:none}
+/* His name, his coins and how he is doing belong together. Three separate
+   floating blobs read as clutter over the tank; one frosted card reads as the
+   game's frame, and takes less of the screen doing it. */
+.hudCard{width:min(560px,100%);box-sizing:border-box;display:flex;flex-direction:column;gap:5px;
+  background:var(--card);border-radius:24px;padding:7px 13px 9px;box-shadow:0 5px 0 var(--shade);
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2)}
+.toprow{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pill{pointer-events:auto;background:none;border-radius:999px;padding:0;display:flex;align-items:center;gap:9px;min-width:0}
+.pill .mood{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--shade);display:grid;place-items:center;font-size:22px}
+.pill b{font-family:var(--display);font-weight:400;font-size:20px;line-height:1.05;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
+.pill small{font-size:12px;font-weight:500;opacity:.7;display:block;line-height:1.2;white-space:nowrap}
+.round{pointer-events:auto;width:36px;height:36px;border-radius:50%;border:0;background:var(--shade);color:var(--ink);font-size:17px;cursor:pointer}
+.stats{background:none;border-radius:0;padding:2px 0 0;display:flex;gap:4px;box-shadow:none;justify-content:space-between}
+.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.ring{--v:100;--c:var(--good);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--c) calc(var(--v)*1%), var(--shade) 0);transition:--v .4s}
-.ring span{width:38px;height:38px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:21px}
-.stat b{font-size:13px;font-weight:700}
+.ring span{width:29px;height:29px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:17px;
+  transition:background .3s}
+.stat b{font-size:11px;font-weight:800;letter-spacing:.2px;opacity:.72}
+/* a thin coloured arc is not a message. When something actually needs doing the
+   whole chip turns that colour and says so. */
 .stat.low .ring{animation:wiggle 1s ease-in-out infinite}
+/* tinted rather than filled, so the little picture stays readable */
+.stat.low .ring span{background-color:var(--paper);
+  background-image:linear-gradient(rgba(255,90,95,.34),rgba(255,90,95,.34))}
+.stat.low b{opacity:1;color:var(--low)}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
 
 #tray{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);box-sizing:border-box;
-  padding:10px 10px calc(env(safe-area-inset-bottom) + 12px);display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  padding:8px 9px calc(env(safe-area-inset-bottom) + 10px);display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
 .act{position:relative;--b:#FF8A3D;--s:#C2561A;--t:#fff;border:0;border-radius:20px;background:var(--b);color:var(--t);font:800 14px/1 var(--font);
-  padding:8px 0 9px;box-shadow:0 6px 0 var(--s);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .08s,box-shadow .08s}
-.act i{font-style:normal;font-size:28px;line-height:1.15}
+  padding:7px 0 8px;box-shadow:0 5px 0 var(--s);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:transform .08s,box-shadow .08s}
+.act i{font-style:normal;font-size:26px;line-height:1.15}
 .act:active{transform:translateY(5px);box-shadow:0 1px 0 var(--s)}
 .act:focus-visible,.round:focus-visible,.go:focus-visible,.sw:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .act.dim{filter:saturate(.3);opacity:.7}
@@ -81,9 +94,20 @@ canvas{position:fixed;inset:0;display:block}
 
 #err{position:fixed;left:16px;right:16px;top:45%;z-index:9;background:#fff;color:#2B1D3A;border-radius:20px;padding:16px;font-weight:700;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.15)}
 #err[hidden]{display:none}
-#picker{position:fixed;inset:0;display:grid;place-items:center;background:rgba(30,20,60,.35);padding:16px;z-index:5}
+/* the top of the screen is left clear so the real gecko shows through and
+   re-colours as she taps - picking a colour blind was the whole problem */
+#picker{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;z-index:5}
+.pkView{flex:1 1 auto;min-height:26vh;position:relative;pointer-events:none}
+.pkTag{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);white-space:nowrap;
+  background:rgba(30,20,60,.55);color:#fff;border-radius:16px;padding:5px 14px;
+  font:600 13px var(--font);letter-spacing:.2px}
 #picker[hidden]{display:none}
 .sheet{background:var(--paper);border-radius:30px;padding:22px 20px 20px;width:min(400px,100%);box-sizing:border-box;box-shadow:0 10px 0 rgba(0,0,0,.15);text-align:center}
+#picker .sheet{width:min(440px,100%);margin:0 auto;border-radius:30px 30px 0 0;
+  max-height:66vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:18px 20px calc(env(safe-area-inset-bottom) + 18px);box-shadow:0 -8px 30px rgba(20,12,40,.28)}
+#picker .sheet h1{font-size:27px}
+#picker .sheet p#pSub{margin-bottom:12px;font-size:14.5px}
 .sheet h1{margin:0 0 4px;font-family:var(--display);font-size:32px;line-height:1.08;font-weight:400;letter-spacing:.3px}
 .sheet p{margin:0 0 14px;font-size:16px;opacity:.8}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
@@ -105,15 +129,18 @@ canvas{position:fixed;inset:0;display:block}
 .bk{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 #mine{margin:2px 0 10px;text-align:left}
 .mineRow{margin:0 0 9px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.mineRow b{flex:0 0 78px;font:400 15px var(--display);color:var(--ink)}
+.mineRow b{flex:0 0 74px;font:400 16px var(--display);color:var(--ink);text-align:left}
 .dots{display:flex;gap:7px;flex-wrap:wrap;flex:1}
-.dots i{width:27px;height:27px;border-radius:50%;background:var(--c);cursor:pointer;
+.dots i{width:33px;height:33px;border-radius:50%;background:var(--c);cursor:pointer;
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.65),0 2px 0 var(--shade)}
 .dots i[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:2px}
 .pats{display:flex;gap:6px;flex-wrap:wrap;flex:1}
-.pats button{border:0;border-radius:12px;background:#EFEAF7;color:var(--ink);
-  font:600 12px var(--font);padding:7px 10px;cursor:pointer}
-.pats button[aria-pressed=true]{background:var(--ink);color:#fff}
+.mineRow--pat{align-items:flex-start}
+.pats{gap:7px}
+.pats button{border:2px solid rgba(43,29,58,.14);border-radius:14px;background:#F3EFFA;color:#2B1D3A;
+  font:700 13px var(--font);padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.pats button i{width:19px;height:19px;border-radius:50%;background:#D8CDEA;background-size:cover;flex:0 0 19px}
+.pats button[aria-pressed=true]{background:#3FCB7A;border-color:#25915A;color:#fff}
 #timeBar{position:fixed;inset:0;z-index:7;display:flex;align-items:flex-end;justify-content:center;
   padding:0 16px calc(env(safe-area-inset-bottom) + 112px);pointer-events:none}
 #timeBar[hidden]{display:none}
@@ -154,12 +181,13 @@ canvas{position:fixed;inset:0;display:block}
 .tabs button{border:0;border-radius:18px;background:var(--shade);color:var(--ink);font:800 13px/1.1 var(--font);padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 .tabs button b{font-size:24px;line-height:1.1}
 .tabs button[aria-selected="true"]{background:var(--tc);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.18)}
-.cards{overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:2px 2px 6px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.cards{overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;padding:2px 2px 6px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .card{position:relative;border:0;border-radius:22px;background:var(--shade);color:var(--ink);text-align:left;padding:12px 12px 12px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;font-family:var(--font);min-height:76px}
 .card:active{transform:scale(.96)}
 .card .ic{flex:none;width:52px;height:52px;border-radius:16px;background:var(--c);display:grid;place-items:center;font-size:30px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
 .card b{display:block;font-size:17px;line-height:1.1}
-.card small{display:block;font-size:13px;line-height:1.25;opacity:.75;margin-top:2px}
+.card small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:13px;line-height:1.25;opacity:.75;margin-top:2px}
 .card .badge{position:absolute;top:-6px;right:-4px;background:#FF5A5F;color:#fff;font:800 12px var(--font);padding:3px 8px;border-radius:999px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 .card.wide{grid-column:1 / -1}
 @media (max-width:360px){.card .ic{width:44px;height:44px;font-size:26px}.card b{font-size:15px}}
@@ -181,7 +209,7 @@ canvas{position:fixed;inset:0;display:block}
 .sheet h2{margin:12px 0 6px;font-size:17px;font-weight:800;text-align:left}
 .tile.locked{opacity:.45}
 .right{display:flex;gap:8px;align-items:center}
-.coin{pointer-events:auto;background:var(--card);border-radius:999px;padding:6px 14px;font:400 20px var(--display);box-shadow:0 4px 0 var(--shade)}
+.coin{pointer-events:auto;background:var(--shade);border-radius:999px;padding:5px 12px;font:400 19px var(--display);white-space:nowrap}
 .coin.bump{animation:bump .45s}
 @keyframes bump{40%{transform:scale(1.25)}}
 .big{font-size:64px;line-height:1.1}
@@ -213,6 +241,7 @@ canvas{position:fixed;inset:0;display:block}
 .job .tick{font:700 14px var(--font);flex:none;min-width:34px;text-align:right}
 .starsRow{font-size:40px;letter-spacing:4px;margin:-4px 0 6px}
 .starsRow .off{filter:grayscale(1);opacity:.3}
+.again.half{width:calc(50% - 6px);display:inline-block;vertical-align:top;margin:0 3px 12px;font-size:19px}
 .again{width:100%;border:0;border-radius:22px;background:#FF5FA2;color:#fff;font:400 22px var(--display);letter-spacing:.3px;padding:11px;box-shadow:0 6px 0 #C23270;cursor:pointer;margin-bottom:12px}
 .again:active{transform:translateY(5px);box-shadow:0 1px 0 #C23270}
 .bar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translateX(-50%);background:var(--paper);border-radius:999px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:8px;font:400 18px var(--display);box-shadow:0 5px 0 var(--shade);z-index:4;white-space:nowrap}
@@ -222,7 +251,7 @@ canvas{position:fixed;inset:0;display:block}
 #gbStop:active{transform:translateY(3px);box-shadow:none}
 .bar button.alt{background:var(--shade);color:var(--ink)}
 #dbDone{background:#3FCB7A}
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 110px);transform:translate(-50%,10px);opacity:0;background:#2B1D3A;color:#fff;font:800 16px var(--font);padding:10px 16px;border-radius:16px;z-index:9;transition:.3s;pointer-events:none;max-width:86vw;text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translate(-50%,10px);opacity:0;background:#2B1D3A;color:#fff;font:800 16px var(--font);padding:10px 16px;border-radius:16px;z-index:9;transition:.3s;pointer-events:none;max-width:86vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 body[data-bg="jungle"] #sky{background:linear-gradient(#6FD19A,#D8F5C8)}
 body[data-bg="beach"] #sky{background:linear-gradient(#5CC2FF,#E6F7FF)}
@@ -241,6 +270,18 @@ body[data-bg="space"] #sky{background:linear-gradient(#0B0E2A,#2B2466)}
   transition:opacity .5s ease,transform .5s ease}
 #intro[hidden]{display:none}
 body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
+/* a close-up of him using a toy: the tank UI gets out of the way for it */
+body.watching #hud,body.watching #tray,body.watching #watchChip,
+body.designing #hud,body.designing #tray{opacity:0;pointer-events:none}
+#watchChip{position:fixed;left:50%;transform:translateX(-50%);z-index:6;cursor:pointer;
+  bottom:calc(env(safe-area-inset-bottom) + 104px);border:0;border-radius:22px;padding:10px 18px;
+  background:var(--paper);color:var(--ink);font:400 20px var(--display);letter-spacing:.3px;
+  box-shadow:0 5px 0 rgba(0,0,0,.18);transition:opacity .35s ease}
+#watchChip[hidden]{display:none}
+#watchOut{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 26px);z-index:6;
+  text-align:center;font:600 15px var(--font);color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);
+  pointer-events:none;opacity:0;transition:opacity .4s ease}
+body.watching #watchOut{opacity:.85}
 #hud,#tray{transition:opacity .45s ease}
 #intro.gone{opacity:0;transform:scale(1.08);pointer-events:none}
 #intro .sun{display:none}
@@ -374,6 +415,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 <div id="night"><div class="moon"></div></div>
 
 <div id="hud">
+ <div class="hudCard">
   <div class="toprow">
     <div class="pill"><div class="mood" id="mood">😊</div><div><b id="gname">Ziggy</b><small id="gday">Baby, day 1</small></div></div>
     <div class="right"><div class="coin" id="coinPill">🪙 <b id="coins">0</b></div><button class="round" id="snd" aria-label="Sound on or off">🔊</button></div>
@@ -384,9 +426,12 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
     <div class="stat" id="st-clean"><div class="ring"><span>🧽</span></div><b>Clean</b></div>
     <div class="stat" id="st-energy"><div class="ring"><span>⚡</span></div><b>Energy</b></div>
   </div>
+ </div>
 </div>
 
+<button id="watchChip" hidden>👀 Watch him</button>
 <div id="bubble"></div>
+<div id="watchOut">Tap anywhere to go back</div>
 <div id="err" hidden></div>
 
 <nav id="tray">
@@ -399,6 +444,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 </nav>
 
 <div id="picker" hidden>
+  <div class="pkView"><span class="pkTag" id="pkTag">This is how he looks</span></div>
   <div class="sheet">
     <h1 id="pTitle">Pick your gecko</h1>
     <p id="pSub">Choose a colour and a name, then hatch your egg!</p>
@@ -408,7 +454,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
       <p class="mineRow"><b>His body</b><span class="dots" id="dotSkin"></span></p>
       <p class="mineRow"><b>His tummy</b><span class="dots" id="dotBelly"></span></p>
       <p class="mineRow"><b>His spots</b><span class="dots" id="dotSpot"></span></p>
-      <p class="mineRow"><b>Pattern</b><span class="pats" id="patRow"></span></p>
+      <p class="mineRow mineRow--pat"><b>Pattern</b><span class="pats" id="patRow"></span></p>
     </div>
     <label for="nameIn">Name</label>
     <input id="nameIn" maxlength="12" value="Ziggy" autocomplete="off">
@@ -458,7 +504,7 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
   <button class="tbGo" id="tbGo">TAP!</button><p class="tbHint">Tap when the arrow is in the gold band</p></div></div>
 <div id="ballBar" class="bar" hidden><span>🎾 Playing fetch</span><button id="bbStop">✕ Put it away</button></div>
 <div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
-<div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
+<div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbBox" class="alt" hidden>📦 Box</button><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
 <div id="toast"></div>
 <script>
 /* ---------- intro splash controller (runs before the 3D engine loads) ---------- */
@@ -510,7 +556,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='16';
+const BUILD='17';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -566,7 +612,10 @@ function blob(mat,sx,sy,sz,x,y,z,parent){const m=new THREE.Mesh(SPH,mat);m.scale
 
 /* ---------- terrarium ---------- */
 const TL=peekMode?2:(S.tank||1),KX=TL>1?1.75:1,KZ=TL>1?1.5:1;
-const TANK={w:17.2*KX,d:10*KZ,h:5.4},BX=7.2*KX,Z0=-2.0*KZ,Z1=3.9*KZ;
+const TANK={w:17.2*KX,d:10*KZ,h:5.4};
+/* the sand reaches the glass; he used to stop well short of it on every side,
+   which threw away most of the tank. Leave only enough for his body. */
+const BX=8.0*KX,Z0=-4.3*KZ,Z1=4.3*KZ;
 /* a real cave he can walk into. The mouth faces the front of the tank so she can see him in there. */
 const KC=TL>1?1.55:1;   /* the cave grows with the tank, uniformly so it stays round */
 const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62*KC,rIn:1.2*KC,mouth:.82,h:1.15*KC};
@@ -623,7 +672,9 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
   const absStart=scene.children.length;
   // backdrop rocks
   const stone=M(0xB9A58F,{flatShading:true,roughness:.9});
-  [[-6.2,-4.25,1.35],[-3.3,-4.4,1.0],[-.3,-4.35,1.22],[2.7,-4.3,.95],[6.0,-4.15,1.4]].forEach(([x,z,sc])=>{const m=new THREE.Mesh(rockGeo(sc,Math.round(x*10+50)),rockMat);m.position.set(x,sc*.45,z);m.scale.y=rand(.9,1.5);m.rotation.y=rand(0,3);m.castShadow=m.receiveShadow=true;scene.add(m);});
+  /* off to the ends and hard against the back glass, so the strip behind the
+     shelf and the ramp is clear for him to walk down */
+  [[-6.9,-4.5,1.35],[6.6,-4.45,1.4],[-5.2,-4.85,.8],[4.4,-4.9,.75],[-.2,-4.95,.7]].forEach(([x,z,sc])=>{const m=new THREE.Mesh(rockGeo(sc,Math.round(x*10+50)),rockMat);m.position.set(x,sc*.45,z);m.scale.y=rand(.9,1.5);m.rotation.y=rand(0,3);m.castShadow=m.receiveShadow=true;scene.add(m);});
   // hide cave
   // log
   const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(2,1.5);const log=new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,2.9,28,4),M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.95}));log.rotation.z=Math.PI/2;log.rotation.y=.3;log.position.set(.4,.34,-2.35);log.castShadow=log.receiveShadow=true;log.name='log';scene.add(log);
@@ -642,12 +693,12 @@ function snakeLeaf(h,bend){const g=new THREE.PlaneGeometry(.3,h,1,12);g.translat
      reads as a lot of empty sand, so it gets more scenery - all of it behind the
      part he walks on, so nothing new is in his way */
   if(TL>1){
-    [[-8.2,-4.2,1.5],[-1.9,-4.5,1.1],[8.0,-4.25,1.45],[4.6,-3.85,.8]].forEach(([x,z,sc])=>{
+    [[-8.2,-4.55,1.5],[8.0,-4.5,1.45],[-2.6,-4.95,.85],[2.2,-4.95,.8]].forEach(([x,z,sc])=>{
       const m=new THREE.Mesh(rockGeo(sc,Math.round(x*10+90)),rockMat);m.position.set(x,sc*.45,z);
       m.scale.y=rand(.9,1.5);m.rotation.y=rand(0,3);m.castShadow=m.receiveShadow=true;scene.add(m);});
-    const plant3=plant.clone();plant3.position.set(-2.9,0,-3.4);plant3.name='plant3';
+    const plant3=plant.clone();plant3.position.set(-7.6,0,-2.2);plant3.name='plant3';
     plant3.scale.setScalar(.85);scene.add(plant3);plants.push(plant3);
-    const succ2=succ.clone();succ2.position.set(-6.4,0,-3.2);succ2.scale.setScalar(.9);scene.add(succ2);}
+    const succ2=succ.clone();succ2.position.set(7.4,0,-2.4);succ2.scale.setScalar(.9);scene.add(succ2);}
   // water dish
   const dish=new THREE.Mesh(new THREE.CylinderGeometry(.72,.6,.26,30),MP(0xF4F1FF,{roughness:.3}));dish.position.set(4.9,.13,2.1);dish.castShadow=dish.receiveShadow=true;dish.name='bowl';dish.userData.kind='bowl';scene.add(dish);
   const water=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.02,30),MP(0x5EC8F2,{roughness:.05,clearcoat:1,transparent:true,opacity:.9}));water.position.set(4.9,.25,2.1);water.name='water';water.userData.kind='bowl';scene.add(water);
@@ -768,10 +819,11 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
 function dotTexR(){if(dotTexR.t)return dotTexR.t;return dotTexR.t=canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});}
 /* ---------- upper level ---------- */
 const LEDGE_H=1.16;
-const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:Z0-1.0,z1:-.34*KZ};
+/* pulled forward off the back wall: the strip behind it is his now */
+const LEDGE={x0:-2.45*KX,x1:1.95*KX,z0:-2.35*KZ,z1:-.2*KZ};
 /* the strip of the shelf he actually walks on - the rest is scenery */
-const WALK={x0:-2.45*KX+.32,x1:1.95*KX+.06,z0:Z0+.08,z1:-.34*KZ-.3};
-const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:Z0-.05,z1:-.34*KZ};
+const WALK={x0:LEDGE.x0+.32,x1:LEDGE.x1+.06,z0:LEDGE.z0+.08,z1:LEDGE.z1-.3};
+const RAMP ={x0:1.95*KX,x1:5.1*KX, z0:LEDGE.z0,z1:LEDGE.z1};
 const DOOR={x:TANK.w/2,z:1.15,w:4.0*KZ,h:2.6};
 const TABLE={x0:TANK.w/2+1.0,x1:TANK.w/2+7.2,z0:-2.9*KZ,z1:3.4*KZ,y:-0.95};
 const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8}];
@@ -843,8 +895,8 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   return [RAMP_FOOT.clone(),RAMP_TOP.clone(),dest];}
 (function buildLedge(){
   const w=LEDGE.x1-LEDGE.x0,d=LEDGE.z1-LEDGE.z0,cx=(LEDGE.x0+LEDGE.x1)/2,cz=(LEDGE.z0+LEDGE.z1)/2;
-  const body=new THREE.Mesh(new THREE.BoxGeometry(w,LEDGE_H,d+.6),rockMat);
-  body.position.set(cx,LEDGE_H/2,cz-.3);body.castShadow=body.receiveShadow=true;scene.add(body);
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,LEDGE_H,d),rockMat);
+  body.position.set(cx,LEDGE_H/2,cz);body.castShadow=body.receiveShadow=true;scene.add(body);
   const top=new THREE.Mesh(new THREE.BoxGeometry(w-.06,.1,d-.06),M(0xD89D5A,{roughness:.96}));
   top.position.set(cx,LEDGE_H-.045,cz);top.receiveShadow=true;scene.add(top);
   /* a rounded lip, then boulders at the ends and behind - never in front,
@@ -852,7 +904,7 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
   const lip=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,w,20),rockMat);
   lip.rotation.z=Math.PI/2;lip.position.set(cx,LEDGE_H-.12,LEDGE.z1);
   lip.castShadow=lip.receiveShadow=true;scene.add(lip);
-  [[LEDGE.x0-.72,.95,-1.15],[LEDGE.x0-.34,.72,-2.15]].forEach(([bx,br,bz],i)=>{
+  [[LEDGE.x0-.72,.95,-1.15*KZ],[LEDGE.x0-.34,.72,-2.1*KZ]].forEach(([bx,br,bz],i)=>{
     const k=new THREE.Mesh(rockGeo(br,140+i*11),rockMat);
     k.position.set(bx,br*.5,bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
     k.castShadow=k.receiveShadow=true;scene.add(k);});
@@ -888,7 +940,7 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
     b.castShadow=b.receiveShadow=true;scene.add(b);});
 })();
 const STATIC_OBS=[{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x:3.2,z:-3.1,r:.72},
-  {x:-6.0,z:2.9,r:.7}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
+  {x:-6.0,z:2.9,r:.7},{x:-6.9,z:-4.5,r:1.1},{x:6.6,z:-4.45,r:1.15}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
 function obstacles(){const o=STATIC_OBS.slice();for(const d of S.decor)o.push({x:d.x,z:d.z,r:.55});return o;}
 function keepIn(p){
   /* mid-doorway the tween owns his position - clamping here would wall him out */
@@ -912,9 +964,12 @@ function keepIn(p){
   /* up on the shelf he cannot walk off the edge - he takes the ramp down */
   if(p.y>LEDGE_H-.35&&!onRamp){p.x=clamp(p.x,WALK.x0,WALK.x1);p.z=clamp(p.z,WALK.z0,WALK.z1);return;}
   if(p.y<LEDGE_H-.42&&inRect(LEDGE,p.x,p.z)&&!inRect(RAMP,p.x,p.z)){
-    const outF=LEDGE.z1-p.z,outL=p.x-LEDGE.x0,outR=LEDGE.x1-p.x;
-    if(outF<=outL&&outF<=outR)p.z=LEDGE.z1+.06;
-    else if(outL<outR)p.x=LEDGE.x0-.06;else p.x=LEDGE.x1+.06;}
+    /* out of whichever side he is nearest - the back counts now that there is
+       somewhere to go back there */
+    const outF=LEDGE.z1-p.z,outB=p.z-LEDGE.z0,outL=p.x-LEDGE.x0,outR=LEDGE.x1-p.x;
+    const m=Math.min(outF,outB,outL,outR);
+    if(m===outF)p.z=LEDGE.z1+.06;else if(m===outB)p.z=LEDGE.z0-.06;
+    else if(m===outL)p.x=LEDGE.x0-.06;else p.x=LEDGE.x1+.06;}
   if(onHigh(p))return;
   for(const o of obstacles()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+.2;if(d<r&&d>1e-4){p.x=o.x+dx/d*r;p.z=o.z+dz/d*r;}}}
 function avoidAngle(p,a){if(onHigh(p))return a;
@@ -1087,7 +1142,7 @@ function onTable(x){return x>TANK.w/2;}
    tunnel that fits the sand on day 7 would be hanging through the glass on day
    25 unless the room it needs is worked out fresh each time. */
 const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.4,z:1.45},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
-function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.5,z:.4};
+function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
   const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
   return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
 /* a long toy turned side-on may be longer than the tank is deep - there is then
@@ -1104,11 +1159,17 @@ function decorSpot(x,z,t,r){const P=decorPad(t,r);
     for(const o of TABLE_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
       if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
     q.x=fit(q.x,TABLE.x0+P.x,TABLE.x1-P.x);q.z=fit(q.z,TABLE.z0+P.z,TABLE.z1-P.z);return q;}
-  const q=new THREE.Vector3(fit(x,-BX+P.x,BX-P.x),0,fit(z,Z0+P.z,Z1-P.z));
-  const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;
+  /* something he plays with has to stay where he can reach it, but an ornament
+     may sit right against the glass, or up on the shelf */
+  const toy=!!TOY_HALF[t];
+  const XL=toy?BX:TANK.w/2-.15,ZA=toy?Z0:-TANK.d/2+.15,ZB=toy?Z1:TANK.d/2-.15;
+  const q=new THREE.Vector3(fit(x,-XL+P.x,XL-P.x),0,fit(z,ZA+P.z,ZB-P.z));
+  if(toy){const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;}
+  else{const dx=q.x-CAVE.x,dz=q.z-CAVE.z,d=Math.hypot(dx,dz)||1e-4,rr=CAVE.rOut+.3;
+    if(d<rr){q.x=CAVE.x+dx/d*rr;q.z=CAVE.z+dz/d*rr;}}
   for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
     if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
-  q.x=fit(q.x,-BX+P.x,BX-P.x);q.z=fit(q.z,Z0+P.z,Z1-P.z);return q;}
+  q.x=fit(q.x,-XL+P.x,XL-P.x);q.z=fit(q.z,ZA+P.z,ZB-P.z);return q;}
 function safeHome(){const free=v=>obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7);
   const first=new THREE.Vector3(clamp(look.x,-BX+1,BX-1),0,Z1-.6);if(free(first))return first;
   for(let i=0;i<16;i++){const v=new THREE.Vector3(rand(-BX+.7,BX-.7),0,rand(Z1-1.8,Z1-.4));if(free(v))return v;}
@@ -1353,8 +1414,10 @@ function updateGecko(dt){
   }
   if(AI.act==='pounce'&&AI.actT<AI.actD*.65){p.x+=Math.sin(G.root.rotation.y)*3.2*dt;p.z+=Math.cos(G.root.rotation.y)*3.2*dt;}
   if(!moving&&AI.act!=='pounce'){if(AI.v>.02){p.x+=Math.sin(G.root.rotation.y)*AI.v*dt;p.z+=Math.cos(G.root.rotation.y)*AI.v*dt;}AI.v*=Math.max(0,1-dt*10);}
-  const ride=rideToy(dt);
-  if(ride){moving=(ride==='walk');
+  const ride=picking?'pose':rideToy(dt);
+  if(ride==='pose'){moving=false;AI.v=0;AI.vy=0;
+    G.root.rotation.x+=(0-G.root.rotation.x)*Math.min(1,dt*6);G.root.rotation.z=0;}
+  else if(ride){moving=(ride==='walk');
     G.root.rotation.x+=(0-G.root.rotation.x)*Math.min(1,dt*6);}
   else{G.root.rotation.z+=(0-G.root.rotation.z)*Math.min(1,dt*6);
     keepIn(p);
@@ -1457,6 +1520,8 @@ function tickStats(dt){if(!S.hatched)return;decay(dt/3600*schoolNow(dt),0);
   if(hunt){hunt.t=(hunt.t||0)+dt;if(hunt.t>7)hunt=null;}
   ballT-=dt;if(ballT<=0){ballT=1;if(ball&&ball.state!=='carried'&&ball.state!=='held')ballSettle();}
   itchT-=dt;if(itchT<=0){itchT=rand(50,105);if(Math.random()<.75)startItch();}
+  {const on=!!(toyUse&&toyT>0&&!game&&!closeUp&&!S.asleep);
+   const c=$('#watchChip');if(c.hidden===on){c.hidden=!on;if(on)c.textContent='\uD83D\uDC40 Watch '+S.name;}}
   if(toyT>0){
     /* while he is riding a toy the toy owns him, so anything else that needs him -
        a game, a cuddle, a thrown ball, the walk back to his cage - has to end the
@@ -1475,7 +1540,8 @@ let lightMix=S.asleep?1:0,nightShown=null,envT=0;
 const motes=(function(){const g=new THREE.BufferGeometry(),a=new Float32Array(55*3);for(let i=0;i<55;i++){a[i*3]=rand(-7,7);a[i*3+1]=rand(.3,4.8);a[i*3+2]=rand(-4,4);}g.setAttribute('position',new THREE.BufferAttribute(a,3));
   const t=canvasTex(64,64,(x)=>{const r=x.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(0,0,64,64);});
   const m=new THREE.Points(g,new THREE.PointsMaterial({size:.07,map:t,transparent:true,opacity:.55,depthWrite:false,color:0xFFF3D0,blending:THREE.AdditiveBlending}));scene.add(m);return m;})();
-function updateLights(dt){const night=cine?false:isNight();const dim=cine?0:(S.asleep?1:(night?.55:0));lightMix+=(dim-lightMix)*Math.min(1,dt*1.5);const L=lightMix;
+/* she should see his colours, not a gecko in the dark */
+function updateLights(dt){const bright=cine||picking;const night=bright?false:isNight();const dim=bright?0:(S.asleep?1:(night?.55:0));lightMix+=(dim-lightMix)*Math.min(1,dt*1.5);const L=lightMix;
   hemi.intensity=.26-.16*L;sun.intensity=.82-.6*L;hemi.color.setRGB(1-.45*L,1-.35*L,1);sun.color.setRGB(1-.45*L,.95-.3*L,.87+.13*L);lamp.intensity=.15+.5*(1-L);
   envT-=dt;if(envT<=0){envT=.5;const ei=1-.75*L;scene.traverse(o=>{if(o.material&&o.material.isMeshStandardMaterial&&!o.material.userData.fixedEnv)o.material.envMapIntensity=ei;});}
   plants.forEach(pl=>pl.children.forEach((l,i)=>{l.rotation.z=l.userData.rz+Math.sin(T*1.1+i*1.7)*.045;}));
@@ -1489,7 +1555,14 @@ function updateLights(dt){const night=cine?false:isNight();const dim=cine?0:(S.a
 let camA=0,camT=0;const look=new THREE.Vector3(0,.5,1.1);
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=camera.aspect<1?52:38;camera.updateProjectionMatrix();}
 window.addEventListener('resize',resize);resize();
-function updateCam(dt){if(cine){cineCam();return;}
+function updateCam(dt){
+  /* read the sheet's own state so the camera can never get stuck up here */
+  if(picking){if($('#picker').hidden)picking=false;
+    else if(G.root.visible&&!cine){pickCam(dt);return;}}
+  if(closeUp){closeUp.t+=dt;
+    if(closeUp.t>=closeUp.dur||!toyUse||toyT<=0||game)stopWatch();
+    else{closeUpCam(dt);return;}}
+  if(cine){cineCam();return;}
   camA+=(camT-camA)*Math.min(1,dt*6);const portrait=camera.aspect<1;const wide=typeof game!=='undefined'&&game&&game.kind==='hide';
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
   /* the grown-up tank is nearly three times the floor, so stand back a little
@@ -1501,7 +1574,9 @@ function updateCam(dt){if(cine){cineCam();return;}
     look.z+=((gz*.8+tcz*.2)-look.z)*Math.min(1,dt*1.5);
     const d2=dist*.95;
     camera.position.set(look.x+Math.sin(camA)*d2,look.y+d2*1.35,look.z+Math.cos(camA)*d2);camera.lookAt(look);return;}
-  const fx=wide?0:clamp(gx*(portrait?.92:.6),-lim,lim),fz=wide?.6:1.1+(gz-1.1)*.45;
+  const fx=wide?0:clamp(gx*(portrait?.92:.6),-lim,lim),
+    /* the sand is twice as deep as it was, so follow him into it further */
+    fz=wide?.6:.9+(gz-.9)*.62;
   look.x+=(fx-look.x)*Math.min(1,dt*2);look.z+=(fz-look.z)*Math.min(1,dt*1.5);
   camP+=(camPT-camP)*Math.min(1,dt*6);camera.position.set(look.x+Math.sin(camA)*dist,dist*camP,look.z+Math.cos(camA)*dist);camera.lookAt(look);}
 
@@ -1747,7 +1822,7 @@ function menuItems(tab){const nm=esc(S.name);return({
   care:[['jobs','📋',"Today's jobs",(3-tasksLeft())+' of 3 done'+(tasksReady()?' — star ready!':''),'#3FCB7A',tasksReady()?'⭐':(tasksLeft()?'':'✅')],
     ...(tankSmall()?[['tank','🏠','Bigger tank',nm+' needs more room!','#FF8A3D','Needed']]:[]),['water','🚰','Fill water',S.water<25?'Bowl is nearly empty!':'Bowl '+Math.round(S.water)+'% full','#35A9F0',S.water<25?'Needed':''],
     ['lamp','💡',S.lamp?'Lamp off':'Lamp on',S.lamp?'Warm and toasty':(S.warm<35?nm+' is chilly!':'Warm spot for basking'),'#FFB020',!S.lamp&&S.warm<35?'Needed':''],
-    ['treat','🐛','Treat','A wiggly waxworm. Just sometimes!','#FF8A3D',''],['mist','💦','Mist','A little rain shower','#5EC8F2',S.shed>0?'Helps shedding':''],
+    ['treat','🐛','Treat','A wiggly waxworm','#FF8A3D',''],['mist','💦','Mist','A little rain shower','#5EC8F2',S.shed>0?'Helps shedding':''],
     ['out','🚪',outside?'Send him home':'Open the door',outside?nm+' is out on the table':'Let '+nm+' out for a wander','#8B6CF0',outside?'Out!':''],
     ['call','📣','Call '+nm,'Come here, '+nm+'!','#FF5FA2',''],['vet','🩺','Vet check-up','Weigh in and health check','#3FCB7A','']],
   play:[['fetch','🎾','Fetch','Throw the ball, '+nm+' brings it back','#FF5FA2',''],['catch','🦗','Cricket catch',bestTxt('catch'),'#FF8A3D',''],['hide','🙈','Hide and seek','Find where '+nm+' is hiding','#8B6CF0',''],
@@ -1755,14 +1830,14 @@ function menuItems(tab){const nm=esc(S.name);return({
   tricks:[['spin','🌀','Spin',trickTxt('spin'),'#8B6CF0',''],['wave','👋','Wave',trickTxt('wave'),'#FF5FA2',''],['jump','🦘','Jump',trickTxt('jump'),'#3FCB7A','']],
   style:[['hats','🎩','Hats','Dress '+nm+' up','#8B6CF0',''],['colours','🎨','Design your gecko','Make your own colours and spots','#FFB020',''],['photo','📸','Take a photo','Say cheese!','#FF5FA2',''],['album','🖼️','Photo album','All your photos','#35A9F0','']],
   collect:[['journey','🏆',nm+"'s journey",'Stars, stickers and how big he is','#8B6CF0',''],
-    ['shop','🛍️','Shop','You have '+(S.coins||0)+' coins','#FFB020',''],['decorate','🪴','Decorate','Move things around the tank','#3FCB7A',''],
+    ['shop','🛍️','Shop','You have '+(S.coins||0)+' coins','#FFB020',''],['decorate','🪴','Decorate','Move things around the tank','#3FCB7A',''],['box','📦','Your box',((S.box||[]).length?(S.box.length+' thing'+(S.box.length===1?'':'s')+' put away'):'Nothing put away yet'),'#8B6CF0',''],
     ['stickers','📒','Sticker book',Object.keys(S.stickers||{}).length+' of '+STICKERS.length+' stickers','#FF5FA2',''],['fact','🧠','Gecko fact','Learn something new','#35A9F0',''],['settings','⚙️','Grown-ups','School mode, bedtime, sound','#9A8FB0','']]
 })[tab];}
 function drawMenu(){const tabs=$('#menuTabs');tabs.innerHTML='';TABS.forEach(([k,ic,lab,c])=>{const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',k===menuTab);b.style.setProperty('--tc',c);b.innerHTML='<b>'+ic+'</b>'+lab;b.onclick=()=>{menuTab=k;SFX.pop();drawMenu();};tabs.appendChild(b);});
   const box=$('#menuCards');box.innerHTML='';const items=menuItems(menuTab);items.forEach(([k,ic,t,sub,c,badge],i)=>{const b=document.createElement('button');b.className='card'+(items.length%2&&i===items.length-1?' wide':'');b.style.setProperty('--c',c);
     b.innerHTML='<span class="ic">'+ic+'</span><span><b>'+t+'</b><small>'+sub+'</small></span>'+(badge?'<span class="badge">'+badge+'</span>':'');b.onclick=()=>menuDo(k);box.appendChild(b);});box.scrollTop=0;}
 function menuDo(k){$('#more').hidden=true;
-  if(k==='tank')askMove();else if(k==='mist')mist();else if(k==='fetch')throwBall();else if(k==='hats'){drawHats();$('#hats').hidden=false;}else if(k==='photo')setTimeout(photo,150);else if(k==='colours')openPicker(false);else if(TRICKS[k])doTrick(k);else moreAction(k);}
+  if(k==='tank')askMove();else if(k==='mist')mist();else if(k==='fetch')throwBall();else if(k==='hats'){drawHats();$('#hats').hidden=false;}else if(k==='photo')setTimeout(photo,150);else if(k==='colours')openPicker(false);else if(k==='box')openBox();else if(TRICKS[k])doTrick(k);else moreAction(k);}
 $('#bMore').onclick=()=>{leaveGame();if(tankSmall()||S.water<25||(!S.lamp&&S.warm<35))menuTab='care';drawMenu();$('#more').hidden=false;};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{b.closest('.overlay').hidden=true;});
 ['more','hats','shop','stickers','album','settings','photo'].forEach(id=>{const o=document.getElementById(id);if(o)o.addEventListener('click',e=>{if(e.target===o)o.hidden=true;});});
@@ -1791,7 +1866,48 @@ $('#snd').textContent=S.sound?'🔊':'🔇';
 
 /* ---------- picker ---------- */
 let chosen=S.morph;
-function openPicker(first){$('#picker').hidden=false;$('#pTitle').textContent=first?'Pick your gecko':'Design your gecko';
+let picking=false,pickA=0,pickHome=null;
+/* the picker sits over the tank as a bottom sheet and the real gecko turns on the
+   spot above it, re-colouring as she taps. Picking colours blind was the problem. */
+function pickCam(dt){const p=G.root.position,k=growth();
+  pickA+=dt*.4;
+  /* far enough back that his whole length fits the window, worked out from how
+     big he actually is and how wide this screen is - a fixed distance frames a
+     hatchling and a grown-up completely differently */
+  const d=distFor(5.9*k*1.25);
+  camera.position.set(p.x+Math.sin(pickA)*d,p.y+d*.22,p.z+Math.cos(pickA)*d);
+  const sheet=$('#picker .sheet');
+  const win=sheet?sheet.getBoundingClientRect().top:innerHeight*.34;
+  aimAt(tmp.set(p.x,p.y+.5*k,p.z),(win*.5)/innerHeight);}
+/* Point the camera so that a world point lands at a chosen height on the screen
+   (0 = top, 1 = bottom). Worked out from the frustum rather than by nudging and
+   re-measuring, which converges on the wrong answer when the projection matrix
+   is a frame behind. */
+/* how far back you have to stand for `width` world units to span the screen */
+function distFor(width){return clamp(width/(2*Math.tan(camera.fov*Math.PI/360)*Math.max(.4,camera.aspect)),4,42);}
+const UPV=new THREE.Vector3(0,1,0),aimR=new THREE.Vector3(),aimF=new THREE.Vector3(),aimC=new THREE.Vector3();
+function aimAt(P,ny){
+  const C=camera.position;
+  aimF.copy(P).sub(C);const dist=aimF.length()||1;aimF.multiplyScalar(1/dist);
+  aimR.copy(aimF).cross(UPV);
+  if(aimR.lengthSq()<1e-6){look.copy(P);camera.lookAt(look);return;}
+  aimR.normalize();
+  const a=Math.atan((2*clamp(ny,0,1)-1)*Math.tan(camera.fov*Math.PI/360));
+  aimC.crossVectors(aimR,aimF);
+  look.copy(C).addScaledVector(aimF.multiplyScalar(Math.cos(a)).addScaledVector(aimC,Math.sin(a)),dist);
+  camera.lookAt(look);}
+function endPicking(){picking=false;$('#picker').hidden=true;document.body.classList.remove('designing');
+  if(pickHome){G.root.position.copy(pickHome.p);G.root.rotation.y=pickHome.r;
+    AI.inCave=pickHome.c;AI.inBed=pickHome.b;pickHome=null;}}
+function openPicker(first){picking=true;pickA=camA-.6;document.body.classList.add('designing');
+  G.root.visible=true;popT=10;if(hatch.egg)hatch.egg.visible=false;
+  /* stand him somewhere clear for the preview - asleep in his cave he is behind
+     a rock wall, and she would be colouring in a gecko she cannot see */
+  pickHome={p:G.root.position.clone(),r:G.root.rotation.y,c:AI.inCave,b:AI.inBed};
+  G.root.position.set(0,0,Z1*.34);G.root.rotation.y=.5;
+  AI.inCave=false;AI.inBed=false;AI.act=null;AI.route=null;AI.target=null;AI.v=0;
+  $('#pkTag').textContent=first?'Your egg will hatch into this one':'Tap a colour and watch him change';
+  $('#picker').hidden=false;$('#pTitle').textContent=first?'Pick your gecko':'Design your gecko';
   $('#pSub').textContent=first?'Choose a colour and a name, then hatch your egg!':'Make your own colours and spots, or pick a ready-made one.';
   $('#pGo').textContent=first?'Hatch my egg!':'Done';$('#pReset').hidden=first;$('#pReset').classList.remove('sure');$('#pReset').textContent='Start again with a new egg';$('#nameIn').value=S.name;chosen=S.morph;drawSwatches();}
 const SKIN_COLS=[0xF7963B,0xF4C542,0xEFE6D2,0x8FD9A8,0x7B6CF0,0xF07AA8,0xFF6F4D,0x5FC8FF,0xB6E24A,0xD9A3FF,0xFFFFFF,0x6E5B4A];
@@ -1808,9 +1924,26 @@ function drawMine(){const c=cust();
   if(chosen!=='custom')return;
   drawDots('#dotSkin',SKIN_COLS,'skin');drawDots('#dotBelly',BELLY_COLS,'belly');drawDots('#dotSpot',SPOT_COLS,'spot');
   const pr=$('#patRow');pr.innerHTML='';
-  PATTERNS.forEach(([id,lab])=>{const b=document.createElement('button');b.textContent=lab;
+  PATTERNS.forEach(([id,lab])=>{const b=document.createElement('button');
+    /* a word alone does not tell an eight year old what "Starry" looks like */
+    b.innerHTML='<i style="background-image:url('+patChip(id,c)+')"></i>'+lab;
     b.setAttribute('aria-pressed',String((c.pattern||'leopard')===id));
     b.onclick=()=>{c.pattern=id;applyMorph('custom');drawMine();SFX.pop();};pr.appendChild(b);});}
+/* a thumbnail of one pattern in her chosen colours, drawn the same way his skin is */
+function patChip(id,c){const N=44,cv=document.createElement('canvas');cv.width=cv.height=N;
+  const x=cv.getContext('2d');x.fillStyle=hex6(c.skin);x.fillRect(0,0,N,N);
+  x.fillStyle=hex6(c.spot);let sd=11;const rn=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+  if(id==='stripes'){for(let i=0;i<7;i++){const u=(i+.5)/7*N;x.save();x.translate(u,N/2);x.rotate((rn()-.5)*.35);
+    x.fillRect(-1.9,-N*.6,3.8,N*1.2);x.restore();}}
+  else if(id==='patches'){for(let i=0;i<5;i++){x.beginPath();
+    x.ellipse(rn()*N,rn()*N,5+rn()*4,4+rn()*3,rn()*3,0,7);x.fill();}}
+  else if(id==='galaxy'){for(let i=0;i<26;i++){x.globalAlpha=.4+rn()*.6;x.beginPath();
+    x.arc(rn()*N,rn()*N,.8+rn()*1.6,0,7);x.fill();}x.globalAlpha=1;
+    for(let i=0;i<3;i++){const u=rn()*N,v=rn()*N,r=4;x.beginPath();
+      for(let k=0;k<10;k++){const a=k/10*Math.PI*2-Math.PI/2,rr=k%2?r*.42:r;x.lineTo(u+Math.cos(a)*rr,v+Math.sin(a)*rr);}x.fill();}}
+  else if(id!=='plain'){for(let i=0;i<9;i++){x.beginPath();
+    x.ellipse(rn()*N,rn()*N,2.6+rn()*2,2.2+rn()*1.6,rn()*3,0,7);x.fill();}}
+  return cv.toDataURL();}
 function drawSwatches(){const box=$('#swatches');box.innerHTML='';
   const add=(k,m)=>{const b=document.createElement('button');b.className='sw';b.setAttribute('aria-pressed',k===chosen);
     b.innerHTML='<span style="--c:'+m.css+';--d:'+m.dcss+'"></span>'+m.label;
@@ -1822,7 +1955,7 @@ function drawSwatches(){const box=$('#swatches');box.innerHTML='';
   drawMine();}
 $('#mineGo').onclick=()=>{chosen='custom';applyMorph('custom');drawSwatches();drawMine();SFX.pop();
   $('#mine').scrollIntoView({behavior:'smooth',block:'nearest'});};
-$('#pGo').onclick=()=>{S.name=($('#nameIn').value.trim()||'Ziggy').slice(0,12);S.morph=chosen;applyMorph(chosen);$('#picker').hidden=true;
+$('#pGo').onclick=()=>{S.name=($('#nameIn').value.trim()||'Ziggy').slice(0,12);S.morph=chosen;applyMorph(chosen);endPicking();
   if(!S.hatched)startHatch();else{say('I love my new look!');startAct('happy',.8);SFX.chirp();}save();updateUI();};
 $('#pReset').onclick=()=>{const b=$('#pReset');if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Tap again to say goodbye to '+S.name;return;}
   hardReset();};
@@ -1870,7 +2003,13 @@ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted(
 function updateBubble(dt){if(bubbleTimer>0){bubbleTimer-=dt;if(bubbleTimer<=0)bubble.classList.remove('show');}
   if(!bubble.classList.contains('show'))return;
   if(hatch.active||!G.root.visible)tmp2.set(0,1.8,1);else{G.head.getWorldPosition(tmp2);tmp2.y+=.75*growth();}
-  tmp2.project(camera);bubble.style.left=((tmp2.x+1)/2*innerWidth)+'px';bubble.style.top=((1-tmp2.y)/2*innerHeight)+'px';}
+  tmp2.project(camera);
+  /* keep what he says clear of the card at the top and the buttons at the
+     bottom - it is no use if it is behind them */
+  const hud=$('.hudCard'),top=(hud&&!document.body.classList.contains('watching')?hud.getBoundingClientRect().bottom:0)+58;
+  const bot=innerHeight-104;
+  bubble.style.left=clamp((tmp2.x+1)/2*innerWidth,72,innerWidth-72)+'px';
+  bubble.style.top=clamp((1-tmp2.y)/2*innerHeight,top,bot)+'px';}
 
 /* ================= EXTRAS ================= */
 const todayKey=()=>new Date().toDateString();
@@ -2045,6 +2184,30 @@ function eatTreat(){if(!treat)return;scene.remove(treat.g);treat=null;startAct('
   if(S.treatCount>3){S.chubby=Math.min(1,S.chubby+.25);setTimeout(()=>say(S.chubby>.5?"Oof, I'm getting a bit chubby!":'Treats are for sometimes!',3),2300);}
   else setTimeout(()=>say(pick(['Best. Treat. Ever!','Yum yum yum!','Happy dance!']),2.2),500);save();updateUI();}
 
+/* ---------- a close-up of him using a toy ----------
+   Watching him crawl through the tunnel from across the room is no fun; this
+   drops the camera right down next to him for a few seconds and gets the UI
+   out of the way, then hands the tank back. */
+let closeUp=null;
+function startWatch(){if(!toyUse||toyT<=0||game||closeUp)return;
+  /* start down the toy's own axis, so a tunnel is seen end-on and he comes at you */
+  const ry=(toyUse.userData.r||0);
+  closeUp={t:0,dur:11,ang:ry+Math.PI/2+.45};document.body.classList.add('watching');
+  $('#watchChip').hidden=true;SFX.pop();}
+function stopWatch(){if(!closeUp)return;closeUp=null;document.body.classList.remove('watching');}
+function closeUpCam(dt){
+  const p=G.root.position,k=growth(),e=Math.min(1,closeUp.t/2.2);
+  closeUp.ang+=dt*.2;
+  /* wide enough to take in him AND the toy, drifting in a little so it reads as
+     a shot rather than a snap, and down at his level rather than looking in from
+     across the room */
+  /* framed on how wide he is, not how long. A phone held upright is narrow, so
+     a shot that fits his whole length is further away than the ordinary view -
+     the close angle has to look ALONG the tunnel, down its length. */
+  const dist=distFor(2.37*k*(1.95-.45*e)), hi=p.y+(.75+.45*(1-e))*k;
+  camera.position.set(p.x+Math.sin(closeUp.ang)*dist,hi,p.z+Math.cos(closeUp.ang)*dist);
+  aimAt(tmp.set(p.x,p.y+.45*k,p.z),.44);}
+$('#watchChip').onclick=startWatch;
 /* ---------- 3D opening cinematic ---------- */
 let cine=null;
 const CINE_SHOTS=[4.0,3.8,4.0,3.0];
@@ -2102,8 +2265,13 @@ function cineCam(){
   camera.lookAt(look);}
 
 /* ---------- a door in the side of the tank ---------- */
-const DOOR_IN =new THREE.Vector3(BX-.35,0,DOOR.z+DOOR.w/2);
-const DOOR_OUT=new THREE.Vector3(TABLE.x0+.55,TABLE.y,DOOR.z+DOOR.w/2);
+/* The door group's origin is its hinge, so the middle of the opening is DOOR.z,
+   not DOOR.z+w/2. He was going through at the very edge of the frame and the
+   ramp was built out there with him - half a door width off, and three units of
+   it once the grown-up door got wider. */
+const DOOR_MID=DOOR.z;
+const DOOR_IN =new THREE.Vector3(BX-.35,0,DOOR_MID);
+const DOOR_OUT=new THREE.Vector3(TABLE.x0+.7,TABLE.y,DOOR_MID);
 (function buildDoor(){
   doorG=new THREE.Group();doorG.position.set(DOOR.x,0,DOOR.z+DOOR.w/2);scene.add(doorG);
   const glass=MP(0xBFE9FA,{transparent:true,opacity:.34,roughness:.04,clearcoat:1,side:THREE.DoubleSide});
@@ -2116,9 +2284,20 @@ const DOOR_OUT=new THREE.Vector3(TABLE.x0+.55,TABLE.y,DOOR.z+DOOR.w/2);
   const knob=new THREE.Mesh(new THREE.SphereGeometry(.11,14,10),M(0xFFC53D,{metalness:.55,roughness:.3}));
   knob.position.set(.12,DOOR.h*.5,-DOOR.w+.22);doorG.add(knob);
   doorG.traverse(o=>{if(o.isMesh)o.userData.kind='door';});
-  const st=new THREE.Mesh(new THREE.BoxGeometry(1.5,.16,DOOR.w-.3),M(0xC98F5D,{roughness:.7}));
-  st.position.set(TABLE.x0-.25,TABLE.y+.42,DOOR.z+DOOR.w/2);st.rotation.z=-.42;
+  /* a ramp that meets both ends: the sand at the sill and the table top, lined
+     up on the middle of the opening and as wide as it */
+  const ax=TANK.w/2-.2,ay=.03,bx=TABLE.x0+.95,by=TABLE.y+.12;
+  const rdx=bx-ax,rdy=by-ay,RL=Math.hypot(rdx,rdy),RA=Math.atan2(rdy,rdx),RW=DOOR.w-.5;
+  const st=new THREE.Mesh(new THREE.BoxGeometry(RL,.16,RW),M(0xC98F5D,{roughness:.7}));
+  st.position.set((ax+bx)/2,(ay+by)/2,DOOR_MID);st.rotation.z=RA;
   st.castShadow=st.receiveShadow=true;scene.add(st);
+  /* slats and low rails, so it reads as a walkway rather than a floating plank */
+  for(let i=1;i<5;i++){const u=i/5;
+    const sl=new THREE.Mesh(new THREE.BoxGeometry(.1,.07,RW),M(0xA9743F,{roughness:.85}));
+    sl.position.set(ax+rdx*u,ay+rdy*u+.11,DOOR_MID);sl.rotation.z=RA;scene.add(sl);}
+  for(const sd of[-1,1]){const rl=new THREE.Mesh(new THREE.BoxGeometry(RL,.13,.14),M(0xA9743F,{roughness:.85}));
+    rl.position.set((ax+bx)/2,(ay+by)/2+.1,DOOR_MID+sd*RW/2);rl.rotation.z=RA;
+    rl.castShadow=true;scene.add(rl);}
 })();
 function outBar(on){$('#outBar').hidden=!on;}
 function letOut(){
@@ -2524,13 +2703,47 @@ const decorGroups=[];let decorating=false,sel=-1,dragging=false,dragMoved=false,
 function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;toyUse=null;toyPick=null;
   S.decor.forEach(d=>{if(d.t==='wheel')d.t='tunnel';const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;});
   S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;g.userData.r=d.r||0;scene.add(g);decorGroups.push(g);});try{sizeToys();}catch(e){}}
-function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or tap to turn':'Tap to pick'):'Visit the Shop!';$('#dbRemove').hidden=sel<0;}
+function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or tap to turn':'Tap to pick'):'Visit the Shop!';
+  $('#dbRemove').hidden=sel<0;
+  const n=(S.box||[]).length;const bb=$('#dbBox');bb.hidden=!n;if(n)bb.textContent='\uD83D\uDCE6 Box ('+n+')';}
 function startDecorate(i){if(game)endGame(true);decorating=true;sel=(i===undefined)?-1:i;$('#decoBar').hidden=false;updDecoBar();}
 function stopDecorate(){decorating=false;sel=-1;$('#decoBar').hidden=true;sizeToys();save();}
 $('#dbDone').onclick=stopDecorate;
 $('#tkClaim').onclick=claimTasks;
 $('#obHome').onclick=sendHome;
-$('#dbRemove').onclick=()=>{if(sel<0)return;S.decor.splice(sel,1);sel=-1;buildDecor();updDecoBar();SFX.pop();save();};
+$('#dbRemove').onclick=()=>{if(sel<0)return;putAway(sel);sel=-1;updDecoBar();};
+/* Things she buys are hers. Putting one away keeps it in a box she can take it
+   out of again, instead of throwing away what she spent her coins on. */
+function putAway(i){const d=S.decor[i];if(!d)return;
+  S.decor.splice(i,1);(S.box||(S.box=[])).push(d.t);
+  if(toyUse&&toyUse.userData&&toyUse.userData.idx===i)toyT=0;
+  buildDecor();SFX.pop();save();updDecoBar();
+  const it=SHOP.find(x=>x.id===d.t);
+  toast((it?it.name:'It')+' is in your box \uD83D\uDCE6 — take it out whenever you like.');}
+function takeOut(i){const box=S.box||[];const id=box[i];if(!id)return;
+  box.splice(i,1);
+  const q=outside?decorSpot((TABLE.x0+TABLE.x1)/2+rand(-1.2,1.2),rand(TABLE.z0+1,TABLE.z1-1),id,0)
+                 :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),id,0);
+  S.decor.push({t:id,x:q.x,z:q.z,r:0});buildDecor();SFX.yay();save();
+  startDecorate(S.decor.length-1);
+  toast('Drag it wherever you like!');}
+function openBox(){const box=S.box||[];
+  if(!box.length){toast('Your box is empty. Tap something in the tank to put it away.');return;}
+  $('#cExtra').innerHTML='<div class="tiles">'+box.map((id,i)=>{
+    const it=SHOP.find(x=>x.id===id)||{ic:'\uD83E\uDEB4',name:id};
+    return '<button class="tile" data-i="'+i+'"><i>'+it.ic+'</i>'+esc(it.name)+'<small>Put back</small></button>';}).join('')+'</div>';
+  openCard('\uD83D\uDCE6','Your box','Tap something to put it back in the tank.',true);
+  $('#cExtra').querySelectorAll('.tile').forEach(b=>b.onclick=()=>{
+    $('#card').hidden=true;cardClose=null;takeOut(+b.dataset.i);});}
+/* tapping a decoration, any time - she should not have to find a mode first */
+function decorMenu(i){const d=S.decor[i];if(!d)return;
+  const it=SHOP.find(x=>x.id===d.t)||{ic:'\uD83E\uDEB4',name:'This'};
+  $('#cExtra').innerHTML='<button class="again half" id="dmPut">\uD83D\uDCE6 Put away</button>'+
+    '<button class="again half" id="dmMove" style="background:#35A9F0;box-shadow:0 6px 0 #1A74B0">\u270B Move it</button>';
+  openCard(it.ic,esc(it.name),'Put it in your box to use again later, or move it somewhere else.',true);
+  $('#dmPut').onclick=()=>{$('#card').hidden=true;cardClose=null;putAway(i);};
+  $('#dmMove').onclick=()=>{$('#card').hidden=true;cardClose=null;startDecorate(i);};}
+$('#dbBox').onclick=openBox;
 
 /* ---------- photo album ---------- */
 const PHOTO_KEY='gecko-photos-v7';
@@ -2712,6 +2925,8 @@ function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(deco
   const lb=scene.getObjectByName('ledgeBody'),rp=scene.getObjectByName('rampPlank'),tb=scene.getObjectByName('sideboardTop');
   if(lb)a.push(lb);if(rp)a.push(rp);if(outside&&tb)a.push(tb);if(present)a.push(present);if(game&&game.def.hits)a.push.apply(a,game.def.hits(game));return a;}
 function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(game&&game.kind==='hide')return true;
+  /* he is on a toy and she taps that toy: she wants to see it properly */
+  if(toyUse&&toyT>0&&!game&&!decorating&&h.kind==='decor'&&h.obj===toyUse){startWatch();return true;}
   if(h.kind==='door'){outside?sendHome():letOut();return true;}
   if(h.kind==='present'){openPresent();return true;}if(h.kind==='lamp'){toggleLamp();return true;}if(h.kind==='bowl'){refill();return true;}
   /* he is out on the table and she taps his cage: that means come home */
@@ -2724,8 +2939,11 @@ function extTap(h){if(game&&game.def.tap&&game.def.tap(game,h))return true;if(ga
       say(pick(['To my cave!','Off to hide!','Cosy time!']),2);}
     return true;}
   if(h.kind==='table'){if(outside)callTo(h.point);return true;}
+  /* tap something you put in the tank and you get to move it or box it again */
+  if(h.kind==='decor'&&!decorating&&!game&&h.obj&&h.obj.userData.idx>=0){decorMenu(h.obj.userData.idx);return true;}
   if(h.kind==='sand'||h.kind==='decor'||h.kind==='ledge'){if(decorating){sel=-1;updDecoBar();}else callTo(h.point);return true;}return false;}
-function extDown(e){if(game&&game.def.down)return game.def.down(game,e);
+function extDown(e){if(closeUp){stopWatch();return true;}
+  if(game&&game.def.down)return game.def.down(game,e);
   if(!game&&!decorating&&ball&&ball.state==='ready'){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='ball'){ball.state='held';ball.samples=[];const p=groundPoint(e);if(p)ball.samples.push({x:p.x,z:p.z,t:performance.now()});ball.moved=0;return true;}}
   if(decorating){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='decor'){const i=h.obj.userData.idx;wasSel=(sel===i);sel=i;dragging=true;dragMoved=false;updDecoBar();return true;}}return false;}
 function extMove(e){if(game&&game.def.move)return game.def.move(game,e);
