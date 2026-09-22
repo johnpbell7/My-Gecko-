@@ -589,7 +589,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='21';
+const BUILD='22';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -2688,7 +2688,15 @@ function makeBday(){const g=new THREE.Group();const cake=new THREE.Group();cake.
 function showBday(on){if(on&&!bday){bday=makeBday();scene.add(bday);}if(!on&&bday){scene.remove(bday);bday=null;}}
 function birthday(dn){showBday(true);earn(10);award('bday');const w=dn/7;setTimeout(()=>{SFX.yay();for(let i=0;i<5;i++)setTimeout(()=>burst(pick(['🎉','🎊','🎈']),tmp.set(look.x+rand(-2,2),2.4,1),4,{size:.45}),i*300);
   openCard('🎂','Happy week-birthday!',S.name+' is '+w+' week'+(w>1?'s':'')+' old today! Here are 10 birthday coins.');},900);}
-function checkDaily(){if(!S.hatched||hatch.active||cine)return;const td=todayKey();
+/* Anything that opens a card on a timer has to wait its turn. A present landing
+   on top of her open box wipes the box out from under her finger - and the same
+   goes for a game result, the shop, or the picker. It will still be there in
+   thirty seconds. */
+function uiBusy(){
+  return !$('#card').hidden||!$('#picker').hidden||!$('#more').hidden||!$('#shop').hidden
+    ||!$('#stickers').hidden||!$('#photo').hidden||!$('#album').hidden
+    ||!!game||!!closeUp||picking||decorating||!$('#timeBar').hidden;}
+function checkDaily(){if(!S.hatched||hatch.active||cine||uiBusy())return;const td=todayKey();
   if(S.lastDay!==td){const y=new Date(Date.now()-864e5).toDateString();S.streak=(S.lastDay===y)?S.streak+1:1;S.lastDay=td;if(S.streak>=7)award('streak');save();}
   if(S.presentDay!==td&&!present)spawnPresent();
   const dn=Math.floor(ageDays())+1;if(dn%7===0){if(S.bdayDay!==td){S.bdayDay=td;birthday(dn);}else showBday(true);}else showBday(false);}
@@ -3355,6 +3363,7 @@ function welcomeBack(){
   if(grew){
     setTimeout(()=>playGrowth(was,now),900);
     setTimeout(()=>{
+      if(uiBusy()){S.seenGrowth=was;save();return;}   /* tell her next time round */
       $('#cExtra').innerHTML='<div class="grow"><b>Baby</b><span><i></i></span><b>Grown-up</b></div>';
       openCard('📏',S.name+' has grown!',
         S.name+' got bigger while you were away! He is a '+stageName().toLowerCase()+' now, on day '+(Math.floor(ageDays())+1)+'.',true);
