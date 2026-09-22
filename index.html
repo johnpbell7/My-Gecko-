@@ -586,7 +586,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='18';
+const BUILD='19';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -1206,7 +1206,7 @@ function onTable(x,z){return !inTank(x,z===undefined?0:z);}
 /* half the footprint of the big toys, in toy units. They grow with him, so a
    tunnel that fits the sand on day 7 would be hanging through the glass on day
    25 unless the room it needs is worked out fresh each time. */
-const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.4,z:1.45},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
+const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.4,z:1.6},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
 function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
   const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
   return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
@@ -2283,9 +2283,14 @@ function eatTreat(){if(!treat)return;scene.remove(treat.g);treat=null;startAct('
    out of the way, then hands the tank back. */
 let closeUp=null;
 function startWatch(){if(!toyUse||toyT<=0||game||closeUp)return;
-  /* start down the toy's own axis, so a tunnel is seen end-on and he comes at you */
+  /* Down the toy's own axis, so a tunnel is seen end-on and he comes at you -
+     but from whichever end is nearer the front of the tank, and never further
+     round than the front quarter. Behind him is the back wall, and beside him
+     is whatever else is in the tank. */
   const ry=(toyUse.userData.r||0);
-  closeUp={t:0,dur:11,ang:ry+Math.PI/2+.45};document.body.classList.add('watching');
+  let a=Math.atan2(Math.sin(ry+Math.PI/2),Math.cos(ry+Math.PI/2));
+  if(Math.abs(a)>Math.PI/2)a=Math.atan2(Math.sin(a+Math.PI),Math.cos(a+Math.PI));
+  closeUp={t:0,dur:11,ang:clamp(a,-1.15,1.15)};document.body.classList.add('watching');
   $('#watchChip').hidden=true;SFX.pop();}
 function stopWatch(){if(!closeUp)return;closeUp=null;document.body.classList.remove('watching');}
 function closeUpCam(dt){
@@ -2710,7 +2715,7 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
       rand(.09,.17),rand(.05,.1),rand(.09,.17),rand(-W2/2+.5,W2/2-.5),.58,rand(-D2/2+.5,D2/2-.5),g);
     g.userData.toy='digbox';g.userData.mount='digbox';g.userData.app={x:0,z:D2/2+1.5};}
   else if(t==='hammock'){const rope=M(0xE8DCC2,{roughness:.9});
-    const SP=3.2,TOP=2.6,LEN=5.4,BR=1.35;
+    const SP=3.2,TOP=2.7,LEN=5.4,BR=1.5;
     for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.14,.2,TOP,10),M(0x8A5A33,{roughness:.85}));
       po.position.set(sd*SP,TOP/2,0);po.castShadow=true;g.add(po);
       const ft=new THREE.Mesh(new THREE.CylinderGeometry(.34,.4,.16,12),M(0x8A5A33,{roughness:.85}));
@@ -2719,9 +2724,9 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
     const bed=new THREE.Mesh(new THREE.CylinderGeometry(BR,BR,LEN,22,1,true,Math.PI,Math.PI),
       M(0x5FC8FF,{roughness:.85,side:THREE.DoubleSide}));
     bed.rotation.set(0,0,Math.PI/2);bed.receiveShadow=true;
-    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.42;sling.position.y=1.62;g.add(sling);
+    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.55;sling.position.y=1.88;g.add(sling);
     for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,6),rope);
-      r.position.set(sd*2.9,2.1,0);r.rotation.z=sd*.52;g.add(r);}
+      r.position.set(sd*2.92,2.28,0);r.rotation.z=sd*.52;g.add(r);}
     g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.6};}
   else if(t==='mirror'){const fr=M(0xFF6FAE,{roughness:.5});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
