@@ -656,6 +656,11 @@ const SB_W=TANK.w+17,SB_D=TANK.d+7,SB_Z=2.6;
 const KC=TL>1?1.55:1;   /* the cave grows with the tank, uniformly so it stays round */
 const CAVE={x:-4.55*KX,z:-.45*KZ,rOut:1.62*KC,rIn:1.2*KC,mouth:.82,h:1.15*KC};
 const plants=[];
+/* Declared up here because obstacles() reads them, and obstacles() is called
+   while the tank is still being built - a const declared further down is not
+   just undefined at that point, it throws. */
+const decorGroups=[];
+let want=null,wantT=6,caveT=0,toyT=0,toyPick=null,toyUse=null;
 function srnd(seed){let sd=seed||1;return()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};}
 function rockGeo(r,seed){const g=new THREE.SphereGeometry(r,40,28);const p=g.attributes.position,rn=srnd(seed),bumps=[];for(let i=0;i<8;i++)bumps.push([new THREE.Vector3(rn()-.5,rn()-.5,rn()-.5).normalize(),rn()*.28+.06]);
   const v=new THREE.Vector3(),n=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);n.copy(v).normalize();let d=1;for(const[b,a]of bumps)d+=a*Math.pow(Math.max(0,n.dot(b)),3);
@@ -2651,7 +2656,6 @@ function updateTrip(dt){
     const a=trip.phase==='through'?DOOR_IN:DOOR_OUT;p.copy(a);}
 }
 /* ---------- idle wants: basking & drinking ---------- */
-let want=null,wantT=6,caveT=0,toyT=0,toyPick=null,toyUse=null;
 const caveSpot=new THREE.Vector3();
 const CAVE_PORCH=new THREE.Vector3(CAVE.x,0,CAVE.z+CAVE.rOut+.62);
 const CAVE_MID  =new THREE.Vector3(CAVE.x,0,CAVE.z+.18);
@@ -3020,7 +3024,7 @@ function buy(it){const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);
       :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),it.id,0);S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);
     tada(q.x,q.z,'NEW!');toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
   else{S.owned[it.id]=true;if(it.type==='bg')setBg(it.id);else{wearHat(it.id);award('hat');$('#shop').hidden=true;showOff(pick(['Brand new!','Look at me!','I love it!']));}drawShop();}save();}
-const decorGroups=[];let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
+let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
 function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;toyUse=null;toyPick=null;noticed=null;
   S.decor.forEach(d=>{if(d.t==='wheel')d.t='tunnel';const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;});
   S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;g.userData.r=d.r||0;g.userData.t0=d.t;scene.add(g);decorGroups.push(g);});try{sizeToys();}catch(e){}}
