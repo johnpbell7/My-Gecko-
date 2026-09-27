@@ -283,15 +283,18 @@ canvas{position:fixed;inset:0;display:block}
 #gbStop:active{transform:translateY(3px);box-shadow:none}
 .bar button.alt{background:var(--shade);color:var(--ink)}
 #dbDone{background:#3FCB7A}
-#tourBar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 108px);transform:translateX(-50%);
+/* clear of the watch chip and the toast, which both live at 104px - and the
+   card itself lets taps through, or an instruction telling her to tap the sand
+   would be sitting on top of the sand */
+#tourBar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 168px);transform:translateX(-50%);
   width:min(420px,92vw);box-sizing:border-box;background:var(--paper);border-radius:22px;padding:13px 16px 12px;
-  box-shadow:var(--sh-1);z-index:8;text-align:center;animation:sheetUp .3s}
+  box-shadow:var(--sh-1);z-index:8;text-align:center;animation:sheetUp .3s;pointer-events:none}
 #tourBar[hidden]{display:none}
 #tourStep{display:block;font:800 11px var(--font);letter-spacing:.1em;text-transform:uppercase;
   color:rgba(43,29,58,.45);margin-bottom:3px}
 #tourText{margin:0 0 10px;font:400 20px var(--display);color:var(--ink);line-height:1.25}
 #tourSkip{border:0;border-radius:999px;background:var(--shade);color:var(--ink);
-  font:800 14px var(--font);padding:8px 18px;cursor:pointer}
+  font:800 14px var(--font);padding:8px 18px;cursor:pointer;pointer-events:auto}
 #saysBar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translateX(-50%);
   width:min(430px,94vw);box-sizing:border-box;display:flex;gap:10px;padding:0 10px;z-index:8;animation:sheetUp .3s}
 #saysBar[hidden]{display:none}
