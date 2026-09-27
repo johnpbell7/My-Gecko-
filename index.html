@@ -589,7 +589,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='22';
+const BUILD='23';
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -835,10 +835,11 @@ const ROOM={bulbs:[],glows:[],win:null,dayT:null,nightT:null};
   const lid=new THREE.Mesh(new THREE.CylinderGeometry(.53,.53,.16,24),M(0x3FCB7A));lid.position.set(W/2+1.6,topY+1.07,1);scene.add(lid);
   const lab=canvasTex(256,128,(x,w,h)=>{x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#2B1D3A';x.font='400 44px "Lilita One","Nunito",sans-serif';x.textAlign='center';x.fillText('CRICKETS',w/2,78);});
   const jl=new THREE.Mesh(new THREE.CylinderGeometry(.505,.505,.4,24,1,true,-.8,1.6),M(0xffffff,{map:lab}));jl.position.copy(jar.position);scene.add(jl);
-  const lampBase=new THREE.Mesh(new THREE.CylinderGeometry(.5,.6,.2,24),M(0xFFC53D,{roughness:.4}));lampBase.position.set(-W/2-2,topY+.1,.4);scene.add(lampBase);
-  const lampArm=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.4,10),M(0xFFC53D,{roughness:.4}));lampArm.position.set(-W/2-2,topY+1.3,.4);scene.add(lampArm);
-  const shade=new THREE.Mesh(new THREE.ConeGeometry(.75,.9,24,1,true),M(0xFF8FB8,{side:THREE.DoubleSide,roughness:.6}));shade.position.set(-W/2-2,topY+2.7,.4);scene.add(shade);
-  const glowB=new THREE.Mesh(new THREE.SphereGeometry(.22,16,12),new THREE.MeshStandardMaterial({color:0xfff2c0,emissive:0xffcf70,emissiveIntensity:.2}));glowB.position.set(-W/2-2,topY+2.45,.4);scene.add(glowB);ROOM.bulbs.push(glowB);
+  const LS=1.9;   /* the tank grew; the lamp beside it did not */
+  const lampBase=new THREE.Mesh(new THREE.CylinderGeometry(.5*LS,.6*LS,.2*LS,24),M(0xFFC53D,{roughness:.4}));lampBase.position.set(-W/2-3.1,topY+.1*LS,.4);scene.add(lampBase);
+  const lampArm=new THREE.Mesh(new THREE.CylinderGeometry(.07*LS,.07*LS,2.4*LS,10),M(0xFFC53D,{roughness:.4}));lampArm.position.set(-W/2-3.1,topY+1.3*LS,.4);scene.add(lampArm);
+  const shade=new THREE.Mesh(new THREE.ConeGeometry(.75*LS,.9*LS,24,1,true),M(0xFF8FB8,{side:THREE.DoubleSide,roughness:.6}));shade.position.set(-W/2-3.1,topY+2.7*LS,.4);scene.add(shade);
+  const glowB=new THREE.Mesh(new THREE.SphereGeometry(.22*LS,16,12),new THREE.MeshStandardMaterial({color:0xfff2c0,emissive:0xffcf70,emissiveIntensity:.2}));glowB.position.set(-W/2-3.1,topY+2.45*LS,.4);scene.add(glowB);ROOM.bulbs.push(glowB);
   const deskLight=new THREE.PointLight(0xffc27a,0,9);deskLight.position.copy(glowB.position);scene.add(deskLight);ROOM.desk=deskLight;
   const frame=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.6,.12),M(0x8B6CF0));frame.position.set(W/2+3.6,topY+.8,-1.2);frame.rotation.set(-.15,-.35,0);scene.add(frame);
   const ph=new THREE.Mesh(new THREE.PlaneGeometry(1,1.3),M(0xffffff,{map:canvasTex(128,160,(x,w,h)=>{x.fillStyle='#9BE3FF';x.fillRect(0,0,w,h);x.fillStyle='#F7963B';x.beginPath();x.ellipse(64,100,30,22,0,0,7);x.fill();x.beginPath();x.arc(64,70,22,0,7);x.fill();x.fillStyle='#1B1420';x.beginPath();x.arc(55,66,5,0,7);x.arc(73,66,5,0,7);x.fill();})}));ph.position.set(0,0,.07);frame.add(ph);
@@ -869,7 +870,7 @@ const DOOR={x:TANK.w/2,z:1.15,w:4.0*KZ,h:2.6};
 const TABLE={x0:-SB_W/2+.8,x1:SB_W/2-.8,z0:SB_Z-SB_D/2+.8,z1:SB_Z+SB_D/2-.8,y:-0.95};
 const TANKF={x0:-TANK.w/2-.45,x1:TANK.w/2+.45,z0:-TANK.d/2-.9,z1:TANK.d/2+.45};
 const TABLE_OBS=[{x:TANK.w/2+1.6,z:1,r:.66},{x:TANK.w/2+3.6,z:-1.2,r:.8},
-  {x:-TANK.w/2-2,z:.4,r:.8}];
+  {x:-TANK.w/2-3.1,z:.4,r:1.25}];
 /* the front apron, which is where he goes round */
 const FRONT_Z=(TANKF.z1+TABLE.z1)/2;
 function inTank(x,z){return x>TANKF.x0&&x<TANKF.x1&&z>TANKF.z0&&z<TANKF.z1;}
@@ -893,19 +894,34 @@ function groundY(x,z){
   if(inRect(RAMP,x,z))return LEDGE_H*clamp(1-(x-RAMP.x0)/(RAMP.x1-RAMP.x0),0,1);
   return 0;}
 function onHigh(p){return p.y>LEDGE_H*.5;}
-function toyTarget(){const list=toyList();
+function toyTarget(){const list=playList();
   if(!list.length){want=null;return null;}
   if(!toyPick||list.indexOf(toyPick)<0)toyPick=pick(list);
   /* each toy says where you get on it - the mouth of the tunnel, the low side of
      the hammock - so he walks to a spot he can actually climb in from */
   const tp=toyPick.position,k=growth(),ry=toyPick.userData.r||0;
-  const a=toyPick.userData.app||{x:0,z:.8},ca=Math.cos(ry),sa=Math.sin(ry);
+  const pl=PLAY[toyPick.userData.t0];
+  const a=toyPick.userData.app||{x:0,z:(pl?pl.z:.8)},ca=Math.cos(ry),sa=Math.sin(ry);
   const q=new THREE.Vector3(tp.x+(a.x*ca+a.z*sa)*k,0,tp.z+(-a.x*sa+a.z*ca)*k);
   const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;q.y=groundY(q.x,q.z);
   return{pos:q,kind:'toy',reach:.45*k+.2,speed:1.05,
-    arrive(){want=null;toyT=rand(13,22);toyUse=toyPick;rideT=0;bumpCount('toy');award('toy');
-      S.fun=clamp(S.fun+10,0,100);SFX.chirp();startAct('happy',.8);
-      say(pick(['My favourite!','This is fun!','Wheee!','Watch this!']),2.6);}};}
+    arrive(){want=null;bumpCount('toy');award('toy');
+      S.fun=clamp(S.fun+10,0,100);SFX.chirp();
+      const p2=PLAY[toyPick.userData.t0];
+      if(toyPick.userData.mount){toyT=rand(13,22);toyUse=toyPick;rideT=0;
+        startAct('happy',.8);say(pick(['My favourite!','This is fun!','Wheee!','Watch this!']),2.6);}
+      else if(p2){
+        /* not something to climb into - something to go and have a go at */
+        toyT=rand(4,7);toyUse=null;
+        /* face it, then do its own thing */
+        const tp2=toyPick.position,q2=G.root.position;
+        tmp2.set(tp2.x-q2.x,0,tp2.z-q2.z);
+        G.root.rotation.y=Math.atan2(tmp2.x,tmp2.z);
+        startAct(p2.act,p2.act==='stalk'?1.2:p2.act==='bask'?2.4:1.1);
+        say(pick(p2.say),2.8);
+        G.head.getWorldPosition(tmp2);
+        burst(p2.act==='jump'?'\u2b50':p2.act==='spin'?'\u2728':'\uD83D\uDC96',tmp2,5,{size:.34,speed:.9});}
+      else{toyT=rand(9,15);toyUse=toyPick;rideT=0;startAct('happy',.8);}}};}
 let rideT=0,digT=0;
 /* riding a toy: while he is on one the toy owns where he is, so he really is
    inside the tunnel or lying in the hammock instead of standing beside it */
@@ -925,18 +941,42 @@ function rideToy(dt){
     G.root.rotation.y=ry+face;};
   if(m==='tunnel'){const span=4.4,per=8.4,u=(rideT%per)/per,fwd=u<.5,t2=fwd?u*2:1-(u-.5)*2;
     put(-span+t2*span*2,0,0,fwd?Math.PI/2:-Math.PI/2);G.root.rotation.z=0;return 'walk';}
-  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.1+Math.sin(rideT*1.5)*.12,0,Math.PI/2);
+  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.06+Math.sin(rideT*1.5)*.12,0,Math.PI/2);
     G.root.rotation.z=Math.sin(rideT*1.5)*.16;return 'rest';}
   if(m==='digbox'){const s2=Math.min(1,rideT/2.4);
-    put(Math.sin(rideT*.8)*.55,.62-s2*.66,Math.cos(rideT*.55)*.45,Math.sin(rideT*.4)*1.3);
+    /* a dip, not a burial - sunk to the rim he just looked like a flat smear
+       lying inside a box */
+    put(Math.sin(rideT*.8)*.5,.66-s2*.26+Math.sin(rideT*4.2)*.045,Math.cos(rideT*.55)*.4,Math.sin(rideT*.4)*1.3);
     G.root.rotation.z=0;
     digT-=dt;if(digT<=0){digT=rand(.45,1.0);
       burst('💨',tmp.copy(G.root.position).setY(g.position.y+.75*k),3,{size:.3*k,speed:.8,life:.6});}
     return 'walk';}
-  if(m==='mirror'){put(0,0,1.5,Math.PI);G.root.rotation.z=0;
+  /* he is nearly three units from nose to middle, so standing a unit and a half
+     away put his face through the glass */
+  if(m==='mirror'){put(0,0,3.5,Math.PI);G.root.rotation.z=0;
     if(!AI.act&&Math.random()<dt*.35)startAct(pick(['wave','happy','spin']),.9);
     return 'rest';}
   return null;}
+/* Four things were toys and the other seventeen were scenery he ignored. Now
+   everything she buys is something he goes and does something at - each with
+   its own little routine, so a castle is not a cactus is not a pond. */
+const PLAY={
+  cactus  :{act:'lick',  z:1.5,say:['Careful, spiky!','Mmm, prickly.']},
+  mushroom:{act:'lick',  z:1.2,say:['Sniff sniff!','Funny mushrooms!']},
+  flowers :{act:'lick',  z:1.3,say:['They smell lovely!','Pretty flowers!']},
+  crystal :{act:'wave',  z:1.3,say:['So sparkly!','Look how it shines!']},
+  shell   :{act:'lick',  z:1.1,say:['A seaside shell!','Listen to this!']},
+  castle  :{act:'jump',  z:1.7,say:['I am king of the castle!','My castle!']},
+  rainbow :{act:'spin',  z:1.8,say:['Under the rainbow!','All the colours!']},
+  pebbles :{act:'lick',  z:1.1,say:['Nice smooth stones.','Pebble patrol!']},
+  bones   :{act:'stalk', z:1.4,say:['Dinosaur bones!','Was this a T-rex?']},
+  ferns   :{act:'lick',  z:1.3,say:['Cool and shady!','Good hiding leaves.']},
+  pond    :{act:'drink', z:1.4,say:['A drink from my pond!','Splish splash!']},
+  lantern :{act:'bask',  z:1.4,say:['Warm and glowy.','Cosy light!']},
+  treasure:{act:'jump',  z:1.5,say:['Treasure!','Gold coins!']}};
+function playList(){const out=[];for(const g of decorGroups)
+  if(g.userData&&(g.userData.toy||PLAY[g.userData.t0])&&onTable(g.position.x,g.position.z)===!!outside)out.push(g);
+  return out;}
 function toyList(){const out=[];for(const g of decorGroups)
   if(g.userData&&g.userData.toy&&onTable(g.position.x,g.position.z)===!!outside)out.push(g);return out;}
 /* a wheel sized for a hatchling is a joke by day 21, so his toys grow with him */
@@ -961,10 +1001,8 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
     const k=new THREE.Mesh(rockGeo(br,140+i*11),rockMat);
     k.position.set(bx,br*.5,bz);k.scale.y=.9+((i*7)%5)/14;k.rotation.y=i*1.1;
     k.castShadow=k.receiveShadow=true;scene.add(k);});
-  [[.16,.62],[.58,.52]].forEach(([fx,br],i)=>{
-    const k=new THREE.Mesh(rockGeo(br,183+i*13),rockMat);
-    k.position.set(LEDGE.x0+w*fx,LEDGE_H+br*.3,LEDGE.z0+.42);k.scale.y=.8;k.rotation.y=i*1.7;
-    k.castShadow=k.receiveShadow=true;scene.add(k);});
+  /* the shelf top is his to walk on - boulders and a log up there left him a
+     ledge he could barely turn round on */
   body.name='ledgeBody';body.userData.kind='ledge';
   /* the ramp he walks up */
   const rw=RAMP.x1-RAMP.x0,len=Math.hypot(rw,LEDGE_H),ang=Math.atan2(LEDGE_H,rw);
@@ -976,13 +1014,6 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
     const rg=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,RAMP.z1-RAMP.z0-.1),M(0x6B4326,{roughness:.9}));
     rg.position.set(RAMP.x0+rw*t,LEDGE_H*(1-t)+.13,(RAMP.z0+RAMP.z1)/2);rg.rotation.z=-ang;scene.add(rg);}
   /* things to hide behind and sit on, up top */
-  const hollow=new THREE.Mesh(new THREE.CylinderGeometry(.46,.5,1.9,26,3,true),M(0xffffff,{map:bt2,bumpMap:bt2,bumpScale:.05,roughness:.95,side:THREE.DoubleSide}));
-  hollow.rotation.z=Math.PI/2;hollow.rotation.y=.22;
-  hollow.position.set(LEDGE.x0+1.25,LEDGE_H+.4,LEDGE.z0+1.02);hollow.castShadow=hollow.receiveShadow=true;
-  hollow.name='ledgeLog';scene.add(hollow);
-  const perch=new THREE.Mesh(rockGeo(.42,171),rockMat);
-  perch.position.set(LEDGE.x0+3.15,LEDGE_H+.16,LEDGE.z0+1.0);perch.scale.y=.75;
-  perch.castShadow=perch.receiveShadow=true;perch.name='perchRock';scene.add(perch);
   const fern=new THREE.Group();fern.position.set(LEDGE.x0+.18,LEDGE_H,LEDGE.z0+.95);scene.add(fern);plants.push(fern);
   for(let i=0;i<9;i++){const l=new THREE.Mesh(snakeLeaf(rand(.8,1.5),rand(.3,1)),snakeMat);
     l.rotation.set(rand(-.3,.15),i/9*6.28,rand(-.35,.35));l.userData.rz=l.rotation.z;l.castShadow=true;fern.add(l);}
@@ -994,7 +1025,17 @@ function planRoute(dest){const p=G.root.position,hi=onHigh(p),want=inRect(LEDGE,
 })();
 const STATIC_OBS=[{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x:3.2,z:-3.1,r:.72},
   {x:-6.0,z:2.9,r:.7},{x:-6.9,z:-4.5,r:1.1},{x:6.6,z:-4.45,r:1.15}].map(o=>({x:o.x*KX,z:o.z*KZ,r:o.r}));
-function obstacles(){const o=STATIC_OBS.slice();for(const d of S.decor)o.push({x:d.x,z:d.z,r:.55});return o;}
+/* Everything she put down counted as the same little half-unit bump, so he
+   strolled through tunnels, dig boxes and castles alike. A thing is as wide as
+   it is - except the one he is on his way into, which he has to be able to
+   reach. */
+function decorR(t){const h=TOY_HALF[t];
+  return h?Math.min(h.x,h.z)*growth()*.8:.55;}
+function obstacles(){const o=STATIC_OBS.slice();
+  for(let i=0;i<S.decor.length;i++){const d=S.decor[i],g=decorGroups[i];
+    if(g&&(g===toyUse||(want==='toy'&&g===toyPick)))continue;
+    o.push({x:d.x,z:d.z,r:decorR(d.t)});}
+  return o;}
 function keepIn(p){
   /* mid-doorway the tween owns his position - clamping here would wall him out */
   if(trip&&(trip.phase==='through'||trip.phase==='throughIn'))return;
@@ -1209,7 +1250,7 @@ function onTable(x,z){return !inTank(x,z===undefined?0:z);}
 /* half the footprint of the big toys, in toy units. They grow with him, so a
    tunnel that fits the sand on day 7 would be hanging through the glass on day
    25 unless the room it needs is worked out fresh each time. */
-const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.4,z:1.6},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
+const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.5,z:1.35},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
 function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
   const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
   return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
@@ -1882,6 +1923,10 @@ const NOTICE={mirror:["Who's that handsome gecko?",'Hello, me!','Looking good!']
 function notice(){
   if(!S.hatched||S.asleep||game||hatch.active||trip||!G.root.visible)return;
   if(AI.act||toyT>0||caveT>0||itch||hic||crickets.length||ball||treat)return;
+  /* and never while he is on his way somewhere. This stopped him reaching his
+     hammock at all: every few seconds something he was walking past caught his
+     eye, his route was thrown away, and he set off again - forever. */
+  if(want||AI.target||AI.route||callPt||outside||closeUp)return;
   const p=G.root.position;let best=null,bd=1e9;
   for(const g of decorGroups){const t=g.userData&&g.userData.t0;
     if(!NOTICE[t]||g===noticed)continue;
@@ -2576,7 +2621,11 @@ function sendHome(){
   trip={phase:'backToDoor',t:0};AI.target=null;AI.route=null;
   say(pick(['Home time!','Back to my tank!','That was fun!']),2.4);}
 function updateTrip(dt){
-  const w=(outside||trip)?1:0;
+  /* It used to stand open the entire time he was out on the table, so he walked
+     straight through the glass panel. It only needs to be open while he is
+     actually going through it - and shutting it behind him is what she would do
+     anyway. */
+  const w=trip?1:0;
   doorOpen+=(w-doorOpen)*Math.min(1,dt*3.2);
   if(doorG)doorG.rotation.y=-doorOpen*1.45;
   if(!trip)return;
@@ -2887,7 +2936,7 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
       rand(.09,.17),rand(.05,.1),rand(.09,.17),rand(-W2/2+.5,W2/2-.5),.58,rand(-D2/2+.5,D2/2-.5),g);
     g.userData.toy='digbox';g.userData.mount='digbox';g.userData.app={x:0,z:D2/2+1.5};}
   else if(t==='hammock'){const rope=M(0xE8DCC2,{roughness:.9});
-    const SP=3.2,TOP=2.7,LEN=5.4,BR=1.5;
+    const SP=3.2,TOP=2.85,LEN=5.6,BR=1.22;
     for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.14,.2,TOP,10),M(0x8A5A33,{roughness:.85}));
       po.position.set(sd*SP,TOP/2,0);po.castShadow=true;g.add(po);
       const ft=new THREE.Mesh(new THREE.CylinderGeometry(.34,.4,.16,12),M(0x8A5A33,{roughness:.85}));
@@ -2896,9 +2945,9 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
     const bed=new THREE.Mesh(new THREE.CylinderGeometry(BR,BR,LEN,22,1,true,Math.PI,Math.PI),
       M(0x5FC8FF,{roughness:.85,side:THREE.DoubleSide}));
     bed.rotation.set(0,0,Math.PI/2);bed.receiveShadow=true;
-    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.46;sling.position.y=1.70;g.add(sling);
+    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.62;sling.position.y=1.78;g.add(sling);
     for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,6),rope);
-      r.position.set(sd*2.92,2.18,0);r.rotation.z=sd*.52;g.add(r);}
+      r.position.set(sd*2.95,2.35,0);r.rotation.z=sd*.5;g.add(r);}
     g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.6};}
   else if(t==='mirror'){const fr=M(0xFF6FAE,{roughness:.5});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
@@ -2906,7 +2955,7 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
       MP(0xDFF3FF,{roughness:.03,clearcoat:1,metalness:.35}));gl.position.set(0,1.95,.06);g.add(gl);
     const po=new THREE.Mesh(new THREE.CylinderGeometry(.13,.18,1.3,10),fr);po.position.y=.65;g.add(po);
     const ba=new THREE.Mesh(new THREE.CylinderGeometry(.68,.8,.2,16),fr);ba.position.y=.1;ba.receiveShadow=true;g.add(ba);
-    g.userData.toy='mirror';g.userData.mount='mirror';g.userData.app={x:0,z:1.9};}
+    g.userData.toy='mirror';g.userData.mount='mirror';g.userData.app={x:0,z:3.7};}
   else if(t==='pond'){const rim=M(0x9C8B74,{roughness:.95});
     for(let i=0;i<14;i++){const a=i/14*6.28;blob(rim,.1,.07,.1,Math.cos(a)*.52,.05,Math.sin(a)*.42,g);}
     const wtr=new THREE.Mesh(new THREE.CircleGeometry(.48,28),MP(0x4FC3F7,{roughness:.03,clearcoat:1,transparent:true,opacity:.85}));
@@ -3124,7 +3173,7 @@ const GAMES={
     stars:[8,16,26],result(s){return 'You and '+S.name+' scored '+s+' points catching crickets! Golden ones are worth 3.';}},
   hide:{dur:1e9,rate:2,intro:"Close your eyes... I'm hiding!",
     start(g){g.round=0;g.wait=3;g.spot=null;g.wrong=0;g.hints=0;g.rounds=hideRounds(g.lv);
-      if(!HIDE_SPOTS)HIDE_SPOTS=[['hideRock',1.7,2.6],['log',-.5,2.5],['plant',-2.3,2.4],['plant2',2.6,.2],['ledgeLog',0,-.55],['perchRock',-.1,.5]]
+      if(!HIDE_SPOTS)HIDE_SPOTS=[['hideRock',1.7,2.6],['log',-.5,2.5],['plant',-2.3,2.4],['plant2',2.6,.2],['succ',1.2,1.4],['slate',.2,1.5]]
         .map(([n,x,z])=>{const o=scene.getObjectByName(n);if(!o)return null;const ox=o.position.x+x,oz=o.position.z+z;
           return{obj:o,out:new THREE.Vector3(ox,groundY(ox,oz),oz)};}).filter(Boolean);
       HIDE_SPOTS.forEach(s=>{s.rz=s.obj.rotation.z;s.prevKind=s.obj.userData.kind;s.obj.userData.kind='hidespot';});},
@@ -3333,11 +3382,11 @@ function updateExtras(dt){updateMess();
     drinkFx-=dt;if(drinkFx<=0){drinkFx=.32;
       burst('💧',tmp.set(4.9*KX,.42,2.1*KZ),1,{size:.2,speed:.5,life:.5,g:4});}}
   if(callPt){callT+=dt;if(callT>(outside?18:8))callPt=null;}
-  if(S.hatched&&!S.asleep&&!game){if(S.thirst<40&&S.water>5&&!want&&!outside&&!game)want='drink';
+  if(S.hatched&&!S.asleep&&!game){if(S.thirst<26&&S.water>5&&!want&&!outside&&!game)want='drink';
     else if(S.lamp&&S.warm<40&&!want&&!outside)want='bask';
     wantT-=dt;if(wantT<=0){wantT=rand(9,16);
-    if(!want&&caveT<=0&&toyT<=0&&outside&&!trip&&!AI.act&&!callPt&&toyList().length&&Math.random()<.55)want='toy';
-    else if(!want&&caveT<=0&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.4)want='bask';else if(S.water>10&&Math.random()<(S.thirst<70?.6:.2))want='drink';else if(toyList().length&&Math.random()<.45)want='toy';else if(Math.random()<.4)want='cave';}}}
+    if(!want&&caveT<=0&&toyT<=0&&outside&&!trip&&!AI.act&&!callPt&&playList().length&&Math.random()<.6)want='toy';
+    else if(!want&&caveT<=0&&!outside&&!trip&&!AI.act&&!callPt&&!treat&&!crickets.length&&!ball){if(S.lamp&&S.warm<92&&Math.random()<.4)want='bask';else if(playList().length&&Math.random()<.6)want='toy';else if(S.water>10&&Math.random()<(S.thirst<55?.55:.15))want='drink';else if(Math.random()<.35)want='cave';}}}
   if(game){if(game.cd>0){game.cd-=dt;if(bubbleTimer>0){bubble.classList.remove('show');bubbleTimer=0;}if(game.cd<=0)say(game.def.intro,2.5);const n=Math.ceil(game.cd-.7);if(n>0){if(cdShown!==String(n))tone(660,.12,'triangle',.06);showCd(String(n));}else{if(cdShown!=='Go!')tone(990,.25,'triangle',.07);showCd('Go!');}if(game.cd<=0)showCd(null);}
     else{game.time-=dt;game.def.update(game,dt);if(game){$('#gbText').textContent=game.def.bar(game);
       if(!game.def.noCd){$('#gbFill').style.setProperty('--p',(100*Math.max(0,game.time)/game.def.dur)+'%');const hurry=game.time<5.5;$('#gameBar').classList.toggle('hurry',hurry);const sec=Math.ceil(game.time);if(hurry&&sec!==game.lastTick&&sec>0){game.lastTick=sec;tone(880,.06,'square',.03);}}
