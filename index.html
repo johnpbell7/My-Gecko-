@@ -292,6 +292,15 @@ canvas{position:fixed;inset:0;display:block}
 #tourText{margin:0 0 10px;font:400 20px var(--display);color:var(--ink);line-height:1.25}
 #tourSkip{border:0;border-radius:999px;background:var(--shade);color:var(--ink);
   font:800 14px var(--font);padding:8px 18px;cursor:pointer}
+#saysBar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translateX(-50%);
+  width:min(430px,94vw);box-sizing:border-box;display:flex;gap:10px;padding:0 10px;z-index:8;animation:sheetUp .3s}
+#saysBar[hidden]{display:none}
+#saysBar button{flex:1;border:0;border-radius:var(--r-2);background:var(--b);color:#fff;cursor:pointer;
+  padding:12px 4px 10px;font:800 14px var(--font);box-shadow:0 5px 0 var(--s),var(--sh-1);
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .08s,box-shadow .08s}
+#saysBar button i{font-style:normal;font-size:30px;line-height:1}
+#saysBar button:active,#saysBar button.lit{transform:translateY(5px);box-shadow:0 0 0 var(--s),var(--sh-1)}
+#saysBar button.lit{filter:brightness(1.35)}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translate(-50%,10px);opacity:0;background:#2B1D3A;color:#fff;font:800 16px var(--font);padding:10px 16px;border-radius:16px;z-index:9;transition:.3s;pointer-events:none;max-width:86vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 body[data-bg="jungle"] #sky{background:linear-gradient(#6FD19A,#D8F5C8)}
@@ -546,6 +555,10 @@ body.watching #watchOut{opacity:.85}
   <button class="tbGo" id="tbGo">TAP!</button><p class="tbHint">Tap when the arrow is in the gold band</p></div></div>
 <div id="ballBar" class="bar" hidden><span>🎾 Playing fetch</span><button id="bbStop">✕ Put it away</button></div>
 <div id="tourBar" hidden><b id="tourStep"></b><p id="tourText"></p><button id="tourSkip">Skip</button></div>
+<div id="saysBar" hidden>
+  <button data-k="spin" style="--b:#8B6CF0;--s:#6848C9"><i>🌀</i>Spin</button>
+  <button data-k="wave" style="--b:#FF5FA2;--s:#C93D79"><i>👋</i>Wave</button>
+  <button data-k="jump" style="--b:#3FCB7A;--s:#25915A"><i>🦘</i>Jump</button></div>
 <div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
 <div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbBox" class="alt" hidden>📦 Box</button><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
 <div id="toast"></div>
@@ -599,7 +612,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD="27";
+const BUILD="28";
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -979,13 +992,21 @@ function toyTarget(){const list=playList();
   const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;q.y=groundY(q.x,q.z);
   return{pos:q,kind:'toy',reach:.45*k+.2,speed:1.05,
     arrive(){want=null;bumpCount('toy');award('toy');
-      S.fun=clamp(S.fun+10,0,100);SFX.chirp();
+      /* He keeps count, and after a while one of them is plainly his. It is
+         worth more fun to him than the others, and he says so - so a thing she
+         bought weeks ago is still the thing he runs to. */
+      const t0=toyPick.userData.t0;const fav=noteFav(t0);
+      S.fun=clamp(S.fun+(fav?16:10),0,100);SFX.chirp();
       const p2=PLAY[toyPick.userData.t0];
+      if(fav){G.head.getWorldPosition(tmp2);burst('💖',tmp2,6,{size:.36,speed:.9});}
       if(toyPick.userData.mount){toyT=rand(13,22);toyUse=toyPick;rideT=0;
-        startAct('happy',.8);say(pick(['My favourite!','This is fun!','Wheee!','Watch this!']),2.6);}
+        startAct('happy',.8);
+        say(fav?pick(['My favourite thing ever!','I love this one best!','Best one in the whole tank!'])
+               :pick(['This is fun!','Wheee!','Watch this!']),2.6);}
       else if(p2){
         /* not something to climb into - something to go and have a go at */
         toyT=rand(4,7);toyUse=null;
+        if(fav)say('My favourite!',2.2);
         /* face it, then do its own thing */
         const tp2=toyPick.position,q2=G.root.position;
         tmp2.set(tp2.x-q2.x,0,tp2.z-q2.z);
@@ -2160,7 +2181,8 @@ function menuItems(tab){const nm=esc(S.name);return({
     ['out','🚪',outside?'Send him home':'Open the door',outside?nm+' is out on the table':'Let '+nm+' out for a wander','#8B6CF0',outside?'Out!':''],
     ['call','📣','Call '+nm,'Come here, '+nm+'!','#FF5FA2',''],['vet','🩺','Vet check-up','Weigh in and health check','#3FCB7A','']],
   play:[['fetch','🎾','Fetch','Throw the ball, '+nm+' brings it back','#FF5FA2',''],['catch','🦗','Cricket catch',bestTxt('catch'),'#FF8A3D',''],['hide','🙈','Hide and seek','Find where '+nm+' is hiding','#8B6CF0',''],
-    ['feather','🪶','Feather',bestTxt('feather'),'#35A9F0',''],['bubbles','🫧','Bubbles',bestTxt('bubbles'),'#5EC8F2','']],
+    ['feather','🪶','Feather',bestTxt('feather'),'#35A9F0',''],['bubbles','🫧','Bubbles',bestTxt('bubbles'),'#5EC8F2',''],
+    ['says','🧠','Gecko says',bestTxt('says'),'#FF8A3D','']],
   tricks:[['spin','🌀','Spin',trickTxt('spin'),'#8B6CF0',''],['wave','👋','Wave',trickTxt('wave'),'#FF5FA2',''],['jump','🦘','Jump',trickTxt('jump'),'#3FCB7A','']],
   style:[['hats','🎩','Hats','Dress '+nm+' up','#8B6CF0',''],['colours','🎨','Design your gecko','Make your own colours and spots','#FFB020',''],['photo','📸','Take a photo','Say cheese!','#FF5FA2',''],['album','🖼️','Photo album','All your photos','#35A9F0','']],
   collect:[['journey','🏆',nm+"'s journey",'Stars, stickers and how big he is','#8B6CF0',''],
@@ -2401,6 +2423,22 @@ const COUNT_AWARDS=[['eat',10,'eat10'],['eat',40,'eat40'],['eat',100,'eat100'],
  ['trick',10,'trick10'],['vet',5,'vet5'],['shed',3,'shed3'],['bed',5,'bed5'],
  ['cave',5,'cave5'],['trip',3,'trip3'],['game',10,'game10'],['game',30,'game30'],
  ['jobs',5,'jobs5'],['pet',25,'pet25'],['toy',10,'toy10']];
+/* counts how often he goes to each thing, and once one is clearly ahead it
+   becomes his favourite. It has to be six visits and twice as many as the
+   runner-up, so a favourite means something rather than whatever he happened
+   to walk past first. */
+function noteFav(t){
+  if(!t)return false;
+  S.plays=S.plays||{};S.plays[t]=(S.plays[t]||0)+1;
+  const ks=Object.keys(S.plays);
+  let top=null,tn=0,second=0;
+  for(const k of ks){const n=S.plays[k];if(n>tn){second=tn;tn=n;top=k;}else if(n>second)second=n;}
+  const was=S.favToy||null;
+  S.favToy=(tn>=6&&tn>=second*2)?top:null;
+  if(S.favToy&&S.favToy!==was){
+    const nm2=(SHOP.find(i=>i.id===S.favToy)||{}).name||S.favToy;
+    setTimeout(()=>{SFX.yay();toast('💖 '+S.name+"'s favourite is the "+nm2.toLowerCase()+'!');},900);}
+  save();return S.favToy===t;}
 function bumpCount(k,n){if(!S.hatched)return;S.counts=S.counts||{};
   S.counts[k]=(S.counts[k]||0)+(n||1);const v=S.counts[k];
   for(const a of COUNT_AWARDS)if(a[0]===k&&v>=a[1])award(a[2]);}
@@ -2486,7 +2524,8 @@ function openJourney(){
     '<ul class="checks"><li>\u2b50 Stars earned: <b>'+(S.stars||0)+'</b></li>'+
     '<li>📒 Stickers: <b>'+st+' of '+STICKERS.length+'</b></li>'+
     '<li>💰 Coins: <b>'+(S.coins||0)+'</b></li>'+
-    '<li>🔥 Days in a row: <b>'+(S.streak||0)+'</b></li></ul>';
+    '<li>🔥 Days in a row: <b>'+(S.streak||0)+'</b></li>'+
+    (S.favToy?'<li>💖 Favourite thing: <b>'+(((SHOP.find(i=>i.id===S.favToy)||{}).name)||S.favToy)+'</b></li>':'')+'</ul>';
   openCard('🏆',S.name+"'s journey",
     S.name+' is '+stageName().toLowerCase()+' on day '+dn+'. He is fully grown on day 21.',true);}
 
@@ -3387,11 +3426,58 @@ function setF(g,p){g.f.position.x=clamp(p.x,-BX,BX);g.f.position.z=clamp(p.z,Z0-
    before she starts. The games themselves get harder as the level climbs, so
    "get better" means something rather than replaying the same 25 seconds. */
 const GAME_MAX=10;
-const GOALS={catch:[6,2],feather:[5,1.5],bubbles:[12,4],hide:[6,1.6]};
+const GOALS={catch:[6,2],feather:[5,1.5],bubbles:[12,4],hide:[6,1.6],says:[3,.9]};
 function gameLvl(k){return clamp(Math.round((S.lvl&&S.lvl[k])||1),1,GAME_MAX);}
 function goalOf(k,lv){const g=GOALS[k]||[10,3];return Math.round(g[0]+g[1]*((lv||gameLvl(k))-1));}
 function hideRounds(lv){return 3+Math.floor((lv-1)/3);}
+/* Gecko Says. The other four are all about quick fingers; this one is the only
+   one that asks her to remember something, which is why it is here. He does a
+   little routine, she taps it back, and it gets one longer every time she gets
+   it right. Three lives, because a memory game with one life is a memory game
+   nobody plays twice. */
+const SAYS_KEYS=['spin','wave','jump'];
+function saysBar(on){$('#saysBar').hidden=!on;}
+function saysFlash(k){const b=document.querySelector('#saysBar button[data-k="'+k+'"]');
+  if(!b)return;b.classList.add('lit');setTimeout(()=>b.classList.remove('lit'),260);}
+function saysAdd(g){g.seq.push(pick(SAYS_KEYS));}
+function saysAnswer(k){
+  if(!game||game.kind!=='says'||game.phase!=='you')return;
+  const g=game;
+  if(g.seq[g.at]===k){
+    g.at++;saysFlash(k);startAct(k,TRICKS[k].d*.75);SFX.chirp();
+    if(g.at>=g.seq.length){
+      g.score++;g.pts+=g.seq.length;SFX.yay();saysBar(false);
+      G.head.getWorldPosition(tmp2);burst('⭐',tmp2,8,{size:.42,speed:1});
+      say(pick(['You got it!','Yes! Watch again.','Brilliant! One more.']),1.8);
+      saysAdd(g);g.phase='show';g.at=0;g.t=1.5;}}
+  else{
+    g.lives--;saysFlash(k);tone(180,.28,'triangle',.05);
+    G.head.getWorldPosition(tmp2);burst('❓',tmp2,3,{size:.4});
+    saysBar(false);
+    if(g.lives<=0){say('Good game!',1.8);setTimeout(()=>{if(game&&game.kind==='says')endGame();},900);return;}
+    say(pick(['Oops! Here it is again.','Not quite - watch me once more.']),2.2);
+    g.phase='show';g.at=0;g.t=1.6;}}
 const GAMES={
+  says:{dur:1e9,noCd:true,intro:'Watch what I do - then tap it back!',
+    start(g){g.seq=[];g.at=0;g.pts=0;g.lives=3;g.phase='show';g.t=1.8;
+      /* a longer opening routine the better she has got at it */
+      for(let i=0;i<1+Math.floor((g.lv-1)/3);i++)saysAdd(g);
+      saysBar(false);},
+    update(g,dt){
+      if(g.phase!=='show')return;
+      g.t-=dt;if(g.t>0)return;
+      if(g.at>=g.seq.length){g.phase='you';g.at=0;saysBar(true);
+        say(pick(['Your turn!','Now you do it!','Off you go!']),1.8);return;}
+      const k=g.seq[g.at++];saysFlash(k);startAct(k,TRICKS[k].d);
+      /* the gap between moves closes up as she levels, so it gets brisker */
+      g.t=TRICKS[k].d+Math.max(.22,.62-(g.lv-1)*.045);},
+    hits(){return [];},
+    tap(){return true;},
+    target(){return STAY;},
+    stop(g){saysBar(false);},
+    coins(g){return g.pts||0;},scoreFn(g){return g.score;},
+    bar(g){return '🧠 Round '+Math.max(1,g.seq.length)+'   '+(g.lives>0?'❤️'.repeat(g.lives):'💔');},
+    result(s){return 'You remembered '+s+' round'+(s===1?'':'s')+' of Gecko Says!';}},
   catch:{dur:25,intro:'Catch the crickets before they escape!',start(g){g.spawn=0;},
     update(g,dt){const el=1-g.time/g.def.dur;g.spawn-=dt;if(g.spawn<=0){g.spawn=rand(.55,.9)*(1-.45*el)*(1-.035*(g.lv-1));const c=makeCricket();c.userData.kind='gcricket';const gold=Math.random()<.12;if(gold){goldify(c);c.scale.setScalar(1.25);}c.position.set(clamp(look.x+rand(-1.5,1.5),-4,4),0,rand(.2,2));scene.add(c);const side=Math.random()<.5?-1:1;
         g.objs.push({g:c,gold:gold,sp:(gold?1.6:.95)*(1+.6*el)*(1+.055*(g.lv-1)),t:new THREE.Vector3(clamp(c.position.x+side*rand(2.5,4),-BX-1,BX+1),0,rand(Z0-.6,Z1+.5)),ph:rand(0,6)});}
@@ -3495,6 +3581,8 @@ function finishGame(g,base,acc){
   if(st===3){SFX.yay();burst(lvUp?'⬆️':'🎉',tmp.set(look.x,2,1),12,{size:.5,speed:1.4});}
   const k=g.kind;$('#againBtn').onclick=()=>{$('#card').hidden=true;cardClose=null;startGame(k);};}
 $('#gbStop').onclick=()=>endGame();
+Array.prototype.forEach.call(document.querySelectorAll('#saysBar button'),
+  b=>{b.onclick=()=>saysAnswer(b.dataset.k);});
 
 /* ---------- touch hooks ---------- */
 function extraHits(){const a=[sandMesh,dishMesh,waterMesh,heatLampG].concat(decorGroups);
@@ -3588,7 +3676,7 @@ $('#setPeekOld')&&($('#setPeekOld').onclick=()=>{peek=true;$('#settings').hidden
 $('#pkDone').onclick=()=>{try{sessionStorage.removeItem(PEEK_KEY);}catch(e){}location.reload();};
 if(peekMode){$('#peekBar').hidden=false;setTimeout(()=>say('Look how big I get \u2014 and what a big tank!',3.5),1400);}
 $('#setSound').onchange=e=>{S.sound=e.target.checked;$('#snd').textContent=S.sound?'🔊':'🔇';save();};
-function moreAction(k){({catch:()=>startGame('catch'),hide:()=>startGame('hide'),feather:()=>startGame('feather'),bubbles:()=>startGame('bubbles'),water:refill,treat:giveTreat,lamp:toggleLamp,vet:vet,call:callName,
+function moreAction(k){({catch:()=>startGame('catch'),hide:()=>startGame('hide'),feather:()=>startGame('feather'),bubbles:()=>startGame('bubbles'),says:()=>startGame('says'),water:refill,treat:giveTreat,lamp:toggleLamp,vet:vet,call:callName,
   out:()=>{outside?sendHome():letOut();},jobs:openTasks,journey:openJourney,album:openAlbum,shop:openShop,decorate:()=>startDecorate(),stickers:openStickers,fact:showFact,howto:tourRestart,settings:openSettings}[k]||function(){})();}
 
 /* ---------- per-frame ---------- */
