@@ -589,7 +589,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD="24";
+const BUILD="25";
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -661,6 +661,9 @@ const plants=[];
    just undefined at that point, it throws. */
 const decorGroups=[];
 let want=null,wantT=6,caveT=0,toyT=0,toyPick=null,toyUse=null;
+/* half the footprint of the big toys, in toy units - up here for the same
+   reason, since working out what he has to walk round needs it */
+const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.5,z:1.35},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
 function srnd(seed){let sd=seed||1;return()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};}
 function rockGeo(r,seed){const g=new THREE.SphereGeometry(r,40,28);const p=g.attributes.position,rn=srnd(seed),bumps=[];for(let i=0;i<8;i++)bumps.push([new THREE.Vector3(rn()-.5,rn()-.5,rn()-.5).normalize(),rn()*.28+.06]);
   const v=new THREE.Vector3(),n=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);n.copy(v).normalize();let d=1;for(const[b,a]of bumps)d+=a*Math.pow(Math.max(0,n.dot(b)),3);
@@ -1036,17 +1039,26 @@ const STATIC_OBS=[{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x
    reach. */
 function decorR(t){const h=TOY_HALF[t];
   return h?Math.min(h.x,h.z)*growth()*.8:.55;}
-function obstacles(){const o=STATIC_OBS.slice();
+/* Everything she has put down, on the side of the glass asked for. Out on the
+   table none of this was in any list at all, so he walked straight through her
+   plant pots and her castle as though they were not there - and the things in
+   the tank were being dodged from out on the table, through the glass. */
+function decorObs(tbl){const o=[];
   for(let i=0;i<S.decor.length;i++){const d=S.decor[i],g=decorGroups[i];
-    if(g&&(g===toyUse||(want==='toy'&&g===toyPick)))continue;
+    /* not the one he is walking up to or busy with - that one he is meant to
+       be standing in the middle of */
+    if(g&&(g===toyUse||(g===toyPick&&(want==='toy'||toyT>0))))continue;
+    if(onTable(d.x,d.z)!==tbl)continue;
     o.push({x:d.x,z:d.z,r:decorR(d.t)});}
   return o;}
+function obstacles(){return STATIC_OBS.concat(decorObs(false));}
+function tableObs(){return TABLE_OBS.concat(decorObs(true));}
 function keepIn(p){
   /* mid-doorway the tween owns his position - clamping here would wall him out */
   if(trip&&(trip.phase==='through'||trip.phase==='throughIn'))return;
   if(outside){p.x=clamp(p.x,TABLE.x0,TABLE.x1);p.z=clamp(p.z,TABLE.z0,TABLE.z1);
     offTank(p);
-    for(const o of TABLE_OBS){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
+    for(const o of tableObs()){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
       if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
     offTank(p);
     return;}
@@ -1076,13 +1088,13 @@ function keepIn(p){
 function avoidAngle(p,a){if(onHigh(p))return a;
   /* the cave is a wall too, unless the cave is where he is going */
   const goingIn=AI.inCave||caveT>0||want==='cave'||S.asleep;
-  const list=outside?TABLE_OBS:(goingIn?obstacles():obstacles().concat([{x:CAVE.x,z:CAVE.z,r:CAVE.rOut}]));
+  const list=outside?tableObs():(goingIn?obstacles():obstacles().concat([{x:CAVE.x,z:CAVE.z,r:CAVE.rOut}]));
   for(const o of list){const dx=o.x-p.x,dz=o.z-p.z,d=Math.hypot(dx,dz),r=o.r+.55;if(d>r+1.8||d<.01)continue;const fx=Math.sin(a),fz=Math.cos(a),ahead=dx*fx+dz*fz;if(ahead<=0)continue;const side=dx*fz-dz*fx;
   if(Math.abs(side)<r){const push=(1-Math.abs(side)/r)*1.2*Math.min(1,(r+1.8-d)/1.8);a+=side>0?-push:push;}}return a;}
-function tableSpot(){let v=null;
+function tableSpot(){let v=null;const obs=tableObs();
   for(let t=0;t<16;t++){const q=new THREE.Vector3(rand(TABLE.x0+.5,TABLE.x1-.5),TABLE.y,rand(TABLE.z0+.5,TABLE.z1-.5));
     if(inTank(q.x,q.z))continue;
-    if(TABLE_OBS.every(o=>Math.hypot(q.x-o.x,q.z-o.z)>o.r+.6)){v=q;break;}
+    if(obs.every(o=>Math.hypot(q.x-o.x,q.z-o.z)>o.r+.6)){v=q;break;}
     if(!v)v=q;}
   return v||new THREE.Vector3(TANKF.x1+1.5,TABLE.y,FRONT_Z);}
 /* Going from one side of the tank to the other means round the front of it, not
@@ -1257,10 +1269,9 @@ function launch(vx,vz){const h=Math.hypot(vx,vz),cap=11;if(h>cap){vx*=cap/h;vz*=
 function autoThrow(){const a=rand(-.7,.7)+Math.PI;launch(Math.sin(a)*rand(6,8)+(Math.random()-.5)*2,Math.cos(a)*rand(5,7));}
 /* decorations go on open sand - never half inside a rock, the shelf or the cave */
 function onTable(x,z){return !inTank(x,z===undefined?0:z);}
-/* half the footprint of the big toys, in toy units. They grow with him, so a
-   tunnel that fits the sand on day 7 would be hanging through the glass on day
-   25 unless the room it needs is worked out fresh each time. */
-const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.5,z:1.35},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
+/* The toys grow with him, so a tunnel that fits the sand on day 7 would be
+   hanging through the glass on day 25 unless the room it needs is worked out
+   fresh each time. */
 function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
   const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
   return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
@@ -1286,7 +1297,8 @@ function decorSpot(x,z,t,r){const P=decorPad(t,r);
   const toy=!!TOY_HALF[t];
   const XL=toy?BX:TANK.w/2-.15,ZA=toy?Z0:-TANK.d/2+.15,ZB=toy?Z1:TANK.d/2-.15;
   const q=new THREE.Vector3(fit(x,-XL+P.x,XL-P.x),0,fit(z,ZA+P.z,ZB-P.z));
-  if(toy){const was=AI.inCave;AI.inCave=false;keepIn(q);AI.inCave=was;
+  if(toy){const was=AI.inCave,wasOut=outside;AI.inCave=false;outside=false;
+    keepIn(q);AI.inCave=was;outside=wasOut;
     /* and not on the shelf, nor in the narrow slot behind it - a big toy put
        there cannot be reached round, cannot be seen, and buries the close-up */
     const L={x0:LEDGE.x0-P.x,x1:LEDGE.x1+P.x,z0:Z0,z1:LEDGE.z1+P.z};
@@ -1936,10 +1948,12 @@ function notice(){
   /* and never while he is on his way somewhere. This stopped him reaching his
      hammock at all: every few seconds something he was walking past caught his
      eye, his route was thrown away, and he set off again - forever. */
-  if(want||AI.target||AI.route||callPt||outside||closeUp)return;
+  if(want||AI.target||AI.route||callPt||closeUp)return;
   const p=G.root.position;let best=null,bd=1e9;
   for(const g of decorGroups){const t=g.userData&&g.userData.t0;
     if(!NOTICE[t]||g===noticed)continue;
+    /* only what is on his side of the glass */
+    if(onTable(g.position.x,g.position.z)!==!!outside)continue;
     const d=Math.hypot(g.position.x-p.x,g.position.z-p.z);
     if(d<2.6*growth()+1.4&&d<bd){bd=d;best=g;}}
   if(!best)return;
@@ -2498,6 +2512,7 @@ function camBlockers(){
   for(const o of STATIC_OBS)a.push({x:o.x,z:o.z,r:o.r+.4});
   for(const g of decorGroups)if(g!==toyUse)a.push({x:g.position.x,z:g.position.z,r:.8*growth()+.3});
   if(outside)for(const o of TABLE_OBS)a.push({x:o.x,z:o.z,r:o.r+.4});
+  for(const o of decorObs(!!outside))a.push({x:o.x,z:o.z,r:o.r+.4});
   return a;}
 /* how much of the line from here to him is inside something */
 function camBlocked(cx,cz,p){
