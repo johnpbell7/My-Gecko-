@@ -589,7 +589,7 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD='23';
+const BUILD="24";
 const KEY='gecko-pet-v7';
 try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
   'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
@@ -958,7 +958,7 @@ function rideToy(dt){
     return 'walk';}
   /* he is nearly three units from nose to middle, so standing a unit and a half
      away put his face through the glass */
-  if(m==='mirror'){put(0,0,3.5,Math.PI);G.root.rotation.z=0;
+  if(m==='mirror'){put(0,0,4.1,Math.PI);G.root.rotation.z=0;
     if(!AI.act&&Math.random()<dt*.35)startAct(pick(['wave','happy','spin']),.9);
     return 'rest';}
   return null;}
@@ -1193,7 +1193,12 @@ const G=makeGecko();scene.add(G.root);G.root.rotation.order='YXZ';G.root.positio
 const lin=h=>new THREE.Color(h).convertSRGBToLinear();G.base={};
 const PATTERNS=[['leopard','Leopard'],['stripes','Stripes'],['patches','Patches'],['galaxy','Starry'],['plain','Plain']];
 const hex6=v=>'#'+('000000'+(v>>>0).toString(16)).slice(-6);
-function customM(){const c=S.custom||(S.custom={skin:0xF7963B,belly:0xFFE2B8,spot:0x4A2C23,pattern:'leopard'});
+function customM(){const c=S.custom||(S.custom={});
+  /* fill in whatever is missing rather than trusting the whole object to be
+     there - a half-written custom from an older save turned him coal black */
+  if(typeof c.skin!=='number')c.skin=0xF7963B;
+  if(typeof c.belly!=='number')c.belly=0xFFE2B8;
+  if(typeof c.spot!=='number')c.spot=0x4A2C23;
   return {label:'My own',skin:c.skin,belly:c.belly,spot:c.spot,pattern:c.pattern||'leopard',
           css:hex6(c.skin),dcss:hex6(c.spot)};}
 function morphOf(k){return k==='custom'?customM():(MORPHS[k]||MORPHS.tangerine);}
@@ -2461,10 +2466,25 @@ function startWatch(){if(!toyUse||toyT<=0||game||closeUp)return;
      but from whichever end is nearer the front of the tank, and never further
      round than the front quarter. Behind him is the back wall, and beside him
      is whatever else is in the tank. */
-  const ry=(toyUse.userData.r||0);
-  let a=Math.atan2(Math.sin(ry+Math.PI/2),Math.cos(ry+Math.PI/2));
-  if(Math.abs(a)>Math.PI/2)a=Math.atan2(Math.sin(a+Math.PI),Math.cos(a+Math.PI));
-  closeUp={t:0,dur:11,ang:clamp(a,-1.15,1.15)};document.body.classList.add('watching');
+  const ry=(toyUse.userData.r||0),mt=toyUse.userData.mount;
+  const axis=ry+Math.PI/2;
+  /* A tunnel you look DOWN, so he comes at you out of the dark. Everything else
+     is the opposite: filmed end-on, a hammock is a blue blade with a nose
+     sticking out of it, and a dig box is a wall. Those are filmed from the side,
+     turned a little so it reads as a shot and not an elevation drawing. */
+  const fold=t=>Math.atan2(Math.sin(t),Math.cos(t));
+  let a;
+  if(mt==='mirror'){
+    /* the whole point of a mirror is the glass, so the camera stands in FRONT
+       of it and off to one side - round the back it is a pink disc on a stick */
+    const c1=fold(ry+.95),c2=fold(ry-.95);a=Math.abs(c1)<=Math.abs(c2)?c1:c2;}
+  else{a=fold(axis+(mt==='tunnel'?0:Math.PI/2+.38));
+    /* whichever way round that leaves the camera nearer the front of the tank */
+    const b=fold(a+Math.PI);if(Math.abs(b)<Math.abs(a))a=b;}
+  /* a tunnel lies along the tank, so looking down it means standing at the END
+     of the tank - a quarter turn. The old limit stopped a hair short of that,
+     which is exactly why the shot came out through the side of the slats. */
+  closeUp={t:0,dur:11,ang:clamp(a,-2.0,2.0),mt:mt};document.body.classList.add('watching');
   $('#watchChip').hidden=true;SFX.pop();}
 function stopWatch(){if(!closeUp)return;closeUp=null;document.body.classList.remove('watching');}
 /* What the camera must not sit inside or peer through. The obstacle list the
@@ -2491,33 +2511,106 @@ function camBlocked(cx,cz,p){
   /* and the camera itself must not be buried, nor out through the glass */
   if(!outside&&(Math.abs(cx)>TANK.w/2+9||cz>TANK.d/2+11||cz<-TANK.d/2-1))bad+=6;
   return bad;}
+/* How far the camera can back off along a bearing before it is through the
+   glass. Filmed from out in the room, a close-up looks past the tank frame -
+   which lands a black bar straight across his face. */
+function roomAlong(p,a){
+  if(outside)return 99;
+  const sx=Math.sin(a),sz=Math.cos(a),mx=TANK.w/2-.7,mz=TANK.d/2-.7;let d=99;
+  if(sx>1e-4)d=Math.min(d,(mx-p.x)/sx);else if(sx<-1e-4)d=Math.min(d,(-mx-p.x)/sx);
+  if(sz>1e-4)d=Math.min(d,(mz-p.z)/sz);else if(sz<-1e-4)d=Math.min(d,(-mz-p.z)/sz);
+  return clamp(d,1.7,99);}
+/* A mirror with nothing in it is a white plate, and he was walking up to a
+   white plate. This renders the little bit of tank in front of the glass into
+   a small texture and hangs it on the mirror, flipped left to right the way a
+   real one is - so when he goes to look at himself, there is a gecko there
+   looking back. Tiny, and only while someone is close enough to see it. */
+let mirRT=null,mirCam=null,mirHold=null,mirTick=0;const mirN=new THREE.Vector3();
+function updateMirrors(dt){
+  let near=null,nd=1e9;
+  for(let i=0;i<decorGroups.length;i++){const g=decorGroups[i];
+    if(!g||!g.userData.glass)continue;
+    const d=(g.position.x-G.root.position.x)**2+(g.position.z-G.root.position.z)**2;
+    if(d<nd){nd=d;near=g;}}
+  /* nobody is looking: give the glass back its plain finish and do no work */
+  if(!near||nd>42){
+    if(mirHold&&mirHold.userData.glass){const m=mirHold.userData.glass.material;
+      m.map=null;m.color.set(0xDFF3FF);m.needsUpdate=true;}
+    mirHold=null;return;}
+  if(mirHold&&mirHold!==near&&mirHold.userData.glass){const m=mirHold.userData.glass.material;
+    m.map=null;m.color.set(0xDFF3FF);m.needsUpdate=true;}
+  mirHold=near;
+  if(!mirRT){mirRT=new THREE.WebGLRenderTarget(256,256,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+    mirRT.texture.wrapS=THREE.RepeatWrapping;mirRT.texture.wrapT=THREE.ClampToEdgeWrapping;
+    mirRT.texture.repeat.set(-1,1);mirRT.texture.offset.set(1,0);
+    mirCam=new THREE.PerspectiveCamera(50,1,.1,60);}
+  const gl=near.userData.glass,mat=gl.material;
+  if(mat.map!==mirRT.texture){mat.map=mirRT.texture;mat.color.set(0xFFFFFF);mat.needsUpdate=true;}
+  /* every other frame is plenty for a 256 pixel square */
+  if((mirTick=(mirTick+1)%2))return;
+  gl.getWorldPosition(tmp);
+  const ry=near.rotation.y;
+  tmp2.set(G.root.position.x,G.root.position.y+.55*growth(),G.root.position.z);
+  const d=Math.max(1.2,tmp.distanceTo(tmp2));
+  /* narrow enough that HE fills the glass - wide open it was a fisheye of the
+     back wall with a speck of gecko in it */
+  mirCam.fov=clamp(2*Math.atan(1.0/d)*180/Math.PI,20,60);
+  mirCam.position.copy(tmp).addScaledVector(mirN.set(Math.sin(ry),0,Math.cos(ry)),-.25);
+  mirCam.lookAt(tmp2);mirCam.updateProjectionMatrix();
+  /* the whole stand steps out of its own reflection, frame and all */
+  near.visible=false;
+  const old=renderer.getRenderTarget();
+  renderer.setRenderTarget(mirRT);renderer.render(scene,mirCam);renderer.setRenderTarget(old);
+  near.visible=true;}
 function closeUpCam(dt){
   const p=G.root.position,k=growth(),e=Math.min(1,closeUp.t/2.2);
-  closeUp.ang+=dt*.2;
+  closeUp.ang+=dt*.11;
   /* wide enough to take in him AND the toy, drifting in a little so it reads as
      a shot rather than a snap, and down at his level rather than looking in from
      across the room */
-  /* framed on how wide he is, not how long. A phone held upright is narrow, so
-     a shot that fits his whole length is further away than the ordinary view -
-     the close angle has to look ALONG the tunnel, down its length. */
-  const dist=distFor(2.37*k*(1.95-.45*e));
+  /* A tunnel is filmed down its length, so he is coming at you nose-first and
+     the shot only has to be as wide as he is. Filmed from the side he is twice
+     as long as he is wide, and the same framing chopped his head and tail off
+     the ends. And at a mirror the whole point is the two of them together, so
+     the shot has to take in him AND what he is standing at. */
+  const tp=toyUse?toyUse.position:null;
+  let cx0=p.x,cz0=p.z,wide=closeUp.mt==='tunnel'?2.37*k*(1.95-.45*e):6.5*k*(1.06+.2*(1-e));
+  if(closeUp.mt!=='tunnel'&&tp){
+    cx0=(p.x+tp.x)/2;cz0=(p.z+tp.z)/2;
+    wide=Math.max(wide,(Math.abs(p.x-tp.x)+Math.abs(p.z-tp.z))*1.15+3.7*k);}
+  const dist=distFor(wide);
   /* high enough to look over the log and the shelf, still low enough to feel
      like you are down there with him */
-  const hi=p.y+(.75+.45*(1-e))*k+.55;
+  /* down at the mouth of the tube for a tunnel, so you are looking along the
+     barrel at him; up at shoulder height for everything else */
+  const hi=closeUp.mt==='tunnel'?p.y+(.62+.2*(1-e))*k+.3:p.y+(.75+.45*(1-e))*k+.55;
+  const fan=closeUp.mt==='tunnel'?.13:.34;
   /* try the angle we wanted, then fan out either side and settle for the
      clearest view rather than burying the camera in the furniture */
-  let bx=p.x,bz=p.z+dist,bs=1e9;
+  const ctr={x:cx0,z:cz0};
+  let bx=cx0,bz=cz0+dist,bs=1e9,bd=dist;
   for(let pass=0;pass<3&&bs>0;pass++){
-    const d=dist*(1+pass*.75);
     for(let i=0;i<11;i++){
-      const off=i?((i%2?1:-1)*Math.ceil(i/2)*.34):0,a=closeUp.ang+off;
-      const cx=p.x+Math.sin(a)*d,cz=p.z+Math.cos(a)*d;
-      const sc=camBlocked(cx,cz,p)+Math.abs(off)*.55+pass*.4;
-      if(sc<bs){bs=sc;bx=cx;bz=cz;}
+      const off=i?((i%2?1:-1)*Math.ceil(i/2)*fan):0,a=closeUp.ang+off;
+      const d=Math.min(dist*(1+pass*.55),roomAlong(ctr,a));
+      const cx=cx0+Math.sin(a)*d,cz=cz0+Math.cos(a)*d;
+      const sc=camBlocked(cx,cz,p)+Math.abs(off)*.55+pass*.4+Math.max(0,dist-d)*.5
+        +Math.max(0,-Math.cos(a))*.9;   /* not from behind the back glass */
+      if(sc<bs){bs=sc;bx=cx;bz=cz;bd=d;}
       if(sc<=0)break;}}
-  /* still something in the way: rise above it rather than film through it */
-  camera.position.set(bx,hi+Math.min(2.2,bs*.55),bz);
-  aimAt(tmp.set(p.x,p.y+.45*k,p.z),.44);}
+  /* Backed up against the glass with no room left - a toy near the front wall
+     leaves nowhere inside the tank to stand, and the shot came out with his
+     head and tail off both ends. Step back out over the glass instead, up above
+     the rim, so the view is over the open top rather than through a frame rail
+     laid across his face. */
+  const shortBy=Math.max(0,dist-bd);
+  /* Backing out over the glass to fit him all in just puts the tank frame
+     across the shot, so when a toy sits near a wall the shot stays inside and
+     closes in on his head end instead - which is the half worth watching. */
+  if(shortBy>.9&&closeUp.mt!=='mirror'){const f=Math.min(1,shortBy/3)*1.55*k;
+    cx0+=Math.sin(G.root.rotation.y)*f;cz0+=Math.cos(G.root.rotation.y)*f;}
+  camera.position.set(bx,hi+Math.min(2.2,bs*.55)+Math.min(1.2,shortBy*.28),bz);
+  aimAt(tmp.set(cx0,p.y+.5*k,cz0),.44);}
 $('#watchChip').onclick=startWatch;
 /* ---------- 3D opening cinematic ---------- */
 let cine=null;
@@ -2957,6 +3050,7 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
     const gl=new THREE.Mesh(new THREE.CircleGeometry(1.1,30),
       MP(0xDFF3FF,{roughness:.03,clearcoat:1,metalness:.35}));gl.position.set(0,1.95,.06);g.add(gl);
+    g.userData.glass=gl;
     const po=new THREE.Mesh(new THREE.CylinderGeometry(.13,.18,1.3,10),fr);po.position.y=.65;g.add(po);
     const ba=new THREE.Mesh(new THREE.CylinderGeometry(.68,.8,.2,16),fr);ba.position.y=.1;ba.receiveShadow=true;g.add(ba);
     g.userData.toy='mirror';g.userData.mount='mirror';g.userData.app={x:0,z:3.7};}
@@ -3440,6 +3534,7 @@ window.__geckoStart=function(){
 let last=performance.now(),booted=false;
 function loop(now){if(resetting)return;const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
   updateTiming(dt);tickStats(dt);updateHatch(dt);updateGrowth(dt);updateTrip(dt);updateCine(dt);updateGecko(dt);updateExtras(dt);updateCrickets(dt);updateBall(dt);updateParts(dt);updateItch(dt);updateLights(dt);updateCam(dt);updateBubble(dt);
+  updateMirrors(dt);
   renderer.render(scene,camera);
   if(!booted){booted=true;if(S.hatched)startCine();if(window.__geckoReady)window.__geckoReady();}
   requestAnimationFrame(loop);}
