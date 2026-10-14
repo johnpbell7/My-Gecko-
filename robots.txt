@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://johnpbell7.github.io/My-Gecko-/sitemap.xml
