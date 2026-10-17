@@ -4,6 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>My Gecko</title>
+<script>
+/* Two sisters, one iPad, one web address. The browser keeps saved games per
+   ADDRESS, not per folder, so two copies of this file would quietly share one
+   gecko. The player comes off the link instead, and every saved thing is filed
+   under her name - her gecko, her colours, her coins, her photos.
+      ?p=ayla   her copy
+      ?p=fleur  her sister's copy
+      no p      ask whose turn it is
+   Nothing is remembered between visits on purpose: it is a shared iPad, so the
+   plain address should always ask. */
+window.PLAYERS={
+  ayla :{name:'Ayla', pet:'Ziggy', ink:'#FF8A3D', deep:'#C96328'},
+  fleur:{name:'Fleur',pet:'Pip',   ink:'#FF5FA2', deep:'#C93D79'}};
+window.__PLAYER=(function(){
+  try{
+    var q=(new URLSearchParams(location.search).get('p')||'').toLowerCase();
+    if(window.PLAYERS[q])return q;
+    var m=location.pathname.toLowerCase().match(/\/(ayla|fleur)(?:\/|$)/);
+    if(m&&window.PLAYERS[m[1]])return m[1];
+  }catch(e){}
+  return null;})();
+</script>
 <meta name="description" content="Look after your very own 3D leopard gecko: feed him, play games, keep him clean and watch him grow.">
 <meta name="theme-color" content="#2B1D3A">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
@@ -63,33 +85,41 @@ canvas{position:fixed;inset:0;display:block}
 /* His name, his coins and how he is doing belong together. Three separate
    floating blobs read as clutter over the tank; one frosted card reads as the
    game's frame, and takes less of the screen doing it. */
-.hudCard{width:min(560px,100%);box-sizing:border-box;display:flex;flex-direction:column;gap:5px;
-  background:var(--card);border-radius:var(--r-l);padding:7px 13px 9px;box-shadow:var(--sh-1);
-  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2)}
-.toprow{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.pill{pointer-events:auto;background:none;border-radius:999px;padding:0;display:flex;align-items:center;gap:9px;min-width:0}
-.pill .mood{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--shade);display:grid;place-items:center;font-size:22px}
-.pill b{font-family:var(--display);font-weight:400;font-size:19px;letter-spacing:.2px;line-height:1.1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
-  .pill small{font-size:11.5px;font-weight:600;opacity:.55;letter-spacing:.2px;display:block;line-height:1.2;white-space:nowrap}
-.round{pointer-events:auto;width:36px;height:36px;border-radius:50%;border:0;background:var(--shade);color:var(--ink);font-size:17px;cursor:pointer}
-.stats{background:none;border-radius:0;padding:3px 0 0;display:flex;gap:2px;box-shadow:none;justify-content:space-between}
-.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;
+.hudCard{width:min(560px,100%);box-sizing:border-box;display:flex;flex-direction:column;gap:9px;
+  background:var(--card);border-radius:var(--r-l);padding:10px 15px 12px;box-shadow:var(--sh-1);
+  backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25)}
+.toprow{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{pointer-events:auto;background:none;border-radius:999px;padding:0;display:flex;align-items:center;gap:10px;min-width:0}
+/* his face is the one thing on the card that is HIM, so give it the weight */
+.pill .mood{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;font-size:25px;
+  background:linear-gradient(170deg,#FFFFFF,#F1ECF8);box-shadow:inset 0 0 0 2px rgba(43,29,58,.07),0 1px 3px rgba(43,29,58,.10)}
+.pill b{font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:.2px;line-height:1.05;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
+  .pill small{font-size:12px;font-weight:700;opacity:.45;letter-spacing:.1px;display:block;line-height:1.3;white-space:nowrap}
+.round{pointer-events:auto;width:34px;height:34px;border-radius:50%;border:0;background:var(--shade);color:var(--ink);
+  font-size:15px;cursor:pointer;opacity:.7;transition:opacity .2s}
+.round:active{opacity:1}
+/* a hairline between who he is and how he is doing - two jobs, two rows */
+.stats{background:none;border-radius:0;padding:9px 0 0;display:flex;gap:4px;box-shadow:none;justify-content:space-between;
+  border-top:1.5px solid rgba(43,29,58,.08)}
+.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;
   pointer-events:auto;border:0;background:none;color:inherit;font:inherit;padding:2px 0 0;cursor:pointer;
-  border-radius:var(--r-s);-webkit-tap-highlight-color:transparent}
-.stat:active{transform:scale(.94)}
-.ring{--v:100;--c:var(--good);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
-  background:conic-gradient(var(--c) calc(var(--v)*1%), var(--shade) 0);transition:--v .4s}
-.ring span{width:26px;height:26px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:15px;
-  transition:background .3s}
-.stat b{font-size:10px;font-weight:700;letter-spacing:.3px;opacity:.6;text-transform:uppercase}
-/* a thin coloured arc is not a message. When something actually needs doing the
-   whole chip turns that colour and says so. */
-.stat.low .ring{animation:wiggle 1s ease-in-out infinite}
-/* tinted rather than filled, so the little picture stays readable */
-.stat.low .ring span{background-color:var(--paper);
-  background-image:linear-gradient(rgba(255,90,95,.34),rgba(255,90,95,.34))}
-.stat.low b{opacity:1;color:var(--low)}
-@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+  border-radius:var(--r-s);-webkit-tap-highlight-color:transparent;transition:transform .12s}
+.stat:active{transform:scale(.92)}
+.ring{--v:100;--c:var(--good);position:relative;width:41px;height:41px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--c) calc(var(--v)*1%), rgba(43,29,58,.11) 0);transition:--v .4s}
+.ring span{width:32px;height:32px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:18px;
+  box-shadow:0 1px 2px rgba(43,29,58,.10);transition:background .3s}
+.stat b{font-size:11px;font-weight:800;letter-spacing:.1px;opacity:.5}
+/* A thin coloured arc is not a message, and a colour on its own is not one
+   either - plenty of children cannot tell the red ring from the green one. A
+   low stat gets a badge that says, plainly, this one. */
+.ring::after{content:'!';position:absolute;top:-2px;right:-2px;width:17px;height:17px;border-radius:50%;
+  background:var(--low);color:#fff;font:800 11px var(--font);display:grid;place-items:center;line-height:1;
+  box-shadow:0 0 0 2.5px var(--paper);opacity:0;transform:scale(.4);transition:transform .25s,opacity .25s;pointer-events:none}
+.stat.low .ring::after{opacity:1;transform:scale(1)}
+.stat.low .ring{animation:wiggle 1.4s ease-in-out infinite}
+.stat.low b{opacity:1;color:var(--low);font-weight:800}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
 
 #tray{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);box-sizing:border-box;
   padding:8px 9px calc(env(safe-area-inset-bottom) + 10px);display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
@@ -236,7 +266,11 @@ canvas{position:fixed;inset:0;display:block}
 .sheet h2{margin:12px 0 6px;font-size:17px;font-weight:800;text-align:left}
 .tile.locked{opacity:.45}
 .right{display:flex;gap:8px;align-items:center}
-.coin{pointer-events:auto;background:var(--shade);border-radius:999px;padding:5px 12px;font:400 19px var(--display);white-space:nowrap}
+/* coins are the nice thing that happens to you, so they look like a little
+   treasure rather than another grey chip */
+.coin{pointer-events:auto;background:linear-gradient(170deg,#FFF3D2,#FFE4A4);color:#6B4A05;
+  border-radius:999px;padding:6px 13px;font:400 19px var(--display);white-space:nowrap;
+  box-shadow:inset 0 0 0 1.5px rgba(198,146,22,.3)}
 .coin.bump{animation:bump .45s}
 @keyframes bump{40%{transform:scale(1.25)}}
 .big{font-size:64px;line-height:1.1}
@@ -311,7 +345,7 @@ body[data-bg="beach"] #sky{background:linear-gradient(#5CC2FF,#E6F7FF)}
 body[data-bg="space"] #sky{background:linear-gradient(#0B0E2A,#2B2466)}
 .go:active{transform:translateY(5px);box-shadow:0 1px 0 #25915A}
 
-@media (max-width:420px){ .stats{gap:8px;padding:6px 10px 3px} .ring{width:44px;height:44px} .ring span{width:34px;height:34px;font-size:19px} .act{font-size:12px;border-radius:16px} .act i{font-size:24px} #tray{gap:6px} }
+@media (max-width:420px){ .stats{gap:6px} .ring{width:44px;height:44px} .ring span{width:34px;height:34px;font-size:19px} .act{font-size:12px;border-radius:16px} .act i{font-size:24px} #tray{gap:6px} }
 @media (prefers-reduced-motion:reduce){ .stat.low .ring,.act.glow{animation:none} }
 
 /* ================= intro splash ================= */
@@ -365,7 +399,45 @@ body.watching #watchOut{opacity:.85}
 #introGo:focus-visible{outline:3px solid #fff;outline-offset:3px}
 #introGo.waiting{background:#6E6390;box-shadow:0 8px 0 #4A4166;cursor:default;animation:iRise .6s .7s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes iPulse{50%{transform:translateY(-5px) scale(1.05)}}
+#whoBox{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:14px;
+  width:min(440px,88vw);margin-bottom:clamp(12px,6vh,54px);
+  animation:iRise .55s .5s cubic-bezier(.2,1.6,.4,1) both}
+#whoBox[hidden]{display:none}
+#whoAsk{margin:0;font:400 clamp(21px,5.6vw,27px)/1.2 var(--display);color:#FFF3D6;text-align:center;text-wrap:balance}
+#whoRow{display:flex;gap:14px;width:100%}
+.who{flex:1;border:0;border-radius:24px;background:rgba(255,255,255,.95);color:#2B1D3A;cursor:pointer;
+  padding:20px 10px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:0 8px 0 rgba(28,18,46,.55),0 16px 34px rgba(18,10,34,.42);
+  transition:transform .14s cubic-bezier(.2,1.6,.4,1),box-shadow .14s}
+/* the same little gecko for both of them, wearing her own colour */
+.who i{font-style:normal;font-size:34px;line-height:1;width:62px;height:62px;border-radius:50%;
+  display:grid;place-items:center;background:var(--tint);box-shadow:inset 0 0 0 2px rgba(43,29,58,.07)}
+.who[data-p="ayla"]{--tint:#FFE6CE}
+.who[data-p="fleur"]{--tint:#FFDCEC}
+.who b{font:400 24px var(--display);letter-spacing:.3px}
+.who:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(28,18,46,.55),0 8px 18px rgba(18,10,34,.4)}
+.who:focus-visible{outline:3px solid #FFD86B;outline-offset:3px}
+.who[data-p="ayla"] b{color:#D9761F}
+.who[data-p="fleur"] b{color:#C93D79}
+#whoHint{margin:0;font:600 13px/1.45 var(--font);color:rgba(255,243,214,.72);text-align:center;max-width:34ch;text-wrap:pretty}
 @media (max-height:620px){ #introBadge{width:min(22vw,92px)} #introTitle{font-size:clamp(30px,9vw,44px);-webkit-text-stroke-width:5px} #introSub2{display:none} #introSub{margin-top:9px} }
+/* An iPad held sideways is a different shape, not a big phone: the card becomes
+   one strip along the top left and the scene keeps the middle of the glass. */
+@media (min-aspect-ratio:1/1) and (min-width:760px){
+  #hud{justify-content:flex-start;padding-left:18px}
+  .hudCard{width:auto;flex-direction:row;align-items:center;gap:20px;padding:10px 20px}
+  .toprow{width:auto;gap:16px}
+  .pill b{max-width:46vw;font-size:24px}
+  .stats{border-top:0;border-left:1.5px solid rgba(43,29,58,.08);padding:2px 0 2px 20px;gap:18px}
+  .ring{width:46px;height:46px}
+  .ring span{width:36px;height:36px;font-size:20px}
+  .stat b{font-size:12px}
+  #tray{width:min(720px,88%);gap:12px}
+  .act{font-size:15px;border-radius:22px}
+  .act i{font-size:30px}
+  #tourBar,#saysBar{width:min(520px,62vw)}
+  #whoRow{max-width:420px}
+}
 @media (prefers-reduced-motion:reduce){ #intro *,#intro{animation:none !important} }
 </style>
 </head>
@@ -458,10 +530,18 @@ body.watching #watchOut{opacity:.85}
   </g>
 </svg>
     <h1 id="introTitle">My Gecko</h1>
-    <p id="introSub"><span>✨ Welcome, Ayla! ✨</span></p>
+    <p id="introSub"><span>Welcome!</span></p>
     <p id="introSub2">Your very own little leopard gecko</p>
   </div>
     <button id="introGo" class="waiting" type="button">Waking up the geckos…</button>
+    <div id="whoBox" hidden>
+      <p id="whoAsk">Whose gecko is it today?</p>
+      <div id="whoRow">
+        <button class="who" data-p="ayla"  type="button"><i>🦎</i><b>Ayla</b></button>
+        <button class="who" data-p="fleur" type="button"><i>🦎</i><b>Fleur</b></button>
+      </div>
+      <p id="whoHint">Each of you gets your own gecko, your own colours and your own coins.</p>
+    </div>
 </div>
 
 <div id="sky"></div>
@@ -547,7 +627,7 @@ body.watching #watchOut{opacity:.85}
     <small id="setResetWhy">This says goodbye to your gecko for good — his name, his age, his coins, every sticker, every photo and everything you have bought. There is no undo. Save a backup first if you might want him back.</small>
     <button class="wipe" id="setReset">🥚 Start again with a new egg</button>
   </div>
-  <p class="build">Version <b id="setBuild"></b></p>
+  <p class="build">Version <b id="setBuild"></b> \u00B7 <b id="setWho"></b></p>
   <button class="go ghost" data-close>Done</button></div></div>
 <div id="card" class="overlay" hidden><div class="sheet"><div class="big" id="cIcon"></div><h1 id="cTitle"></h1><p id="cText"></p><div id="cExtra"></div><button class="go" id="cOk" data-close>OK</button></div></div>
 <div id="gameBar" class="bar" hidden><span id="gbText"></span><button id="gbStop">✕ End game</button><i id="gbFill"></i></div>
@@ -563,7 +643,7 @@ body.watching #watchOut{opacity:.85}
   <button data-k="wave" style="--b:#FF5FA2;--s:#C93D79"><i>👋</i>Wave</button>
   <button data-k="jump" style="--b:#3FCB7A;--s:#25915A"><i>🦘</i>Jump</button></div>
 <div id="peekBar" class="bar" hidden><span>👀 Fully grown, in the big tank</span><button id="pkDone">Done</button></div>
-<div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbBox" class="alt" hidden>📦 Box</button><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
+<div id="decoBar" class="bar" hidden><span id="dbText"></span><button id="dbSide" class="alt" hidden>🪵 Table</button><button id="dbBox" class="alt" hidden>📦 Box</button><button id="dbRemove" class="alt">Put away</button><button id="dbDone">Done</button></div>
 <div id="toast"></div>
 <script>
 /* ---------- intro splash controller (runs before the 3D engine loads) ---------- */
@@ -571,14 +651,26 @@ body.watching #watchOut{opacity:.85}
   var intro=document.getElementById('intro'),go=document.getElementById('introGo');
   var t0=Date.now(),ready=false,done=false;
   document.body.classList.add('booting');
-  function enable(){if(ready||done)return;ready=true;go.classList.remove('waiting');go.textContent='Tap to play!';}
+  var who=window.__PLAYER, P=who&&window.PLAYERS[who];
+  if(P){
+    document.getElementById('introSub').innerHTML='<span>Welcome back, '+P.name+'</span>';
+    document.getElementById('introTitle').textContent=P.name+"'s Gecko";
+    document.title=P.name+"'s Gecko";
+  }else{
+    /* nobody named in the link: ask, and send her to her own one */
+    document.getElementById('whoBox').hidden=false;
+    go.hidden=true;
+    Array.prototype.forEach.call(document.querySelectorAll('.who'),function(b){
+      b.addEventListener('click',function(){location.replace('?p='+b.dataset.p);});});
+  }
+  function enable(){if(ready||done||!P)return;ready=true;go.classList.remove('waiting');go.textContent='Tap to play!';}
   function start(){if(done)return;done=true;intro.classList.add('gone');document.body.classList.remove('booting');
     setTimeout(function(){intro.hidden=true;},550);
     try{if(window.__geckoStart)window.__geckoStart();}catch(e){}}
   go.addEventListener('click',function(){if(ready)start();});
   window.__geckoReady=function(){setTimeout(enable,Math.max(0,1600-(Date.now()-t0)));};
   window.__geckoSkipIntro=start;
-  setTimeout(enable,9000);           /* never leave anyone stuck on the splash */
+  if(P)setTimeout(enable,9000);      /* never leave anyone stuck on the splash */
 })();
 </script>
 <script>
@@ -615,17 +707,22 @@ const MORPHS={
    so it cannot outlive the tab, and saving is off while it is on. */
 const PEEK_KEY='gecko-peek';
 let peekMode=false;try{peekMode=sessionStorage.getItem(PEEK_KEY)==='1';}catch(e){}
-const BUILD="28";
-const KEY='gecko-pet-v7';
-try{['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
-  'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6'].forEach(k=>localStorage.removeItem(k));}catch(e){}
-const DEF={name:'Ziggy',morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',tasks:null,taskDay:'',stars:0,chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
+const BUILD="29";
+/* Whose gecko this is. Two children, one github.io address, and the browser
+   keeps its saved games per ADDRESS - not per folder - so two copies of the
+   game would quietly share one gecko. Changing this one word is the whole
+   difference between her copy and her sister's. */
+const PLAYER=window.__PLAYER||'ayla';
+const ME=(window.PLAYERS&&window.PLAYERS[PLAYER])||{name:'you',pet:'Ziggy'};
+const KEY='gecko-pet-v8-'+PLAYER;
+const OLD_KEYS=['gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6','gecko-pet-v7',
+  'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6','gecko-photos-v7'];
+try{OLD_KEYS.forEach(k=>localStorage.removeItem(k));}catch(e){}
+const DEF={name:ME.pet,morph:'tangerine',hunger:80,fun:80,clean:90,energy:85,sick:false,asleep:false,born:Date.now(),last:Date.now(),poops:0,hatched:false,sound:true,best:{},hat:'none',tricks:{},shed:0,nextShed:0,coins:0,owned:{},decor:[],stickers:{},water:100,warm:70,lamp:true,wees:0,loo:null,seenGrowth:0,seenDay:'',tasks:null,taskDay:'',stars:0,chubby:0,treatDay:'',treatCount:0,lastDay:'',streak:0,presentDay:'',school:false,bedtime:19.5,vetDay:'',bdayDay:'',bg:'desert'};
 let S=(function(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign({},DEF,JSON.parse(r));}catch(e){}return Object.assign({},DEF);})();
 let resetting=false,peek=peekMode;
 function hardReset(){resetting=true;S.name='';
-  try{[KEY,PHOTO_KEY,'gecko-pet-v1','gecko-pet-v2','gecko-pet-v3','gecko-pet-v4','gecko-pet-v5','gecko-pet-v6',
-    'gecko-photos-v2','gecko-photos-v3','gecko-photos-v4','gecko-photos-v5','gecko-photos-v6']
-    .forEach(k=>localStorage.removeItem(k));}catch(e){}
+  try{[KEY,PHOTO_KEY].concat(OLD_KEYS).forEach(k=>localStorage.removeItem(k));}catch(e){}
   try{sessionStorage.clear();}catch(e){}
   location.reload();}
 function save(){if(resetting||peekMode||!S.name)return;S.last=Date.now();S.poops=poops.length;S.wees=wees.length;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -689,7 +786,14 @@ const decorGroups=[];
 let want=null,wantT=6,caveT=0,toyT=0,toyPick=null,toyUse=null;
 /* half the footprint of the big toys, in toy units - up here for the same
    reason, since working out what he has to walk round needs it */
-const TOY_HALF={tunnel:{x:2.75,z:2.0},hammock:{x:3.5,z:1.35},digbox:{x:2.4,z:1.9},mirror:{x:1.2,z:1.2}};
+const TOY_HALF={tunnel:{x:2.05,z:1.6},hammock:{x:2.85,z:1.05},digbox:{x:1.95,z:1.55},mirror:{x:1.4,z:.95}};
+/* Measured off the models rather than guessed. Every ornament used to claim the
+   same tiny square, so a castle and a pond could be put down in the same place
+   and happily sit inside one another. */
+const DECOR_HALF={cactus:{x:.53,z:.32},mushroom:{x:.57,z:.39},flowers:{x:.63,z:.52},
+  crystal:{x:.60,z:.42},shell:{x:.50,z:.30},castle:{x:.75,z:.61},rainbow:{x:1.06,z:.26},
+  pebbles:{x:.46,z:.31},bones:{x:.47,z:.51},ferns:{x:.38,z:.41},pond:{x:.68,z:.57},
+  lantern:{x:.30,z:.22},treasure:{x:.40,z:.35}};
 /* and how big he is: anything that works out how much room a thing needs asks
    growth(), and growth() reads these. Left where they were, the first such
    question during the build threw and took the whole game down with it. */
@@ -1036,21 +1140,21 @@ function rideToy(dt){
     if(outside){q.x=clamp(q.x,TABLE.x0,TABLE.x1);q.z=clamp(q.z,TABLE.z0,TABLE.z1);}
     else{q.x=clamp(q.x,-BX,BX);q.z=clamp(q.z,Z0,Z1);}
     G.root.rotation.y=ry+face;};
-  if(m==='tunnel'){const span=4.4,per=8.4,u=(rideT%per)/per,fwd=u<.5,t2=fwd?u*2:1-(u-.5)*2;
+  if(m==='tunnel'){const span=3.3,per=8.4,u=(rideT%per)/per,fwd=u<.5,t2=fwd?u*2:1-(u-.5)*2;
     put(-span+t2*span*2,0,0,fwd?Math.PI/2:-Math.PI/2);G.root.rotation.z=0;return 'walk';}
-  if(m==='hammock'){put(Math.sin(rideT*.6)*.22,1.06+Math.sin(rideT*1.5)*.12,0,Math.PI/2);
+  if(m==='hammock'){put(Math.sin(rideT*.6)*.18,.93+Math.sin(rideT*1.5)*.10,0,Math.PI/2);
     G.root.rotation.z=Math.sin(rideT*1.5)*.16;return 'rest';}
   if(m==='digbox'){const s2=Math.min(1,rideT/2.4);
     /* a dip, not a burial - sunk to the rim he just looked like a flat smear
        lying inside a box */
-    put(Math.sin(rideT*.8)*.5,.66-s2*.26+Math.sin(rideT*4.2)*.045,Math.cos(rideT*.55)*.4,Math.sin(rideT*.4)*1.3);
+    put(Math.sin(rideT*.8)*.38,.64-s2*.22+Math.sin(rideT*4.2)*.045,Math.cos(rideT*.55)*.3,Math.sin(rideT*.4)*1.3);
     G.root.rotation.z=0;
     digT-=dt;if(digT<=0){digT=rand(.45,1.0);
       burst('💨',tmp.copy(G.root.position).setY(g.position.y+.75*k),3,{size:.3*k,speed:.8,life:.6});}
     return 'walk';}
   /* he is nearly three units from nose to middle, so standing a unit and a half
      away put his face through the glass */
-  if(m==='mirror'){put(0,0,4.1,Math.PI);G.root.rotation.z=0;
+  if(m==='mirror'){put(0,0,3.4,Math.PI);G.root.rotation.z=0;
     if(!AI.act&&Math.random()<dt*.35)startAct(pick(['wave','happy','spin']),.9);
     return 'rest';}
   return null;}
@@ -1131,18 +1235,36 @@ const STATIC_OBS=[{x:4.9,z:2.1,r:.62},{x:5.7,z:-2.9,r:.85},{x:-6.5,z:.9,r:.5},{x
    strolled through tunnels, dig boxes and castles alike. A thing is as wide as
    it is - except the one he is on his way into, which he has to be able to
    reach. */
-function decorR(t){const h=TOY_HALF[t];
-  return h?Math.min(h.x,h.z)*growth()*.8:.55;}
+function decorR(t){const h=TOY_HALF[t]||DECOR_HALF[t];
+  return h?Math.min(h.x,h.z)*(TOY_HALF[t]?growth():1)*.8:.45;}
 /* Everything she has put down, on the side of the glass asked for. Out on the
    table none of this was in any list at all, so he walked straight through her
    plant pots and her castle as though they were not there - and the things in
    the tank were being dodged from out on the table, through the glass. */
+/* Low, flat things he goes OVER rather than round - he climbs up one side and
+   down the other, which is what she was expecting him to do and what he was
+   walking straight through instead. Everything else is a wall. */
+const CLIMB={pebbles:.20,bones:.24,shell:.30,treasure:.44,pond:.14,ferns:.38,flowers:.40,mushroom:.38};
+function climbH(t){return CLIMB[t]||0;}
+/* how high the ground is where he is standing, once her things are counted */
+function decorLift(x,z,tbl){
+  let h=0;
+  for(let i=0;i<S.decor.length;i++){const d=S.decor[i],c=climbH(d.t);
+    if(!c||onTable(d.x,d.z)!==tbl)continue;
+    const P=decorPad(d.t,d.r||0);
+    const e=Math.max(Math.abs(x-d.x)/(P.x+.3),Math.abs(z-d.z)/(P.z+.3));
+    if(e>=1)continue;
+    /* flat on top, a slope at the edges so he walks up it rather than popping */
+    h=Math.max(h,c*(e<.62?1:(1-e)/.38));}
+  return h;}
+function walkY(x,z){return groundY(x,z)+decorLift(x,z,!!outside);}
 function decorObs(tbl){const o=[];
   for(let i=0;i<S.decor.length;i++){const d=S.decor[i],g=decorGroups[i];
     /* not the one he is walking up to or busy with - that one he is meant to
        be standing in the middle of */
     if(g&&(g===toyUse||(g===toyPick&&(want==='toy'||toyT>0))))continue;
     if(onTable(d.x,d.z)!==tbl)continue;
+    if(climbH(d.t))continue;          /* he walks over this one */
     o.push({x:d.x,z:d.z,r:decorR(d.t)});}
   return o;}
 function obstacles(){return STATIC_OBS.concat(decorObs(false));}
@@ -1166,6 +1288,12 @@ function keepIn(p){
   {const d=Math.hypot(p.x-CAVE.x,p.z-CAVE.z);
    p.z=clamp(p.z,d<CAVE.rIn?Math.min(Z0,CAVE.z-CAVE.rIn+.14):Z0,Z1);
    AI.inCave=Math.hypot(p.x-CAVE.x,p.z-CAVE.z)<CAVE.rIn-.03;}
+  /* Her things were solid out on the table and thin air inside the tank, so he
+     strolled through the castle. One wall for both sides of the glass. */
+  if(p.y<LEDGE_H*.5){
+    for(const o of decorObs(false)){const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
+      if(d<o.r&&d>1e-4){p.x=o.x+dx/d*o.r;p.z=o.z+dz/d*o.r;}}
+    p.x=clamp(p.x,-BX,BX);p.z=clamp(p.z,Z0,Z1);}
   const onRamp=inRect(RAMP,p.x,p.z);
   if(onRamp&&p.y>.15){p.z=clamp(p.z,RAMP.z0+.34,RAMP.z1-.34);}
   /* up on the shelf he cannot walk off the edge - he takes the ramp down */
@@ -1368,8 +1496,9 @@ function onTable(x,z){return !inTank(x,z===undefined?0:z);}
 /* The toys grow with him, so a tunnel that fits the sand on day 7 would be
    hanging through the glass on day 25 unless the room it needs is worked out
    fresh each time. */
-function decorPad(t,r){const h=TOY_HALF[t];if(!h)return{x:.35,z:.3};
-  const k=growth(),c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
+function decorPad(t,r){const h=TOY_HALF[t]||DECOR_HALF[t];if(!h)return{x:.42,z:.36};
+  /* only the big toys grow with him */
+  const k=TOY_HALF[t]?growth():1,c=Math.abs(Math.cos(r||0)),s2=Math.abs(Math.sin(r||0));
   return{x:(h.x*c+h.z*s2)*k,z:(h.x*s2+h.z*c)*k};}
 /* a long toy turned side-on may be longer than the tank is deep - there is then
    no spot at all for it, so that turn is simply not offered */
@@ -1379,7 +1508,76 @@ function decorFits(t,r,tbl){const P=decorPad(t,r);
 /* when a toy is simply too big for the space, centre it rather than clamping to
    a backwards range */
 function fit(v,lo,hi){return lo>hi?(lo+hi)/2:clamp(v,lo,hi);}
-function decorSpot(x,z,t,r){const P=decorPad(t,r);
+/* Nothing she puts down may land on top of something already there. Without
+   this the tunnel sat inside the dig box with the hammock through both, which
+   is exactly the "graphics go through things" she was looking at. Rectangles,
+   not circles, because these things are long: push out along whichever side has
+   the least to give, a few passes, then clamp back inside the glass. */
+function decorSep(q,t,r,skip,tbl,B){
+  const P=decorPad(t,r),gap=.22;
+  const inB=(x,z)=>!B||(x>=B.x0-.01&&x<=B.x1+.01&&z>=B.z0-.01&&z<=B.z1+.01);
+  for(let pass=0;pass<9;pass++){
+    let moved=false;
+    for(let i=0;i<S.decor.length;i++){
+      if(i===skip)continue;
+      const d=S.decor[i];
+      if(onTable(d.x,d.z)!==tbl)continue;
+      const Q=decorPad(d.t,d.r||0);
+      const needX=P.x+Q.x+gap,needZ=P.z+Q.z+gap;
+      const dx=q.x-d.x,dz=q.z-d.z;
+      if(needX-Math.abs(dx)<=0||needZ-Math.abs(dz)<=0)continue;
+      /* Four ways out. Take the shortest one that does not end up against the
+         glass - shoving it straight back into the wall just leaves it half
+         inside the thing it was meant to clear. */
+      let best=null;
+      for(const c of [{x:d.x+needX,z:q.z},{x:d.x-needX,z:q.z},{x:q.x,z:d.z+needZ},{x:q.x,z:d.z-needZ}]){
+        if(!inB(c.x,c.z))continue;
+        const cost=Math.abs(c.x-q.x)+Math.abs(c.z-q.z);
+        if(!best||cost<best.cost)best={x:c.x,z:c.z,cost:cost};}
+      if(!best)continue;
+      q.x=best.x;q.z=best.z;moved=true;}
+    if(!moved)break;}
+  return q;}
+/* is it still sitting on top of something after all that? */
+function decorClash(q,t,r,skip){
+  const P=decorPad(t,r),tbl=onTable(q.x,q.z);
+  for(let i=0;i<S.decor.length;i++){
+    if(i===skip)continue;const d=S.decor[i];
+    if(onTable(d.x,d.z)!==tbl)continue;
+    const Q=decorPad(d.t,d.r||0);
+    if(Math.abs(q.x-d.x)<P.x+Q.x&&Math.abs(q.z-d.z)<P.z+Q.z)return true;}
+  return false;}
+/* Where a new thing goes. The tank only holds so much, and quietly stacking the
+   ninth thing on top of the eighth is what made it look broken - so when there
+   is genuinely no room left it goes out on the table and she is told why. */
+function freeSpot(t,tbl,near){
+  const tries=[];
+  if(near)tries.push(near);
+  const big=!!TOY_HALF[t];
+  for(let i=0;i<48;i++)tries.push(tbl
+    ?[rand(TABLE.x0+1,TABLE.x1-1),rand(TABLE.z0+1,TABLE.z1-1)]
+    :[rand(-BX+1,BX-1),big?rand(Z0+1,Z1-2.4):rand(Z0+1,Z1-1)]);
+  let fallback=null;
+  for(const [x,z] of tries){
+    if(tbl&&inTank(x,z))continue;
+    if(!tbl&&inRect(LEDGE,x,z))continue;
+    const q=decorSpot(x,z,t,0);
+    if(!decorClash(q,t,0))return q;
+    if(!fallback)fallback=q;}
+  return fallback;}
+function placeNew(t){
+  const gp=G.root.position;
+  if(outside){const q=freeSpot(t,true,[gp.x+rand(-1.6,1.6),gp.z+rand(-1.6,1.6)]);if(q)return q;}
+  else{
+    const q=freeSpot(t,false,[look.x+rand(-1.5,1.5),rand(.1,1.4)]);
+    if(q&&!decorClash(q,t,0))return q;
+    const out=freeSpot(t,true,null);
+    if(out&&!decorClash(out,t,0)){
+      setTimeout(()=>toast('\uD83E\uDEB5 The tank is full \u2014 I put it out on the table!'),500);
+      return out;}
+    if(q)return q;}
+  return decorSpot(TANKF.x1+2.4,FRONT_Z,t,0);}
+function decorSpot(x,z,t,r,skip){const P=decorPad(t,r);
   /* past the glass means the table: the table is a second place to put things */
   if(onTable(x,z)){const q=new THREE.Vector3(fit(x,TABLE.x0+P.x,TABLE.x1-P.x),TABLE.y,fit(z,TABLE.z0+P.z,TABLE.z1-P.z));
     for(const o of TABLE_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
@@ -1387,11 +1585,16 @@ function decorSpot(x,z,t,r){const P=decorPad(t,r);
     /* nothing gets parked where the tank stands */
     if(inTank(q.x,q.z)){const dL=q.x-(TANKF.x0-P.x),dR=(TANKF.x1+P.x)-q.x,dF=(TANKF.z1+P.z)-q.z;
       if(dF<=dL&&dF<=dR)q.z=TANKF.z1+P.z;else if(dL<dR)q.x=TANKF.x0-P.x;else q.x=TANKF.x1+P.x;}
+    decorSep(q,t,r,skip,true,{x0:TABLE.x0+P.x,x1:TABLE.x1-P.x,z0:TABLE.z0+P.z,z1:TABLE.z1-P.z});
+    if(inTank(q.x,q.z)){const dL=q.x-(TANKF.x0-P.x),dR=(TANKF.x1+P.x)-q.x,dF=(TANKF.z1+P.z)-q.z;
+      if(dF<=dL&&dF<=dR)q.z=TANKF.z1+P.z;else if(dL<dR)q.x=TANKF.x0-P.x;else q.x=TANKF.x1+P.x;}
     q.x=fit(q.x,TABLE.x0+P.x,TABLE.x1-P.x);q.z=fit(q.z,TABLE.z0+P.z,TABLE.z1-P.z);return q;}
   /* something he plays with has to stay where he can reach it, but an ornament
      may sit right against the glass, or up on the shelf */
   const toy=!!TOY_HALF[t];
-  const XL=toy?BX:TANK.w/2-.15,ZA=toy?Z0:-TANK.d/2+.15,ZB=toy?Z1:TANK.d/2-.15;
+  /* the strip of sand nearest the glass is where he walks and where the camera
+     looks, so the big toys stay out of it */
+  const XL=toy?BX:TANK.w/2-.15,ZA=toy?Z0:-TANK.d/2+.15,ZB=toy?Z1-2.2:TANK.d/2-.15;
   const q=new THREE.Vector3(fit(x,-XL+P.x,XL-P.x),0,fit(z,ZA+P.z,ZB-P.z));
   if(toy){const was=AI.inCave,wasOut=outside;AI.inCave=false;outside=false;
     keepIn(q);AI.inCave=was;outside=wasOut;
@@ -1405,6 +1608,13 @@ function decorSpot(x,z,t,r){const P=decorPad(t,r);
     if(d<rr){q.x=CAVE.x+dx/d*rr;q.z=CAVE.z+dz/d*rr;}}
   for(const o of STATIC_OBS){const dx=q.x-o.x,dz=q.z-o.z,d=Math.hypot(dx,dz),r2=o.r+.5;
     if(d<r2&&d>1e-4){q.x=o.x+dx/d*r2;q.z=o.z+dz/d*r2;}}
+  /* the heat lamp hangs down into the tank, so nothing gets parked under it -
+     a dig box with a lamp shade inside it is exactly the sort of thing that
+     makes the whole tank look broken */
+  {const LX=-1.6*KX,LZ=1.25*KZ,rr=1.35+Math.max(P.x,P.z)*.5;
+   const dx=q.x-LX,dz=q.z-LZ,d=Math.hypot(dx,dz)||1e-4;
+   if(d<rr){q.x=LX+dx/d*rr;q.z=LZ+dz/d*rr;}}
+  decorSep(q,t,r,skip,false,{x0:-XL+P.x,x1:XL-P.x,z0:ZA+P.z,z1:ZB-P.z});
   q.x=fit(q.x,-XL+P.x,XL-P.x);q.z=fit(q.z,ZA+P.z,ZB-P.z);return q;}
 function safeHome(){const free=v=>obstacles().every(o=>Math.hypot(v.x-o.x,v.z-o.z)>o.r+.7);
   const first=new THREE.Vector3(clamp(look.x,-BX+1,BX-1),0,Z1-.6);if(free(first))return first;
@@ -1665,7 +1875,7 @@ function updateGecko(dt){
     keepIn(p);
     /* curled up in the cave: hold the spot, so he does not drift out of the mouth */
     if(caveT>0&&!game&&!callPt){p.x=caveSpot.x;p.z=caveSpot.z;AI.v=0;}
-    const gy=groundY(p.x,p.z);
+    const gy=walkY(p.x,p.z);
     if(p.y>gy+1e-4){AI.vy=(AI.vy||0)-15*dt;p.y+=AI.vy*dt;
       if(p.y<=gy){const hard=AI.vy<-2.2;p.y=gy;AI.vy=0;
         if(hard){burst('💨',tmp2.set(p.x,gy+.14,p.z),4,{size:.3,speed:.8,life:.6});tone(150,.09,'triangle',.045);}}}
@@ -1824,7 +2034,9 @@ function updateCam(dt){
   look.y+=((.5+G.root.position.y*.62)-look.y)*Math.min(1,dt*2);
   /* the grown-up tank is nearly three times the floor, so stand back a little
    further in it - otherwise all that new room is off the side of the screen */
-  const dist=((portrait?8.6:10.5)+(growth()-.85)*2.6+(TL>1?2.1:0)+(wide?(portrait?7:3.5):0))*camZoom;
+  /* It was standing so close that a grown gecko filled the screen and the tank
+     around him was cropped away - which is most of why it looked a mess. */
+  const dist=((portrait?12.0:13.4)+(growth()-.85)*2.6+(TL>1?2.1:0)+(wide?(portrait?7:3.5):0))*camZoom;
   const gx=hatch.active?0:G.root.position.x,gz=hatch.active?1:G.root.position.z;const lim=portrait?BX-1.2:BX-3;
   if(outside){
     /* the table wraps right round the tank now, so follow him rather than a
@@ -1841,7 +2053,7 @@ function updateCam(dt){
 
 /* ---------- touch ---------- */
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let down=null;
-let camZoom=1.12,pinch=null,camP=.42,camPT=.42;const ptrs=new Map();
+let camZoom=1.12,pinch=null,camP=.46,camPT=.46;const ptrs=new Map();
 function pinchDist(){const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;}
 renderer.domElement.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){pinch={d0:pinchDist(),z0:camZoom};down=null;if(ball&&ball.state==='held'){ball.state='ready';}}},true);
 window.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){camZoom=clamp(pinch.z0*pinch.d0/pinchDist(),.7,2.1);e.stopImmediatePropagation();}},true);
@@ -2331,7 +2543,11 @@ $('#nameIn').addEventListener('pointerdown',e=>e.stopPropagation());
 /* ---------- UI ---------- */
 function updateUI(){checkAwards();sizeToys();for(const k of['hunger','fun','clean','energy','water']){const el=$('#st-'+k),r=el.querySelector('.ring'),v=Math.round(S[k]);
     r.style.setProperty('--v',v);r.style.setProperty('--c',v>55?'var(--good)':v>28?'var(--mid)':'var(--low)');el.classList.toggle('low',v<=28&&S.hatched);}
-  $('#gname').textContent=S.name;$('#gday').textContent=S.hatched?stageName()+', day '+(Math.floor(ageDays())+1):'Waiting to hatch';
+  $('#gname').textContent=S.name;
+  /* her name stays on screen, so a shared iPad never leaves you wondering
+     whose gecko you are looking at */
+  $('#gday').textContent=(ME.name!=='you'?ME.name+' \u00B7 ':'')+
+    (S.hatched?stageName()+', day '+(Math.floor(ageDays())+1):'Waiting to hatch');
   const n=need();$('#mood').textContent=!S.hatched?'🥚':n?n[0]:(S.fun>80&&S.hunger>70?'😍':'😊');
   $('#bMed').classList.toggle('glow',S.sick);$('#bMed').classList.toggle('dim',!S.sick);
   /* when something is wrong, say so in both places she might look: the chip in
@@ -2990,7 +3206,7 @@ function openPresent(){if(!present)return;S.presentDay=todayKey();
       else{wearHat(g.it.id);award('hat');showOff(pick(['Brand new!','Look at me!','I love it!']));}
       drawShop();save();};
   }else if(g.kind==='decor'){
-    {const q=decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),g.it.id,0);S.decor.push({t:g.it.id,x:q.x,z:q.z,r:0});
+    {const q=placeNew(g.it.id);S.decor.push({t:g.it.id,x:q.x,z:q.z,r:0});
      setTimeout(()=>tada(q.x,q.z,'A PRESENT!'),300);}
     buildDecor();award('decor');
     $('#cExtra').innerHTML='<button class="again" id="giftMove">\uD83C\uDFE1 Put it somewhere</button>';
@@ -3186,42 +3402,48 @@ function makeDecor(t){const g=new THREE.Group();if(t==='wheel')t='tunnel';
     /* slats rather than a solid shell - a closed half pipe just reads as a plank
        from the front, and you want to see him in there */
     const bt=barkTex();bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(4,1);
-    const R=1.85,L=5.2,N=9;
+    const R=1.38,L=3.9,N=9;
     const caneM=M(0xffffff,{map:bt,bumpMap:bt,bumpScale:.05,roughness:.92,color:0xF2D9A6});
     const bandM=M(0xB07A46,{roughness:.85});
     for(let i=0;i<N;i++){const th=(.075+ (i/(N-1))*.85)*Math.PI;
-      const bar=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,L,9),caneM);
+      const bar=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,L,9),caneM);
       bar.rotation.z=Math.PI/2;bar.position.set(0,Math.sin(th)*R,Math.cos(th)*R);
       bar.castShadow=bar.receiveShadow=true;g.add(bar);}
     for(const x0 of[-L/2+.2,-L/6,L/6,L/2-.2]){
       const band=new THREE.Mesh(new THREE.TorusGeometry(R,.1,7,24,Math.PI*.93),bandM);
       band.position.x=x0;band.rotation.y=Math.PI/2;band.rotation.z=Math.PI*.035;g.add(band);}
-    g.userData.toy='tunnel';g.userData.mount='tunnel';g.userData.app={x:-(L/2+1.4),z:0};}
+    g.userData.toy='tunnel';g.userData.mount='tunnel';g.userData.app={x:-(L/2+1.1),z:0};}
   else if(t==='digbox'){
-    const W2=4.6,D2=3.6,H2=.95,wm=M(0xC98F5D,{roughness:.85});
+    const W2=3.5,D2=2.7,H2=.8,wm=M(0xC98F5D,{roughness:.85});
     for(const sd of[-1,1]){const s2=new THREE.Mesh(new THREE.BoxGeometry(W2,H2,.2),wm);
       s2.position.set(0,H2/2,sd*D2/2);s2.castShadow=s2.receiveShadow=true;g.add(s2);
       const s3=new THREE.Mesh(new THREE.BoxGeometry(.2,H2,D2),wm);
       s3.position.set(sd*W2/2,H2/2,0);s3.castShadow=s3.receiveShadow=true;g.add(s3);}
     const soil=new THREE.Mesh(new THREE.BoxGeometry(W2-.3,.55,D2-.3),M(0x6E4B33,{roughness:1}));
     soil.position.y=.3;soil.receiveShadow=true;g.add(soil);
-    for(let i=0;i<24;i++)blob(M(pick([0x8A6242,0x7A553A,0x9C7350]),{roughness:1}),
+    for(let i=0;i<18;i++)blob(M(pick([0x8A6242,0x7A553A,0x9C7350]),{roughness:1}),
       rand(.09,.17),rand(.05,.1),rand(.09,.17),rand(-W2/2+.5,W2/2-.5),.58,rand(-D2/2+.5,D2/2-.5),g);
-    g.userData.toy='digbox';g.userData.mount='digbox';g.userData.app={x:0,z:D2/2+1.5};}
+    g.userData.toy='digbox';g.userData.mount='digbox';g.userData.app={x:0,z:D2/2+1.2};}
   else if(t==='hammock'){const rope=M(0xE8DCC2,{roughness:.9});
-    const SP=3.2,TOP=2.85,LEN=5.6,BR=1.22;
-    for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.14,.2,TOP,10),M(0x8A5A33,{roughness:.85}));
+    const SP=2.35,TOP=2.3,LEN=4.2,BR=.95;
+    for(const sd of[-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.18,.26,TOP,10),M(0x8A5A33,{roughness:.85}));
       po.position.set(sd*SP,TOP/2,0);po.castShadow=true;g.add(po);
       const ft=new THREE.Mesh(new THREE.CylinderGeometry(.34,.4,.16,12),M(0x8A5A33,{roughness:.85}));
       ft.position.set(sd*SP,.08,0);g.add(ft);}
     /* a sling, not a tube: a deep cradle just hides him behind a wall of fabric */
     const bed=new THREE.Mesh(new THREE.CylinderGeometry(BR,BR,LEN,22,1,true,Math.PI,Math.PI),
-      M(0x5FC8FF,{roughness:.85,side:THREE.DoubleSide}));
+      M(0x4FB3E8,{roughness:.85,side:THREE.DoubleSide}));
     bed.rotation.set(0,0,Math.PI/2);bed.receiveShadow=true;
-    const sling=new THREE.Group();sling.add(bed);sling.scale.y=.62;sling.position.y=1.78;g.add(sling);
-    for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,6),rope);
-      r.position.set(sd*2.95,2.35,0);r.rotation.z=sd*.5;g.add(r);}
-    g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.6};}
+    const sling=new THREE.Group();sling.add(bed);
+    /* Flattened almost to a plane and seen from the front it was a cyan slab
+       hanging in mid air. Deeper curve, and a rope along each long edge so the
+       eye reads a slung hammock rather than a glitch. */
+    for(const sd of[-1,1]){const edge=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,LEN,8),rope);
+      edge.rotation.z=Math.PI/2;edge.position.set(0,0,sd*BR);sling.add(edge);}
+    sling.scale.y=.78;sling.position.y=1.5;g.add(sling);
+    for(const sd of[-1,1]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.95,6),rope);
+      r.position.set(sd*(SP-.25),1.9,0);r.rotation.z=sd*.5;g.add(r);}
+    g.userData.toy='hammock';g.userData.mount='hammock';g.userData.app={x:0,z:BR+1.35};}
   else if(t==='mirror'){const fr=M(0xFF6FAE,{roughness:.5});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.17,10,30),fr);ring.position.y=1.95;g.add(ring);
     const gl=new THREE.Mesh(new THREE.CircleGeometry(1.1,30),
@@ -3290,17 +3512,29 @@ function buy(it){const own=it.type!=='decor'&&(S.owned[it.id]||it.price===0);
   if(S.coins<it.price){tone(220,.2,'square',.04);toast('You need '+(it.price-S.coins)+' more coins. Play games and care for '+S.name+' to earn some!');return;}
   S.coins-=it.price;updateCoins();SFX.yay();
   if(it.type==='decor'){const gp=G.root.position;
-    const q=outside?decorSpot(gp.x+rand(-1.6,1.6),gp.z+rand(-1.6,1.6),it.id,0)
-      :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),it.id,0);S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);
+    const q=placeNew(it.id);S.decor.push({t:it.id,x:q.x,z:q.z,r:0});buildDecor();award('decor');$('#shop').hidden=true;startDecorate(S.decor.length-1);
     tada(q.x,q.z,'NEW!');toast('Drag your '+it.name.toLowerCase()+' wherever you like!');}
   else{S.owned[it.id]=true;if(it.type==='bg')setBg(it.id);else{wearHat(it.id);award('hat');$('#shop').hidden=true;showOff(pick(['Brand new!','Look at me!','I love it!']));}drawShop();}save();}
 let decorating=false,sel=-1,dragging=false,dragMoved=false,wasSel=false;
 function buildDecor(){decorGroups.forEach(g=>scene.remove(g));decorGroups.length=0;toyUse=null;toyPick=null;noticed=null;
-  S.decor.forEach(d=>{if(d.t==='wheel')d.t='tunnel';const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;});
+  S.decor.forEach((d,i)=>{if(d.t==='wheel')d.t='tunnel';const q=decorSpot(d.x,d.z,d.t,d.r,i);d.x=q.x;d.z=q.z;});
   S.decor.forEach((d,i)=>{const g=makeDecor(d.t);g.position.set(d.x,groundY(d.x,d.z),d.z);g.rotation.y=d.r||0;g.userData.idx=i;g.userData.r=d.r||0;g.userData.t0=d.t;scene.add(g);decorGroups.push(g);});try{sizeToys();}catch(e){}}
-function updDecoBar(){$('#dbText').textContent=S.decor.length?(sel>=0?'Drag or tap to turn':'Tap to pick'):'Visit the Shop!';
+function updDecoBar(){
+  const out=sel>=0&&onTable(S.decor[sel].x,S.decor[sel].z);
+  $('#dbText').textContent=S.decor.length?(sel>=0?(out?'Out on the table':'Drag it anywhere'):'Tap a thing to move it'):'Visit the Shop!';
   $('#dbRemove').hidden=sel<0;
+  /* the table was always hers to decorate and nothing ever said so */
+  const sb=$('#dbSide');sb.hidden=sel<0;
+  if(sel>=0)sb.textContent=out?'\uD83C\uDFE0 Into the tank':'\uD83E\uDEB5 Onto the table';
   const n=(S.box||[]).length;const bb=$('#dbBox');bb.hidden=!n;if(n)bb.textContent='\uD83D\uDCE6 Box ('+n+')';}
+function flipSide(){
+  if(sel<0)return;const d=S.decor[sel],toTable=!onTable(d.x,d.z);
+  const q=toTable?decorSpot(TANKF.x1+2.4,FRONT_Z,d.t,d.r,sel)
+                 :decorSpot(0,1.6,d.t,d.r,sel);
+  d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);
+  save();updDecoBar();SFX.pop();
+  toast(toTable?'\uD83E\uDEB5 Out on the table \u2014 drag it anywhere out here!':'\uD83C\uDFE0 Back inside the tank');}
+$('#dbSide').onclick=flipSide;
 function startDecorate(i){if(game)endGame(true);decorating=true;sel=(i===undefined)?-1:i;$('#decoBar').hidden=false;updDecoBar();}
 function stopDecorate(){
   /* "put down" is the moment that deserves the flourish - she has chosen where
@@ -3323,8 +3557,7 @@ function putAway(i){const d=S.decor[i];if(!d)return;
 function takeOut(i){const box=S.box||[];const id=box[i];if(!id)return;
   box.splice(i,1);
   const gp=G.root.position;
-  const q=outside?decorSpot(gp.x+rand(-1.6,1.6),gp.z+rand(-1.6,1.6),id,0)
-                 :decorSpot(look.x+rand(-1.5,1.5),rand(.1,1.4),id,0);
+  const q=placeNew(id);
   S.decor.push({t:id,x:q.x,z:q.z,r:0});buildDecor();save();
   tada(q.x,q.z,'BACK!');startDecorate(S.decor.length-1);
   toast('Drag it wherever you like!');}
@@ -3347,7 +3580,7 @@ function decorMenu(i){const d=S.decor[i];if(!d)return;
 $('#dbBox').onclick=openBox;
 
 /* ---------- photo album ---------- */
-const PHOTO_KEY='gecko-photos-v7';
+const PHOTO_KEY='gecko-photos-v8-'+PLAYER;
 function loadPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||'[]');}catch(e){return [];}}
 function savePhoto(c){try{const t=document.createElement('canvas');t.width=t.height=360;t.getContext('2d').drawImage(c,0,0,360,360);let arr=loadPhotos();arr.unshift({d:t.toDataURL('image/jpeg',.72),cap:S.name+', day '+(Math.floor(ageDays())+1)});arr=arr.slice(0,24);
   for(let k=0;k<4;k++){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(arr));break;}catch(e){arr=arr.slice(0,Math.max(1,arr.length-3));}}}catch(e){}}
@@ -3618,20 +3851,21 @@ function extDown(e){if(closeUp){stopWatch();return true;}
   if(decorating){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='decor'){const i=h.obj.userData.idx;wasSel=(sel===i);sel=i;dragging=true;dragMoved=false;updDecoBar();return true;}}return false;}
 function extMove(e){if(game&&game.def.move)return game.def.move(game,e);
   if(ball&&ball.state==='held'){const p=groundPoint(e);if(p){const b=ball.m.position;ball.moved+=Math.hypot(p.x-b.x,p.z-b.z);b.set(clamp(p.x,-BX,BX),.75,clamp(p.z,Z0-.3,Z1+.3));const now=performance.now();ball.samples.push({x:b.x,z:b.z,t:now});while(ball.samples.length>2&&now-ball.samples[0].t>110)ball.samples.shift();}return true;}
-  if(dragging&&sel>=0){const p=dragPoint(e);if(p){dragMoved=true;const d=S.decor[sel];const q=decorSpot(p.x,p.z,d.t,d.r);d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
+  if(dragging&&sel>=0){const p=dragPoint(e);if(p){dragMoved=true;const d=S.decor[sel];const q=decorSpot(p.x,p.z,d.t,d.r,sel);d.x=q.x;d.z=q.z;decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);}return true;}return false;}
 function extUp(e){if(game&&game.def.up)return game.def.up(game,e);
   if(ball&&ball.state==='held'){const a=ball.samples[0],z=ball.samples[ball.samples.length-1];const dt2=a&&z?Math.max(16,z.t-a.t)/1000:1;
     if(!a||ball.moved<.3||z.t-a.t<5){autoThrow();}else{const vx=(z.x-a.x)/dt2*.55,vz=(z.z-a.z)/dt2*.55;const hv=Math.hypot(vx,vz);if(hv<.05)autoThrow();else{const k=Math.max(hv,4.5)/hv;launch(vx*k,vz*k);}}return true;}
   if(dragging){dragging=false;if(!dragMoved&&wasSel&&sel>=0){const d=S.decor[sel];
     {let r=d.r||0;const tbl=onTable(d.x,d.z);for(let i=0;i<8;i++){r+=Math.PI/4;if(decorFits(d.t,r,tbl))break;}d.r=r;}
     /* a long toy turned side-on needs different room, so re-seat it after the turn */
-    const q=decorSpot(d.x,d.z,d.t,d.r);d.x=q.x;d.z=q.z;
+    const q=decorSpot(d.x,d.z,d.t,d.r,sel);d.x=q.x;d.z=q.z;
     decorGroups[sel].rotation.y=d.r;decorGroups[sel].userData.r=d.r;
     decorGroups[sel].position.set(d.x,groundY(d.x,d.z),d.z);tone(800,.06,'sine',.04);}save();return true;}return false;}
 
 /* ---------- More sheet actions, settings ---------- */
 function refreshMore(){}
-function openSettings(){$('#setBuild').textContent=BUILD;$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
+function openSettings(){
+  {const w=$('#setWho');if(w)w.textContent=ME.name!=='you'?ME.name+"'s game":'shared game';}$('#setBuild').textContent=BUILD;$('#setSchool').checked=!!S.school;$('#setBed').value=String(S.bedtime||19.5);$('#setSound').checked=!!S.sound;
   const rb=$('#setReset');rb.classList.remove('sure');rb.textContent='Start again with a new egg';
   $('#settings').hidden=false;}
 /* a card to confirm, not two taps on a button that moves between them */
