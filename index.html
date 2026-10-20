@@ -760,7 +760,7 @@ const MORPHS={
 /* ---------- saved state ---------- */
 /* peeking at him grown up shows the big tank as well. It rides in sessionStorage
    so it cannot outlive the tab, and saving is off while it is on. */
-const BUILD="32";
+const BUILD="33";
 /* Whose game this is, settled before a single thing is read or written, so
    every key below carries her name and the two of them never touch. */
 const PLAYER=(window.__PLAYER)||'ayla';
@@ -2520,18 +2520,33 @@ $('#snd').textContent=S.sound?'🔊':'🔇';
 
 /* ---------- picker ---------- */
 let chosen=S.morph;
-let picking=false,pickA=0,pickHome=null;
+let picking=false,pickA=0,pickHome=null,pickNudge=0;
+/* a little swing when she picks something, which settles back */
+function pickBump(){pickNudge=.34;}
 /* the picker sits over the tank as a bottom sheet and the real gecko turns on the
    spot above it, re-colouring as she taps. Picking colours blind was the problem. */
+/* Three-quarters on from his front: head, back and one flank all in view,
+   which is exactly where his colours and his pattern are. */
+const PICK_A=-.62;
 function pickCam(dt){const p=G.root.position,k=growth();
-  pickA+=dt*.4;
+  /* He used to turn on the spot the whole time she was choosing, so she was
+     picking a colour while looking at his tail and waiting for his face to come
+     back round. He holds still now, and gives a small turn only when she taps
+     something - enough to feel alive, not enough to lose what she is judging. */
+  pickA+=((PICK_A+pickNudge)-pickA)*Math.min(1,dt*3.2);
+  pickNudge+=(0-pickNudge)*Math.min(1,dt*2.4);
   /* far enough back that his whole length fits the window, worked out from how
      big he actually is and how wide this screen is - a fixed distance frames a
      hatchling and a grown-up completely differently */
   const d=distFor(5.9*k*1.25);
   camera.position.set(p.x+Math.sin(pickA)*d,p.y+d*.22,p.z+Math.cos(pickA)*d);
+  /* How much screen is left above the sheet. The colour panel is long enough
+     to scroll, and the moment it does its top goes NEGATIVE - which aimed him
+     off the top of the screen and left her choosing colours for a gecko she
+     could not see. Whatever the sheet does, he stays in the strip. */
   const sheet=$('#picker .sheet');
-  const win=sheet?sheet.getBoundingClientRect().top:innerHeight*.34;
+  const raw=sheet?sheet.getBoundingClientRect().top:innerHeight*.34;
+  const win=clamp(raw,innerHeight*.26,innerHeight*.62);
   aimAt(tmp.set(p.x,p.y+.5*k,p.z),(win*.5)/innerHeight);}
 /* Point the camera so that a world point lands at a chosen height on the screen
    (0 = top, 1 = bottom). Worked out from the frustum rather than by nudging and
@@ -2553,7 +2568,7 @@ function aimAt(P,ny){
 function endPicking(){picking=false;$('#picker').hidden=true;document.body.classList.remove('designing');
   if(pickHome){G.root.position.copy(pickHome.p);G.root.rotation.y=pickHome.r;
     AI.inCave=pickHome.c;AI.inBed=pickHome.b;pickHome=null;}}
-function openPicker(first){picking=true;pickA=camA-.6;document.body.classList.add('designing');
+function openPicker(first){picking=true;pickA=PICK_A;pickNudge=0;document.body.classList.add('designing');
   G.root.visible=true;popT=10;if(hatch.egg)hatch.egg.visible=false;
   /* stand him somewhere clear for the preview - asleep in his cave he is behind
      a rock wall, and she would be colouring in a gecko she cannot see */
@@ -2572,7 +2587,7 @@ function drawDots(id,cols,key){const box=$(id);box.innerHTML='';
   const c=cust();
   cols.forEach(v=>{const i=document.createElement('i');i.style.setProperty('--c',hex6(v));
     i.setAttribute('aria-pressed',String(c[key]===v));
-    i.onclick=()=>{c[key]=v;applyMorph('custom');drawMine();SFX.pop();};box.appendChild(i);});}
+    i.onclick=()=>{c[key]=v;applyMorph('custom');drawMine();SFX.pop();pickBump();};box.appendChild(i);});}
 function drawMine(){const c=cust();
   $('#mine').hidden=chosen!=='custom';
   if(chosen!=='custom')return;
@@ -2582,7 +2597,7 @@ function drawMine(){const c=cust();
     /* a word alone does not tell an eight year old what "Starry" looks like */
     b.innerHTML='<i style="background-image:url('+patChip(id,c)+')"></i>'+lab;
     b.setAttribute('aria-pressed',String((c.pattern||'leopard')===id));
-    b.onclick=()=>{c.pattern=id;applyMorph('custom');drawMine();SFX.pop();};pr.appendChild(b);});}
+    b.onclick=()=>{c.pattern=id;applyMorph('custom');drawMine();SFX.pop();pickBump();};pr.appendChild(b);});}
 /* a thumbnail of one pattern in her chosen colours, drawn the same way his skin is */
 function patChip(id,c){const N=44,cv=document.createElement('canvas');cv.width=cv.height=N;
   const x=cv.getContext('2d');x.fillStyle=hex6(c.skin);x.fillRect(0,0,N,N);
