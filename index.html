@@ -385,6 +385,13 @@ body.booting #hud,body.booting #tray{opacity:0;pointer-events:none}
 /* a close-up of him using a toy: the tank UI gets out of the way for it */
 body.watching #hud,body.watching #tray,body.watching #watchChip,
 body.designing #hud,body.designing #tray{opacity:0;pointer-events:none}
+/* only shown once she has slid the view off him, and it puts it back */
+#backChip{position:fixed;left:50%;transform:translateX(-50%);z-index:5;cursor:pointer;
+  top:calc(env(safe-area-inset-top) + 188px);border:0;border-radius:999px;padding:9px 18px;
+  background:var(--paper);color:var(--ink);font:400 18px var(--display);box-shadow:var(--sh-1);
+  animation:sheetUp .25s}
+#backChip[hidden]{display:none}
+#backChip:active{transform:translateX(-50%) translateY(2px)}
 #watchChip{position:fixed;left:50%;transform:translateX(-50%);z-index:5;cursor:pointer;
   bottom:calc(env(safe-area-inset-bottom) + 104px);border:0;border-radius:22px;padding:10px 18px;
   background:var(--paper);color:var(--ink);font:400 20px var(--display);letter-spacing:.3px;
@@ -589,6 +596,7 @@ body.watching #watchOut{opacity:.85}
 </div>
 
 <button id="watchChip" hidden>👀 Watch him</button>
+<button id="backChip" hidden>👀 Back to him</button>
 <div id="bubble"></div>
 <div id="watchOut">Tap anywhere to go back</div>
 <div id="err" hidden></div>
@@ -760,7 +768,7 @@ const MORPHS={
 /* ---------- saved state ---------- */
 /* peeking at him grown up shows the big tank as well. It rides in sessionStorage
    so it cannot outlive the tab, and saving is off while it is on. */
-const BUILD="33";
+const BUILD="34";
 /* Whose game this is, settled before a single thing is read or written, so
    every key below carries her name and the two of them never touch. */
 const PLAYER=(window.__PLAYER)||'ayla';
@@ -848,6 +856,9 @@ const plants=[];
    just undefined at that point, it throws. */
 const decorGroups=[];
 let want=null,wantT=6,caveT=0,toyT=0,toyPick=null,toyUse=null;
+/* how far she has slid the view off him - read by the camera, which is
+   written further up the file than these were */
+let panX=0,panZ=0;
 /* half the footprint of the big toys, in toy units - up here for the same
    reason, since working out what he has to walk round needs it */
 const TOY_HALF={tunnel:{x:2.05,z:1.6},hammock:{x:2.85,z:1.05},digbox:{x:1.95,z:1.55},mirror:{x:1.4,z:.95}};
@@ -2116,29 +2127,50 @@ function updateCam(dt){
   if(outside){
     /* the table wraps right round the tank now, so follow him rather than a
        fixed middle that may be on the far side of the glass from him */
-    look.x+=(gx-look.x)*Math.min(1,dt*2);
-    look.z+=((gz+.6)-look.z)*Math.min(1,dt*1.6);
+    look.x+=((gx+panX)-look.x)*Math.min(1,dt*2);
+    look.z+=((gz+.6+panZ)-look.z)*Math.min(1,dt*1.6);
     const d2=dist*.95;
     camera.position.set(look.x+Math.sin(camA)*d2,look.y+d2*1.35,look.z+Math.cos(camA)*d2);camera.lookAt(look);return;}
   const fx=wide?0:clamp(gx*(portrait?.92:.6),-lim,lim),
     /* the sand is twice as deep as it was, so follow him into it further */
     fz=wide?.6:.9+(gz-.9)*.62;
-  look.x+=(fx-look.x)*Math.min(1,dt*2);look.z+=(fz-look.z)*Math.min(1,dt*1.5);
+  look.x+=((fx+panX)-look.x)*Math.min(1,dt*2);look.z+=((fz+panZ)-look.z)*Math.min(1,dt*1.5);
   camP+=(camPT-camP)*Math.min(1,dt*6);camera.position.set(look.x+Math.sin(camA)*dist,dist*camP,look.z+Math.cos(camA)*dist);camera.lookAt(look);}
 
 /* ---------- touch ---------- */
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let down=null;
 let camZoom=1.12,pinch=null,camP=.46,camPT=.46;const ptrs=new Map();
+/* The view was welded to him: you could swivel a hundred degrees and zoom, and
+   that was the lot. Two fingers now slide the view wherever she likes, and a
+   chip brings it back so she can never be lost. */
+function panned(){return Math.abs(panX)>.35||Math.abs(panZ)>.35;}
+function recentre(){panX=0;panZ=0;updateBackChip();}
+function updateBackChip(){const c=$('#backChip');if(!c)return;
+  const show=panned()&&!picking&&!cine&&!closeUp&&$('#picker').hidden;
+  if(show)c.textContent='\uD83D\uDC40 Back to '+(S.name||'him');
+  c.hidden=!show;}
 function pinchDist(){const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;}
-renderer.domElement.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){pinch={d0:pinchDist(),z0:camZoom};down=null;if(ball&&ball.state==='held'){ball.state='ready';}}},true);
-window.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){camZoom=clamp(pinch.z0*pinch.d0/pinchDist(),.7,2.1);e.stopImmediatePropagation();}},true);
+function pinchMid(){const a=[...ptrs.values()];return {x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};}
+renderer.domElement.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2){const m=pinchMid();pinch={d0:pinchDist(),z0:camZoom,mx:m.x,my:m.y,px:panX,pz:panZ};
+    down=null;if(ball&&ball.state==='held'){ball.state='ready';}}},true);
+window.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch&&ptrs.size>=2){
+    camZoom=clamp(pinch.z0*pinch.d0/pinchDist(),.7,2.1);
+    /* and wherever the two fingers travel together, the view goes with them */
+    const m=pinchMid(),dx=m.x-pinch.mx,dy=m.y-pinch.my;
+    const k=.026*camZoom,a=camA,cs=Math.cos(a),sn=Math.sin(a);
+    panX=clamp(pinch.px-(dx*cs*k)-(dy*sn*k),-16,16);
+    panZ=clamp(pinch.pz+(dx*sn*k)-(dy*cs*k),-11,11);
+    updateBackChip();
+    e.stopImmediatePropagation();}},true);
 function ptrEnd(e){ptrs.delete(e.pointerId);if(pinch){if(ptrs.size<2){pinch=null;down=null;}e.stopImmediatePropagation();}}
 window.addEventListener('pointerup',ptrEnd,true);window.addEventListener('pointercancel',ptrEnd,true);
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();camZoom=clamp(camZoom*(1+e.deltaY*.0012),.7,2.1);},{passive:false});
 renderer.domElement.addEventListener('pointerdown',e=>{if(pinch)return;if(extDown(e)){down=null;return;}const h=hit(e.clientX,e.clientY);down={x:e.clientX,y:e.clientY,a:camT,pp:camPT,moved:false,rub:!!h&&h.kind==='gecko',lastRub:0,lx:e.clientX,ly:e.clientY,lt:performance.now()};});
 window.addEventListener('pointermove',e=>{if(extMove(e))return;if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;
   if(down.rub){if(Math.hypot(dx,dy)>6)down.moved=true;const now=performance.now();if(now-down.lastRub>70){const h=hit(e.clientX,e.clientY);if(h&&h.kind==='gecko'){const sp=Math.hypot(e.clientX-down.lx,e.clientY-down.ly)/Math.max(1,now-down.lt);down.lx=e.clientX;down.ly=e.clientY;down.lt=now;down.lastRub=now;if(S.shed>0&&!S.asleep)rubAt(h.point);else strokeAt(h.point,sp);}}return;}
-  if(Math.abs(dx)>8||Math.abs(dy)>8)down.moved=true;if(down.moved){camT=clamp(down.a-dx*.005,-.9,.9);camPT=clamp(down.pp+dy*.0014,.2,.66);}});
+  if(Math.abs(dx)>8||Math.abs(dy)>8)down.moved=true;if(down.moved){camT=clamp(down.a-dx*.005,-1.35,1.35);camPT=clamp(down.pp+dy*.0016,.14,.78);}});
 window.addEventListener('pointerup',e=>{if(extUp(e)){down=null;return;}if(down&&!down.moved)tap(e.clientX,e.clientY);down=null;});
 function hit(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const objs=poops.concat(wees,extraHits());if(ball)objs.push(ball.m);if(G.root.visible)objs.push(G.root);
   const hits=ray.intersectObjects(objs,true);if(!hits.length)return null;let o=hits[0].object;while(o&&!o.userData.kind)o=o.parent;return o?{kind:o.userData.kind,obj:o,point:hits[0].point}:null;}
@@ -3097,6 +3129,9 @@ function closeUpCam(dt){
   camera.position.set(bx,hi+Math.min(2.2,bs*.55)+Math.min(1.2,shortBy*.28),bz);
   aimAt(tmp.set(cx0,p.y+.5*k,cz0),.44);}
 $('#watchChip').onclick=startWatch;
+$('#backChip').onclick=()=>{recentre();SFX.pop();};
+/* anything that takes over the camera starts from his face again */
+const _oldStartWatch=startWatch;startWatch=function(){recentre();return _oldStartWatch.apply(this,arguments);};
 /* ---------- 3D opening cinematic ---------- */
 let cine=null;
 const CINE_SHOTS=[4.0,3.8,4.0,3.0];
