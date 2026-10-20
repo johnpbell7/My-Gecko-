@@ -163,7 +163,15 @@ canvas{position:fixed;inset:0;display:block}
 #bubble::after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-9px;border:9px solid transparent;border-bottom:0;border-top-color:var(--paper)}
 #bubble.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
 
-#err{position:fixed;left:16px;right:16px;top:45%;z-index:9;background:#fff;color:#2B1D3A;border-radius:20px;padding:16px;font-weight:700;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.15)}
+#err{position:fixed;left:16px;right:16px;top:40%;z-index:9;background:#fff;color:#2B1D3A;border-radius:22px;
+  padding:20px 18px 16px;font-weight:700;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.15);
+  max-width:420px;margin:0 auto}
+#err .errMsg{margin:0 0 14px;font:400 21px/1.3 var(--display,inherit);text-wrap:balance}
+#err .errGo{border:0;border-radius:18px;background:#3FCB7A;color:#fff;font:400 20px var(--display,inherit);
+  padding:13px 26px;cursor:pointer;box-shadow:0 5px 0 #25915A;letter-spacing:.3px}
+#err .errGo:active{transform:translateY(5px);box-shadow:0 0 0 #25915A}
+#err .errGo:disabled{background:#9A8FB0;box-shadow:0 5px 0 #6E6390}
+#err .errWhy{display:block;margin-top:12px;font:600 11px var(--font,inherit);opacity:.35;word-break:break-word}
 #err[hidden]{display:none}
 /* the top of the screen is left clear so the real gecko shows through and
    re-colours as she taps - picking a colour blind was the whole problem */
@@ -700,7 +708,37 @@ body.watching #watchOut{opacity:.85}
 
 </script>
 <script>
-window.addEventListener('error',function(e){var d=document.getElementById('err');if(d){d.hidden=false;d.textContent='Oops: '+(e.message||'something went wrong');}if(window.__geckoSkipIntro)window.__geckoSkipIntro();});
+/* Throw away everything this device has kept of the game and fetch it again.
+   Her saved gecko lives in localStorage and is not touched. */
+window.__geckoFresh=function(){
+  var done=function(){
+    try{var u=location.pathname+location.search;
+      location.replace(u+(location.search?'&':'?')+'fresh='+Date.now());}
+    catch(e){location.reload(true);}};
+  var jobs=[];
+  try{if(window.caches&&caches.keys)jobs.push(caches.keys().then(function(k){
+    return Promise.all(k.map(function(n){return caches.delete(n);}));}));}catch(e){}
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)
+    jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){
+      return Promise.all(rs.map(function(r){return r.unregister();}));}));}catch(e){}
+  if(!jobs.length)return done();
+  Promise.all(jobs).then(done,done);
+  setTimeout(done,2500);                 /* never leave her waiting on this */
+};
+/* A child looking at "Oops" has nowhere to go. Give her one big button that
+   throws the stale copy away and fetches the newest one. */
+window.addEventListener('error',function(e){var d=document.getElementById('err');
+  if(d){d.hidden=false;
+    d.innerHTML='';
+    var p=document.createElement('p');p.className='errMsg';
+    p.textContent='Oops \u2014 that went wrong. Let us get the newest version.';
+    var small=document.createElement('small');small.className='errWhy';
+    small.textContent=(e.message||'something went wrong');
+    var b=document.createElement('button');b.className='errGo';b.type='button';
+    b.textContent='\u2728 Fix it';
+    b.onclick=function(){b.disabled=true;b.textContent='Getting it\u2026';window.__geckoFresh();};
+    d.appendChild(p);d.appendChild(b);d.appendChild(small);}
+  if(window.__geckoSkipIntro)window.__geckoSkipIntro();});
 (function(){
 if(typeof THREE==='undefined'){var d=document.getElementById('err');d.hidden=false;d.textContent='The 3D engine could not load. Check your internet and reload.';if(window.__geckoSkipIntro)window.__geckoSkipIntro();return;}
 try{var tc=document.createElement('canvas');if(!(tc.getContext('webgl')||tc.getContext('experimental-webgl')))throw 0;}catch(e){var d2=document.getElementById('err');d2.hidden=false;d2.textContent='This device or browser can\'t show 3D graphics. Try opening the link in Safari or Chrome.';if(window.__geckoSkipIntro)window.__geckoSkipIntro();return;}
@@ -722,7 +760,7 @@ const MORPHS={
 /* ---------- saved state ---------- */
 /* peeking at him grown up shows the big tank as well. It rides in sessionStorage
    so it cannot outlive the tab, and saving is off while it is on. */
-const BUILD="31";
+const BUILD="32";
 /* Whose game this is, settled before a single thing is read or written, so
    every key below carries her name and the two of them never touch. */
 const PLAYER=(window.__PLAYER)||'ayla';
@@ -2613,14 +2651,17 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.hatched)
 window.addEventListener('pagehide',()=>{if(S.hatched)save();});
 /* if this copy is older than the one on the server, take the new one, once.
    version.json is a few bytes, so the check costs nothing on mobile data. */
+/* Checked early, because a build with a crash in it may not survive to the old
+   three-and-a-half seconds - and taken properly, by throwing the cached copy
+   away rather than reloading into the same stale one. */
 try{if(!sessionStorage.getItem('gecko-refreshed-'+PLAYER)){
   setTimeout(()=>{fetch('version.json?t='+Date.now(),{cache:'no-store'})
     .then(r=>r.json()).then(v=>{
       if(v&&v.build&&String(v.build)!==BUILD){
         try{sessionStorage.setItem('gecko-refreshed-'+PLAYER,'1');}catch(e){}
         toast('\u2728 Getting the newest version...');
-        setTimeout(()=>location.reload(true),1200);}})
-    .catch(()=>{});},3500);}}catch(e){}
+        setTimeout(()=>window.__geckoFresh(),1000);}})
+    .catch(()=>{});},900);}}catch(e){}
 /* so you can tell at a glance whether the phone picked up the new build */
 try{const bk='gecko-build-'+PLAYER,was=localStorage.getItem(bk);
   if(was!==BUILD){localStorage.setItem(bk,BUILD);
