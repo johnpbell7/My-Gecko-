@@ -722,7 +722,7 @@ const MORPHS={
 /* ---------- saved state ---------- */
 /* peeking at him grown up shows the big tank as well. It rides in sessionStorage
    so it cannot outlive the tab, and saving is off while it is on. */
-const BUILD="30";
+const BUILD="31";
 /* Whose game this is, settled before a single thing is read or written, so
    every key below carries her name and the two of them never touch. */
 const PLAYER=(window.__PLAYER)||'ayla';
@@ -1763,10 +1763,21 @@ function say(t,secs){bubble.textContent=t;bubble.classList.add('show');bubbleTim
 
 /* ---------- hatching ---------- */
 const hatch={active:false,t:0,egg:null};let popT=10;
-function startHatch(){hatch.active=true;hatch.t=0;const g=new THREE.Group();const m=MORPHS[S.morph];blob(M(0xFFF6E6,{roughness:.4}),.55,.72,.55,0,.72,0,g);
+function startHatch(){
+  /* morphOf, not MORPHS - "Make my own" is not in MORPHS, so designing her own
+     colours and then hatching threw here, before the egg existed. The flag was
+     already set, so every frame after that died on a null egg and the game was
+     gone: a blank tank, an "Oops", and a gecko stuck waiting to hatch forever.
+     The egg is built first and the flag set last, so a throw cannot strand it. */
+  hatch.t=0;const g=new THREE.Group();const m=morphOf(S.morph);blob(M(0xFFF6E6,{roughness:.4}),.55,.72,.55,0,.72,0,g);
   const sp=M(m.skin);for(let i=0;i<9;i++){const a=rand(0,6.28),y=rand(.3,1.15),r=.55*Math.sqrt(Math.max(0,1-Math.pow((y-.72)/.72,2)));blob(sp,.08,.08,.08,Math.cos(a)*r*.97,y,Math.sin(a)*r*.97,g);}
-  g.position.set(0,0,1);scene.add(g);hatch.egg=g;G.root.visible=false;G.root.position.set(0,0,1);G.root.rotation.y=0;}
-function updateHatch(dt){if(!hatch.active)return;hatch.t+=dt;const t=hatch.t;hatch.egg.rotation.z=Math.sin(t*(t<1?10:24))*.2*Math.min(1,t/1.2);
+  g.position.set(0,0,1);scene.add(g);hatch.egg=g;hatch.active=true;
+  G.root.visible=false;G.root.position.set(0,0,1);G.root.rotation.y=0;}
+function updateHatch(dt){if(!hatch.active)return;
+  /* no egg and nothing to wait for: let him out rather than throwing here on
+     every frame for the rest of the session */
+  if(!hatch.egg){hatch.active=false;S.hatched=true;S.born=S.born||Date.now();G.root.visible=true;popT=0;save();updateUI();return;}
+  hatch.t+=dt;const t=hatch.t;hatch.egg.rotation.z=Math.sin(t*(t<1?10:24))*.2*Math.min(1,t/1.2);
   if(t>2.4){scene.remove(hatch.egg);burst('✨',tmp.set(0,.8,1),12,{size:.5,speed:1.4});hatch.active=false;S.hatched=true;S.born=Date.now();S.nextShed=Date.now()+4*60e3;S.last=Date.now();
     G.root.visible=true;popT=0;SFX.yay();S.seenGrowth=growth();S.seenDay=todayKey();setTimeout(()=>say("Hi! I'm "+S.name+"!",3.5),500);save();updateUI();}}
 const easeOutBack=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};

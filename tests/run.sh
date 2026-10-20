@@ -4,7 +4,7 @@
 # modest machine. Pass names to run only those:  ./run.sh tdz verify
 set -u
 cd "$(dirname "$0")"
-SUITE="tdz verify tour says players solid twogames sweep scenarios cave jam ride
+SUITE="tdz verify hatch tour says players solid twogames sweep scenarios cave jam ride
        toys custom box room turn watch levels water play outdoor"
 [ $# -gt 0 ] && SUITE="$*"
 fail=0
